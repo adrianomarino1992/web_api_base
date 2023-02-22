@@ -8,10 +8,11 @@ export default class Configuration implements IApplicationConfiguration
 
     public Host : string = "0.0.0.0";    
     public Port : number = 5555;
+    public RootPath : string;
 
     constructor()
-    {
-        process.env["root_dir"] = __dirname;
+    {        
+        this.RootPath = process.mainModule?.path ?? __dirname;
     }
 
     public async StartAsync() : Promise<void>

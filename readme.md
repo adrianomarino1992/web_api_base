@@ -20,13 +20,22 @@ After that, we need to create some controllers and, they must inherit  the abstr
 
 ```typescript
 
-import { ControllerBase, ControllersDecorators as CD, HTTPVerbs as verbs } from "web_api_base";
+import { ControllerBase, HTTPVerbs as verbs, Use, Verb, Route, Action } from "web_api_base";
+/*
 
-@CD.Route("/sample")
+we can use this class to acess all decorators centralized
+import { ControllerDecorators as CD } from "web_api_base";
+
+*/
+
+//@CD.Route("/sample")
+@Route("/sample")
 export default class SampleController extends ControllerBase
 {   
-    @CD.Verb(verbs.GET)
-    @CD.Action("/hello")
+    //@CD.Verb(verbs.GET)
+    @Verb(verbs.GET)
+    //@CD.Action("/hello")
+    @Action("/hello")
     public Hello() : void
     {
         this.OK({message: "Hello Word!"})
@@ -48,8 +57,10 @@ export default class App extends Application
     
     public override Configure(appConfig: IApplicationConfiguration): void
     {      
-        appConfig.Host = "0.0.0.0";
-        appConfig.Port = 5555;  
+        //to define the host use this property, if that property is not changed, the default value will be 0.0.0.0
+        appConfig.Host = "127.0.0.1";
+        //to define the app port use this property, if that property is not changed, the default value will be 5555
+        appConfig.Port = 1234;  
        
         //allow CORS
         this.UseCors();

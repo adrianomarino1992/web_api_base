@@ -9,5 +9,5 @@ export default interface IApplication
 
     StartAsync() : Promise<void>;    
 
-    Configure(appConfig : IApplicationConfiguration): void;
+    ConfigureAsync (appConfig : IApplicationConfiguration): Promise<void>;
 }

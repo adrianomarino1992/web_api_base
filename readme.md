@@ -14,9 +14,9 @@ npm install web_api_base
 ## Usage
 
 First of all we need implement the abstract class __Application__. 
-After that, we need to create some controllers and, they must inherit  the abstract class __ControllerBase__.
+After that, we need to create some controllers and they must inherit  the abstract class __ControllerBase__.
 
-### SampleController.ts
+### ./controllers/SampleController.ts
 
 ```typescript
 
@@ -67,9 +67,22 @@ export default class App extends Application
 
         //register in DI service
         DependecyService.Register(SampleController);  
+
+        */
+            if the controlles follow the naming rules, the method UseControllers will automatically append them
+
+            rootDir -
+                     |
+                     | -  controllers -
+                                        | - <Name>Controller.ts
+            |
+            | - App.ts //the class that inherit the Application       
+     
+         */        
+        this.UseControllers();
     
-        //append the controller in the pipe line of requests
-        ControllerBase.AppendController(SampleController,this);  
+        //if not, we can append manually using the method bellow
+        //ControllerBase.AppendController(SampleController,this);  
 
     }  
 }

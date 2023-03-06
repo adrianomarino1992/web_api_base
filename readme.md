@@ -21,20 +21,13 @@ After that, we need to create some controllers and they must inherit  the abstra
 ```typescript
 
 import { ControllerBase, HTTPVerbs as verbs, Use, Verb, Route, Action } from "web_api_base";
-/*
 
-we can use this class to acess all decorators centralized
-import { ControllerDecorators as CD } from "web_api_base";
 
-*/
-
-//@CD.Route("/sample")
 @Route("/sample")
 export default class SampleController extends ControllerBase
 {   
-    //@CD.Verb(verbs.GET)
-    @Verb(verbs.GET)
-    //@CD.Action("/hello")
+    
+    @Verb(verbs.GET)    
     @Action("/hello")
     public Hello() : void
     {
@@ -56,33 +49,12 @@ export default class App extends Application
 {   
     
     public override Configure(appConfig: IApplicationConfiguration): void
-    {      
-        //to define the host use this property, if that property is not changed, the default value will be 0.0.0.0
-        appConfig.Host = "127.0.0.1";
-        //to define the app port use this property, if that property is not changed, the default value will be 5555
-        appConfig.Port = 1234;  
-       
+    {        
         //allow CORS
         this.UseCors();
 
-        //register in DI service
-        DependecyService.Register(SampleController);  
-
-        */
-            if the controlles follow the naming rules, the method UseControllers will automatically append them
-
-            rootDir -
-                     |
-                     | -  controllers -
-                                        | - <Name>Controller.ts
-            |
-            | - App.ts //the class that inherit the Application       
-     
-         */        
-        this.UseControllers();
-    
-        //if not, we can append manually using the method bellow
-        //ControllerBase.AppendController(SampleController,this);  
+        //if the controlles follow the naming rules, the method UseControllers will automatically append them
+        this.UseControllers();   
 
     }  
 }

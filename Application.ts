@@ -142,6 +142,10 @@ export default abstract class Application implements IApplication
                     }
     
                     let controller = DependecyService.ResolveCtor(empty.constructor) as IController;
+
+                    if(controller == undefined)
+                        controller = new ctor() as IController;
+
                     controller.Request = context.Request;
                     controller.Response = context.Response;
                     (controller as any)[method](...params);

@@ -145,6 +145,8 @@ export default abstract class Application implements IApplication
 
                     if(controller == undefined)
                         controller = new ctor() as IController;
+                    
+                    DependecyService.CheckForDependenciesAndResolve(controller);
 
                     controller.Request = context.Request;
                     controller.Response = context.Response;

@@ -68,7 +68,94 @@ import Application from './Application';
 new Application().StartAsync();
 ```
 
+## Dependecy injection service
+Consider this abstraction of a service and some imnplementations
 
+### ./services/SampleService.ts
+
+```typescript
+export abstract class SampleServiceAbstract
+{
+    abstract DoSomething() : void;
+}
+
+export class SampleService extends SampleServiceAbstract
+{
+    public DoSomething(): void {
+        console.log("Doing in SampleServices");
+    }
+}
+
+export class AnotherService extends SampleServiceAbstract
+{
+    public DoSomething(): void {
+        console.log("Doing another job in AnotherService");
+    }
+}
+```
+
+We can use the DI service like this
+
+### ./controllers/SampleController.ts
+
+```typescript
+
+import { ControllerBase, HTTPVerbs as verbs, Use, Verb, Route, Action } from "web_api_base";
+import {SampleServiceAbstract } from '../services/SampleService.ts';
+
+@Route("/sample")
+export default class SampleController extends ControllerBase
+{   
+    @Inject() // say to DI that this property will be inject on the instance
+    public SomeDepency : SampleServiceAbstract;
+
+    constructor(someDependecy : SampleServiceAbstract)
+    {
+        super();
+        this.SomeDepency = someDependecy ;        
+    }
+
+    @Verb(verbs.GET)    
+    @Action("/hello")
+    public Hello() : void
+    {
+        this.OK({message: "Hello Word!"})
+    }
+    
+}
+```
+
+And we can register our dependecies in Application ConfigureAsync method
+
+### App.ts
+
+```typescript 
+
+import { Application, IApplicationConfiguration, DependecyService, } from "web_api_base";
+
+import { SampleService, SampleServiceAbstract } from './service/SampleService';
+
+
+export default class App extends Application
+{
+    constructor()
+    {
+        super();
+    }
+    
+    public override async ConfigureAsync(appConfig: IApplicationConfiguration): Promise<void>
+    {
+        this.UseCors();
+
+        // everytime some class need a SampleServiceAbstract it will get a intance of SampleService
+        DependecyService.RegisterFor(SampleServiceAbstract, SampleService);     
+
+        this.UseControllers();
+
+    }  
+}
+
+```
 
 ## Contributing
 

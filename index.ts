@@ -15,6 +15,7 @@ export { default as IApplicatiIControllernConfiguration } from "./interfaces/ICo
 
 
 import ControllersDecorators from "./decorators/controllers/ControllerDecorators";
+import DependecyService from "./dependencyInjection/DependecyService";
 import { HTTPVerbs } from "./enums/httpVerbs/HttpVerbs";
 import IMidleware from "./midlewares/IMidleware";
 
@@ -39,10 +40,23 @@ export function Route(route : string)
 } ;
 
 
-export function Verb(verb : HTTPVerbs)       {
+export function Verb(verb : HTTPVerbs)      
+{
 
     return ControllersDecorators.Verb(verb); 
 } ;
+
+export function Inject()
+{
+    return DependecyService.Injectable();
+}
+
+export function InjectAbstract(object : Function)
+{
+    return DependecyService.InjectOne(object);
+}
+
+
 
 export function Argument<T>(argName1 : string) : ( target : Object, methodName : string, propertyDescriptor : PropertyDescriptor) => void;
 export function Argument<T, U>(argName1 : string, argName2? : string) : ( target : Object, methodName : string, propertyDescriptor : PropertyDescriptor) => void ;

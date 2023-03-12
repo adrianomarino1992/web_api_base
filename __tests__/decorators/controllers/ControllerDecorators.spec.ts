@@ -1,13 +1,14 @@
-import { ControllerTest } from "../../classes/Controller";
+import { ControllerTest } from "../../classes/ControllerTest";
 import ControllersDecorators from "../../../decorators/controllers/ControllerDecorators";
 import { HTTPVerbs } from "../../../enums/httpVerbs/HttpVerbs";
+import { SampleService } from "../../classes/SampleServiceTest";
 
 describe('testing controllers decorators', ()=>
 {
 
     test("action name", ()=>
     {
-        var controller = new ControllerTest();
+        var controller = new ControllerTest(new SampleService());
         let action = ControllersDecorators.GetAction(controller, "TestAction");
         expect(action).toBe("Test");
 
@@ -15,7 +16,7 @@ describe('testing controllers decorators', ()=>
 
     test("http verb", ()=>
     {
-        var controller = new ControllerTest();
+        var controller = new ControllerTest(new SampleService());
         let verb = ControllersDecorators.GetVerb(controller, "TestAction");
         expect(verb).toBe(HTTPVerbs.GET);
 
@@ -23,7 +24,7 @@ describe('testing controllers decorators', ()=>
 
     test("action with one arg", ()=>
     {
-        var controller = new ControllerTest();
+        var controller = new ControllerTest(new SampleService());
         
         var handler = ControllersDecorators.GetArgumentsHandler(controller, 'TestAction');
 
@@ -39,7 +40,7 @@ describe('testing controllers decorators', ()=>
 
     test("action with two args", ()=>
     {
-        var controller = new ControllerTest();
+        var controller = new ControllerTest(new SampleService());
         
         var handler = ControllersDecorators.GetArgumentsHandler(controller, 'TestActionTwo');
 
@@ -55,7 +56,7 @@ describe('testing controllers decorators', ()=>
 
     test("controller route", ()=>
     {
-        var controller = new ControllerTest();
+        var controller = new ControllerTest(new SampleService());
         
         var route = ControllersDecorators.GetRoute(controller);
         

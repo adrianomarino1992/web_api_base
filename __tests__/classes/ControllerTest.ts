@@ -14,11 +14,15 @@ export class ControllerTest extends ControllerBase
     @InjectAbstract(SampleServiceAbstract)
     public AnotherDepency : SampleServiceAbstract;
 
+    @Inject()
+    private _somePrivateDepency : SampleServiceAbstract;
+
     constructor(some : SampleServiceAbstract)
     {
         super();
         this.SomeDepency = some;
         this.AnotherDepency = some;
+        this._somePrivateDepency = some;
     }
 
     @Action("Test")

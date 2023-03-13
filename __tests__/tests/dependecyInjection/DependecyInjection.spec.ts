@@ -15,7 +15,7 @@ describe("testing the dependecy injection service", ()=>{
 
         expect(controller).not.toBeNull();
     
-    })
+    });
 
 
     test("testing Inject decorator", ()=>
@@ -27,7 +27,7 @@ describe("testing the dependecy injection service", ()=>{
         expect(controller.SomeDepency).not.toBeNull();
 
         expect(controller.SomeDepency instanceof SampleService).toBeTruthy();
-    })
+    });
 
     test("testing InjectAbstract decorator", ()=>
     {
@@ -38,7 +38,19 @@ describe("testing the dependecy injection service", ()=>{
         expect(controller.AnotherDepency).not.toBeNull();
 
         expect(controller.AnotherDepency instanceof SampleService).toBeTruthy();
-    })
+    });
+
+
+    test("testing injection on a private property", ()=>
+    {
+        let controller = DependecyService.Build(ControllerTest) as unknown as ControllerTest;
+
+        let prop = Reflect.get(controller, "_somePrivateDepency");
+
+        expect(prop).not.toBeNull();
+
+        expect(prop instanceof SampleService).toBeTruthy();
+    });
 
 
     test("test change implementation of a abstract class on DI service", ()=>
@@ -61,7 +73,7 @@ describe("testing the dependecy injection service", ()=>{
 
         expect(controller2.AnotherDepency instanceof AnotherService).toBeTruthy();
 
-    })
+    });
 
 
 });

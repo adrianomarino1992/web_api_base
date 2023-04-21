@@ -34,7 +34,7 @@ export function Action(actionName : String)
     return ControllersDecorators.Action(actionName); 
 } ;
 
-export function Route(route : string)       
+export function Route(route? : string)       
 {
     return ControllersDecorators.Route(route); 
 } ;

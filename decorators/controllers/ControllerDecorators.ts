@@ -20,11 +20,12 @@ export default class ControllersDecorators
     private static ActionsMidlewaresKeyMetadata = "meta:actionMidlewaresKey";
     
 
-    public static Route(route : string)  
+    public static Route(route? : string)  
     {
         return function( target : Function)
         {
-            Reflect.defineMetadata(ControllersDecorators.RouteKeyMetadata, route, target);
+            let value = route ?? target.name.toLocaleLowerCase().replace("controller",""); 
+            Reflect.defineMetadata(ControllersDecorators.RouteKeyMetadata, value, target);
             
         }
     }
@@ -66,7 +67,15 @@ export default class ControllersDecorators
 
     public static GetRoute(controller : IController) : string | undefined
     {
-       return Reflect.getMetadata(ControllersDecorators.RouteKeyMetadata, controller.constructor);
+       let meta = Reflect.getMetadata(ControllersDecorators.RouteKeyMetadata, controller.constructor);
+
+       if(meta && meta[0] != '/')
+       {
+            return `/${meta}`;
+       }
+
+       return meta;
+
     }
 
 
@@ -86,11 +95,11 @@ export default class ControllersDecorators
         return meta;
     }
 
-    public static Action(actionName : String)  
+    public static Action(actionName? : String)  
     {
         return function( target : Object, methodName : string, propertyDescriptor : PropertyDescriptor)
         {
-            ControllersDecorators.SetMetaData(ControllersDecorators.ActionNameKeyMetadata, target, methodName, actionName);
+            ControllersDecorators.SetMetaData(ControllersDecorators.ActionNameKeyMetadata, target, methodName, actionName ?? methodName.toLocaleLowerCase());
             
         }
     }
@@ -98,6 +107,11 @@ export default class ControllersDecorators
     public static GetAction(target : IController, methodName : string ) : string | undefined
     {
         let meta = this.GetMetaData<string>(ControllersDecorators.ActionNameKeyMetadata, target, methodName);
+
+        if(meta && meta[0] != '/')
+        {  
+            return `/${meta}`;
+        }
 
         return meta;
     }

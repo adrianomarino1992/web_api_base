@@ -2,7 +2,7 @@
 module.exports = {
   preset: 'ts-jest',
   testEnvironment: 'node',  
-  collectCoverage: true,
+  collectCoverage: false,
   testPathIgnorePatterns : [
     "__tests__/classes", 
     "__test__/*/*.d.ts"       

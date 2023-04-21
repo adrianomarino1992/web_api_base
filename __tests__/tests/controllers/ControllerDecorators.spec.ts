@@ -10,7 +10,7 @@ describe('testing controllers decorators', ()=>
     {
         var controller = new ControllerTest(new SampleService());
         let action = ControllersDecorators.GetAction(controller, "TestAction");
-        expect(action).toBe("Test");
+        expect(action).toBe("/Test");
 
     },10^5)
 

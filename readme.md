@@ -21,9 +21,8 @@ After that, we need to create some controllers and they must inherit  the abstra
 We can create a controller using the __create-controller__ command : 
 
 ```bash
-npx create-controller "SampleController" -d
+npx create-controller
 ```
-Where "SampleController" is the controller name and "__-d__" is the flag to create inside the __controller__ folder. If the folder not exists, the folder will be created. 
 
 ```typescript
 
@@ -47,9 +46,9 @@ export default class SampleController extends ControllerBase
 We can create a app using the __create-application__ command : 
 
 ```bash
-npx create-application "App"
+npx create-application 
 ```
-Where "App" is the application name. 
+ 
 ```typescript
 import SampleController from "./controllers/SampleController ";
 

@@ -29,7 +29,7 @@ export function Run(midleware : IMidleware)
     return ControllersDecorators.Before(midleware); 
 } ;
 
-export function Action(actionName : String)     
+export function Action(actionName? : String)     
 {
     return ControllersDecorators.Action(actionName); 
 } ;

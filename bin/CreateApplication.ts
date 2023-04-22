@@ -3,14 +3,7 @@ import FS from 'fs';
 
 var currentDirectoryPath = Path.join(process.cwd());
 
-var args = process.argv;
 var AppName = "App";
-
-if(args.length >= 3)
-{    
-    AppName = args[2];
-    AppName = `${AppName[0].toLocaleUpperCase()}${AppName.substring(1)}`;
-}
 
 var app = `
 import { Application, IApplicationConfiguration } from "web_api_base";

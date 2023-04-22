@@ -1,7 +1,7 @@
-import { ControllerTest } from "../../classes/ControllerTest";
-import ControllersDecorators from "../../../decorators/controllers/ControllerDecorators";
-import { HTTPVerbs } from "../../../enums/httpVerbs/HttpVerbs";
-import { SampleService } from "../../classes/SampleServiceTest";
+import { ControllerTest } from "./classes/ControllerTest";
+import ControllersDecorators from "../decorators/controllers/ControllerDecorators";
+import { HTTPVerbs } from "../enums/httpVerbs/HttpVerbs";
+import { SampleService } from "./classes/SampleServiceTest";
 
 describe('testing controllers decorators', ()=>
 {
@@ -10,7 +10,7 @@ describe('testing controllers decorators', ()=>
     {
         var controller = new ControllerTest(new SampleService());
         let action = ControllersDecorators.GetAction(controller, "TestAction");
-        expect(action).toBe("/Test");
+        expect(action).toBe("/test");
 
     },10^5)
 

@@ -8,7 +8,7 @@
         {
             "type": "node",
             "request": "launch",
-            "name": "Launch Program",
+            "name": "dist index.js",
             "skipFiles": [
                 "<node_internals>/**"
             ],
@@ -16,6 +16,18 @@
             "outFiles": [
                 "${workspaceFolder}/**/*.js"
             ]
+        }, 
+        {
+            "type": "node",
+            "request": "launch",
+            "name": "degub some test file",
+            "skipFiles": [
+                "<node_internals>/**"
+            ],
+            "runtimeExecutable": "npx",
+            "runtimeArgs": ["jest", "./__tests__/${fileBasename}"],
+            "console": "integratedTerminal", 
+            "internalConsoleOptions": "neverOpen"
         }
     ]
 }

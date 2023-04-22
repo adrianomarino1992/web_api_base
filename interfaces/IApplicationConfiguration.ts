@@ -3,5 +3,8 @@ export default interface IApplicationConfiguration
     Host : string;    
     Port : number;
     RootPath : string;
-    StartAsync() : Promise<void>
+    AddScoped(type: Function, ctor?: (new (...args: any[]) => any) | undefined, builder?: (() => any) | undefined, ): void;
+    AddTransient(type: Function, ctor?: (new (...args: any[]) => any) | undefined, builder?: (() => any) | undefined, ): void;
+    AddSingleton(type: Function, ctor?: (new (...args: any[]) => any) | undefined, builder?: (() => any) | undefined, ): void;  
+        
 }

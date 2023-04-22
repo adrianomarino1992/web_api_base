@@ -51,9 +51,9 @@ export function Inject()
     return DependecyService.Injectable();
 }
 
-export function InjectAbstract(object : Function)
+export function InjectAbstract(cTor : Function)
 {
-    return DependecyService.InjectOne(object);
+    return DependecyService.InjectOne(cTor);
 }
 
 

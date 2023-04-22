@@ -1,6 +1,6 @@
-import { ControllerTest } from "../../classes/ControllerTest";
-import { SampleService, SampleServiceAbstract, AnotherService } from "../../classes/SampleServiceTest";
-import DependecyService from "../../../dependencyInjection/DependecyService";
+import { ControllerTest } from "./classes/ControllerTest";
+import { SampleService, SampleServiceAbstract, AnotherService } from "./classes/SampleServiceTest";
+import DependecyService from "../dependencyInjection/DependecyService";
 
 
 

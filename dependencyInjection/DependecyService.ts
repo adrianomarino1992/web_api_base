@@ -1,4 +1,5 @@
 import 'reflect-metadata';
+import IDIContext from './IDIContext';
 
 export default class DependecyService
 {
@@ -7,40 +8,74 @@ export default class DependecyService
     private static _injectableKey : string = "di:injectable"; 
     private static _injectableTypeKey : string = "di:injectable-type"; 
 
-    public static RegisterFor(type : Function, ctor : { new (...args : any[]) : any;}, builder? : () => any) : void    
+    public static RegisterFor(type : Function, ctor : { new (...args : any[]) : any;}, scope? :  DIEscope, builder? : () => any) : void    
     {        
-        let defaultBuilder = () =>  Reflect.construct(ctor ?? type, []) as any;
+        let defaultBuilder = DependecyService.DefaultObjectBuilder(ctor);
 
         let exist = this._services.find(s => s.Type == type);
 
         if(exist === undefined)
-            this._services.push({ Type : type, Builder : builder ?? defaultBuilder });
+            this._services.push({ Type : type, Builder : builder ?? defaultBuilder, Scope : DIEscope.TRANSIENT });
         else
             exist.Builder =  builder ?? defaultBuilder;
               
     }
 
 
-    public static Register(type : Function, builder? : () => any) : void
-    {
-        let defaultBuilder = () => Reflect.construct(type, []);
+    public static Register(type : Function, scope? : DIEscope, builder? : () => any) : void
+    {       
+        let defaultBuilder = DependecyService.DefaultObjectBuilder(type);
 
         let exist = this._services.find(s => s.Type == type);
 
         if(exist === undefined)
-            this._services.push({ Type : type, Builder : builder ?? defaultBuilder });
+            this._services.push({ Type : type, Builder : builder ?? defaultBuilder, Scope : scope ?? DIEscope.TRANSIENT });
         else
             exist.Builder =  builder ?? defaultBuilder;
     }
-    
-    public static Resolve<T>(type : Function, args? : any[]) : T
+
+    private static DefaultObjectBuilder(type : Function, context? : IDIContext) : ()=>any
     {
-        return this._services.find(u => u.Type == type)?.Builder(args) as T;
+        return function(){
+            let insance = Reflect.construct(type, []);
+            DependecyService.CheckForDependenciesAndResolve(insance);
+            return insance;
+        }
+    }
+    
+    public static Resolve<T>(type :  Function, context? : IDIContext) : T | undefined
+    {
+        let service = this._services.find(u => u.Type == type);
+
+        if(!service)
+            return undefined;
+        
+        let insance = service.Builder(context) as T;
+
+        if(service.Scope == DIEscope.SINGLETON)
+        {
+            service.Builder = () => insance;
+        }
+
+        return insance
     }
 
-    public static ResolveCtor(ctor : Function, args? : any[]) : any
+    public static ResolveCtor(ctor :  Function, context? : IDIContext) : any | undefined
     {
-        return this._services.find(u => u.Type == ctor)?.Builder(args);
+
+        let service = this._services.find(u => u.Type == ctor);
+
+        if(!service)
+            return undefined;
+        
+        let insance = service.Builder(context);
+
+        if(service.Scope == DIEscope.SINGLETON)
+        {
+            service.Builder = () => insance;
+        }
+
+        return insance
     }
 
     public static Injectable() : (target : Object, property : string | symbol) => void 
@@ -59,15 +94,15 @@ export default class DependecyService
         return marked || type;
     }
 
-    public static InjectOne(tp : Function) : (target : Object, property : string | symbol) => void 
+    public static InjectOne(cTor : Function) : (target : Object, property : string | symbol) => void 
     {
         return function(target : Object, property : string | symbol) : void 
         {
-            Reflect.defineMetadata(DependecyService._injectableTypeKey, tp, target.constructor, property)
+            Reflect.defineMetadata(DependecyService._injectableTypeKey, cTor, target.constructor, property)
         }
     }
 
-    public static GetDIType(target : object, property : string) 
+    public static GetDIType(target : object, property : string) :  {new (...args:any[]) : unknown} | undefined
     {
         let type = Reflect.getMetadata(DependecyService._injectableTypeKey, target.constructor, property);
 
@@ -78,7 +113,7 @@ export default class DependecyService
     }
 
    
-    public static CheckForDependenciesAndResolve(object : any)
+    public static CheckForDependenciesAndResolve(object : any, context? : IDIContext)
     {
         for(let k of Object.keys(object))
         {
@@ -90,17 +125,43 @@ export default class DependecyService
 
                     if(tp == undefined)
                         throw new Error(`Can not resolve the dependecy of ${object.constructor.name}.${k}`);
+
+                    let service = this._services.find(u => u.Type == tp);
+
+                    if(context && context.Intances && service?.Scope == DIEscope.SCOPED)
+                    {
+                        let scopped = context.Intances.filter(s => s.Type == tp);
+
+                        if(scopped.length > 0 && scopped[0]){
+                            object[k] = scopped[0];
+                            continue;
+                        }                            
+                    }
                         
-                    let instance = DependecyService.Resolve(tp);
+                    let instance = DependecyService.Resolve(tp);                    
 
                     if(instance == undefined)
-                        throw new Error(`Can not resolve the dependecy of ${object.constructor.name}.${k}`);
+                        throw new Error(`Can not resolve the dependecy of ${object.constructor.name}.${k}`);                   
+                   
+
+                    if(DependecyService.IsDIConext(object) && service?.Scope == DIEscope.SCOPED)
+                    {
+                        if(!object.Intances)
+                            object.Intances = [];
+
+                        object.Intances.push(
+                            {
+                                Object : instance, 
+                                Type : tp
+                            });
+                    }
 
                     object[k] = instance;
                 }
             }
         }
     }
+    
 
     public static Build<T extends Function>(Ctor : T)
     {
@@ -111,15 +172,26 @@ export default class DependecyService
         return object as T;
     }
 
+    private static IsDIConext(object : any) : object is IDIContext
+    {
+        return "Intances" in object;
+    }
     
     
 }
 
-
-
-
+export enum DIEscope
+{
+    SCOPED, 
+    TRANSIENT, 
+    SINGLETON
+}
 interface IService
 {
     Type : Function;
     Builder : Function;
+    Scope : DIEscope
 }
+
+
+

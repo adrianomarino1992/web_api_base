@@ -1,7 +1,7 @@
 import File from 'fs';
 
 import IApplicationConfiguration from './interfaces/IApplicationConfiguration';
-
+import DependecyService, { DIEscope } from './dependencyInjection/DependecyService';
 
 export default class Configuration implements IApplicationConfiguration
 {
@@ -14,6 +14,43 @@ export default class Configuration implements IApplicationConfiguration
     {        
         this.RootPath = process.mainModule?.path ?? __dirname;
     }
+
+
+   
+    AddScoped(type: Function, ctor?: (new (...args: any[]) => any) | undefined, builder?: (() => any) | undefined): void
+    {
+        if(ctor)
+        {
+            DependecyService.RegisterFor(type, ctor, DIEscope.SCOPED, builder);
+        }else{
+
+            DependecyService.Register(type, DIEscope.SCOPED, builder);
+        }
+    }
+    
+    AddTransient(type: Function, ctor?: (new (...args: any[]) => any) | undefined, builder?: (() => any) | undefined): void
+    {
+        if(ctor)
+        {
+            DependecyService.RegisterFor(type, ctor, DIEscope.TRANSIENT, builder);
+        }else{
+
+            DependecyService.Register(type, DIEscope.TRANSIENT, builder);
+        }
+    }
+    
+    AddSingleton(type: Function, ctor?: (new (...args: any[]) => any) | undefined, builder?: (() => any) | undefined): void
+    {
+        if(ctor)
+        {
+            DependecyService.RegisterFor(type, ctor, DIEscope.SINGLETON, builder);
+        }else{
+
+            DependecyService.Register(type, DIEscope.SINGLETON, builder);
+        }
+    }
+       
+   
 
     public async StartAsync() : Promise<void>
     {

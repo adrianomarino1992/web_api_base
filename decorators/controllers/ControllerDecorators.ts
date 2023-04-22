@@ -71,10 +71,10 @@ export default class ControllersDecorators
 
        if(meta && meta[0] != '/')
        {
-            return `/${meta}`;
+            return `/${meta}`.toLocaleLowerCase();
        }
 
-       return meta;
+       return meta?.toLocaleLowerCase();
 
     }
 
@@ -110,10 +110,10 @@ export default class ControllersDecorators
 
         if(meta && meta[0] != '/')
         {  
-            return `/${meta}`;
+            return `/${meta}`.toLocaleLowerCase();
         }
 
-        return meta;
+        return meta?.toLocaleLowerCase();
     }
    
     

@@ -1,16 +1,18 @@
+import IDIContext, { IDIItem } from "../../dependencyInjection/IDIContext";
 import IController from "../../interfaces/IController";
 import {Request, Response} from 'express';
 
 
-export class ControllerBase implements IController
+export class ControllerBase implements IController, IDIContext
 {
     Request : Request = {} as Request;
     Response : Response = {} as Response;
+    Intances: IDIItem[] = [];
 
     constructor()
     {
         
-    }
+    }   
     
     public OK<T>(result : T)
     {

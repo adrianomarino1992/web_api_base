@@ -11,7 +11,7 @@ import { Request, Response } from "express";
 
 import File from 'fs';
 import Path from 'path';
-import IMidleware, { HTTPRequestContext } from "./midlewares/IMidleware";
+import { HTTPRequestContext } from "./midlewares/IMidleware";
 
 export default abstract class Application implements IApplication
 {
@@ -32,7 +32,7 @@ export default abstract class Application implements IApplication
 
     public async StartAsync() : Promise<void>
     {
-        await this.ApplicationConfiguration.StartAsync();
+        await (this.ApplicationConfiguration as ApplicationConfiguration).StartAsync();
 
         this.Express.use(ExpressModule.json({limit : 50 * 1024 * 1024}));    
 
@@ -186,14 +186,7 @@ export default abstract class Application implements IApplication
 
                                     pipeline.length - 1  == box.v ? handler(httpRequestContexts[box.v]) : midlewares[box.v](httpRequestContexts[box.v])
                                 
-                                },
-                                Next : () => 
-                                {
-                                    let call = pipeline.length -1 == box.v ? undefined : pipeline[box.v + 1];
-                                    
-                                    if(call != undefined)
-                                        call.Execute();
-                                }
+                                }                                
                             });
                     }
 

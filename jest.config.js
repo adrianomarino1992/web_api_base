@@ -5,7 +5,7 @@ module.exports = {
   collectCoverage: false,
   testPathIgnorePatterns : [
     "__tests__/classes", 
-    "__test__/*/*.d.ts"       
+    "__tests__/*/*.d.ts"       
   ]
   
 };

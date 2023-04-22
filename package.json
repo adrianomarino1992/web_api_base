@@ -1,12 +1,17 @@
 {
   "name": "web_api_base",
-  "version": "2.6.2",
+  "version": "2.7.0",
   "description": "web api base",  
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "files": [
     "/dist"
   ],
+  "bin": 
+  {
+    "create-controller" : "./dist/bin/CreateController.js", 
+    "create-application" : "./dist/bin/CreateApplication.js"
+  },
   "scripts": {
     "test": "jest",
     "debug": "node ./dist/Index.js",

@@ -35,7 +35,7 @@ export default class ${controllerName} extends ControllerBase
 
 if(!(currentDirectoryPath.endsWith("controllers/") || currentDirectoryPath.endsWith("controllers")))
 {
-    if(args.length >= 4 && args[3] == "--createFolder")
+    if(args.length >= 4 && (args[3] == "--createFolder" || args[3] == "-d"))
         currentDirectoryPath = Path.join(currentDirectoryPath, "controllers");
     if(!FS.existsSync(currentDirectoryPath))
         FS.mkdirSync(currentDirectoryPath);    

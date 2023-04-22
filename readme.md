@@ -18,17 +18,23 @@ After that, we need to create some controllers and they must inherit  the abstra
 
 ### ./controllers/SampleController.ts
 
+We can create a controller using the __create-controller__ command : 
+
+```bash
+npx create-controller "SampleController" -d
+```
+Where "SampleController" is the controller name and "__-d__" is the flag to create inside the __controller__ folder. If the folder not exists, the folder will be created. 
+
 ```typescript
 
-import { ControllerBase, HTTPVerbs as verbs, Use, Verb, Route, Action } from "web_api_base";
+import { ControllerBase, Route, Action } from "web_api_base";
 
 
-@Route("/sample")
+@Route()
 export default class SampleController extends ControllerBase
 {   
-    
-    @Verb(verbs.GET)    
-    @Action("/hello")
+     
+    @Action()
     public Hello() : void
     {
         this.OK({message: "Hello Word!"})
@@ -38,7 +44,12 @@ export default class SampleController extends ControllerBase
 ```
 
 ### App.ts
+We can create a app using the __create-application__ command : 
 
+```bash
+npx create-application "App"
+```
+Where "App" is the application name. 
 ```typescript
 import SampleController from "./controllers/SampleController ";
 
@@ -68,7 +79,7 @@ import Application from './Application';
 new Application().StartAsync();
 ```
 
-## Dependecy injection service
+## Dependecy Injection
 Consider this abstraction of a service and some imnplementations
 
 ### ./services/SampleService.ts
@@ -100,10 +111,10 @@ We can use the DI service like this
 
 ```typescript
 
-import { ControllerBase, HTTPVerbs as verbs, Use, Verb, Route, Action } from "web_api_base";
+import { ControllerBase, Route, Action, Inject } from "web_api_base";
 import {SampleServiceAbstract } from '../services/SampleService.ts';
 
-@Route("/sample")
+@Route()
 export default class SampleController extends ControllerBase
 {   
     @Inject() // say to DI that this property will be inject on the instance
@@ -114,9 +125,8 @@ export default class SampleController extends ControllerBase
         super();
         this.SomeDepency = someDependecy ;        
     }
-
-    @Verb(verbs.GET)    
-    @Action("/hello")
+     
+    @Action()
     public Hello() : void
     {
         this.OK({message: "Hello Word!"})
@@ -131,7 +141,7 @@ And we can register our dependecies in Application ConfigureAsync method
 
 ```typescript 
 
-import { Application, IApplicationConfiguration, DependecyService, } from "web_api_base";
+import { Application, IApplicationConfiguration} from "web_api_base";
 
 import { SampleService, SampleServiceAbstract } from './service/SampleService';
 
@@ -147,8 +157,8 @@ export default class App extends Application
     {
         this.UseCors();
 
-        // everytime some class need a SampleServiceAbstract it will get a intance of SampleService
-        DependecyService.RegisterFor(SampleServiceAbstract, SampleService);     
+        //DI AddScoped, AddTransient and AddSingleton
+        App.AddScoped(SampleServiceAbstract, SampleService);     
 
         this.UseControllers();
 

@@ -1,6 +1,6 @@
 /* istanbul ignore next */
 
-import { SampleServiceAbstract } from "./SampleServiceTest";
+import { AnotherService, SampleServiceAbstract } from "./SampleServiceTest";
 
 import {Inject, ControllerBase, Action, Route, Verb, Argument, HTTPVerbs, IApplication, InjectAbstract} from '../../index';
 
@@ -17,12 +17,18 @@ export class ControllerTest extends ControllerBase
     @Inject()
     private _somePrivateDepency : SampleServiceAbstract;
 
+    
+    @Inject()
+    public TypeInferedInjection? : AnotherService;
+
+
     constructor(some : SampleServiceAbstract)
     {
         super();
         this.SomeDepency = some;
         this.AnotherDepency = some;
         this._somePrivateDepency = some;
+        this.TypeInferedInjection = undefined;
     }
 
     @Action("Test")

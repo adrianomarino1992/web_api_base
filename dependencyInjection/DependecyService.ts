@@ -10,14 +10,16 @@ export default class DependecyService
 
     public static RegisterFor(type : Function, ctor : { new (...args : any[]) : any;}, scope? :  DIEscope, builder? : () => any) : void    
     {        
-        let defaultBuilder = DependecyService.DefaultObjectBuilder(ctor);
+        let defaultBuilder = DependecyService.DefaultObjectBuilder(type, ctor);
 
         let exist = this._services.find(s => s.Type == type);
 
         if(exist === undefined)
-            this._services.push({ Type : type, Builder : builder ?? defaultBuilder, Scope : DIEscope.TRANSIENT });
-        else
+            this._services.push({ Type : type, Builder : builder ?? defaultBuilder, Scope : scope ?? DIEscope.TRANSIENT });
+        else{
+            exist.Scope = scope ?? exist.Scope;
             exist.Builder =  builder ?? defaultBuilder;
+        }
               
     }
 
@@ -30,15 +32,30 @@ export default class DependecyService
 
         if(exist === undefined)
             this._services.push({ Type : type, Builder : builder ?? defaultBuilder, Scope : scope ?? DIEscope.TRANSIENT });
-        else
+        else{            
+            exist.Scope = scope ?? exist.Scope;
             exist.Builder =  builder ?? defaultBuilder;
+        }
     }
 
-    private static DefaultObjectBuilder(type : Function, context? : IDIContext) : ()=>any
+    private static DefaultObjectBuilder(type : Function, ctor? : { new (...args : any[]) : any;}) : ()=>any
     {
-        return function(){
-            let insance = Reflect.construct(type, []);
-            DependecyService.CheckForDependenciesAndResolve(insance);
+        return function(context? : IDIContext){
+
+            let service = DependecyService._services.find(u => u.Type == type);
+
+            if(context && context.Intances && service?.Scope == DIEscope.SCOPED)
+            {
+                let scopped = context.Intances.filter(s => s.Type == type);
+
+                if(scopped.length > 0 && scopped[0].Object)
+                {
+                    return scopped[0].Object;
+                }                            
+            }
+            
+            let insance = Reflect.construct(ctor ?? type, []);
+            DependecyService.CheckForDependenciesAndResolve(insance, context ?? DependecyService.IsDIConext(insance) ? insance : undefined);
             return insance;
         }
     }
@@ -133,7 +150,7 @@ export default class DependecyService
                         let scopped = context.Intances.filter(s => s.Type == tp);
 
                         if(scopped.length > 0 && scopped[0]){
-                            object[k] = scopped[0];
+                            object[k] = scopped[0].Object;
                             continue;
                         }                            
                     }

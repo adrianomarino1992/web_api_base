@@ -1,14 +1,16 @@
 import { ControllerTest } from "./classes/ControllerTest";
 import { SampleService, SampleServiceAbstract, AnotherService } from "./classes/SampleServiceTest";
 import DependecyService from "../dependencyInjection/DependecyService";
+import { DIEscope } from "../dist/dependencyInjection/DependecyService";
 
 
 
 
 describe("testing the dependecy injection service", ()=>{
 
-    DependecyService.RegisterFor(SampleServiceAbstract, SampleService);
-
+    DependecyService.RegisterFor(SampleServiceAbstract, SampleService, DIEscope.TRANSIENT);
+    DependecyService.Register(AnotherService, DIEscope.SCOPED);
+    
     test("testing the creation of a controller", ()=>
     {
         let controller = DependecyService.Build(ControllerTest) as unknown as ControllerTest;
@@ -72,6 +74,84 @@ describe("testing the dependecy injection service", ()=>{
         expect(controller2.AnotherDepency).not.toBeNull();
 
         expect(controller2.AnotherDepency instanceof AnotherService).toBeTruthy();
+
+    });
+
+
+    describe("Test DI in scoped context on application", ()=>{
+
+
+        test("should be the same instance", ()=>{
+
+            DependecyService.RegisterFor(SampleServiceAbstract, SampleService, DIEscope.SCOPED);
+            DependecyService.Register(ControllerTest);
+            DependecyService.Register(AnotherService, DIEscope.SCOPED);
+            
+            let controller1 = DependecyService.Resolve<ControllerTest>(ControllerTest)!; 
+
+            let dependency = controller1.SomeDepency;
+            let scoped = DependecyService.Resolve<SampleServiceAbstract>(SampleServiceAbstract, controller1);
+            let infered = DependecyService.Resolve<AnotherService>(AnotherService, controller1);
+
+            expect(dependency).not.toBeUndefined();
+            expect(dependency.Id).toBe(controller1.AnotherDepency.Id);
+            expect(dependency.Id).toBe(scoped?.Id);  
+            expect(infered?.Id).toBe(controller1.TypeInferedInjection?.Id);             
+        });
+
+
+
+        describe("Test DI in transient context on application", ()=>{
+    
+            test("should be diferents instance", ()=>{
+               
+        
+                DependecyService.RegisterFor(SampleServiceAbstract, SampleService, DIEscope.TRANSIENT);
+                DependecyService.Register(ControllerTest);
+                DependecyService.Register(AnotherService, DIEscope.TRANSIENT);
+
+                
+                let controller1 = DependecyService.Resolve<ControllerTest>(ControllerTest)!; 
+    
+                let dependency = controller1.SomeDepency;
+                let scoped = DependecyService.Resolve<SampleServiceAbstract>(SampleServiceAbstract, controller1);
+                let infered = DependecyService.Resolve<AnotherService>(AnotherService, controller1);
+    
+                expect(dependency).not.toBeUndefined();
+                expect(dependency.Id).not.toBe(controller1.AnotherDepency.Id);
+                expect(dependency.Id).not.toBe(scoped?.Id);   
+                expect(infered?.Id).not.toBe(controller1.TypeInferedInjection?.Id);
+            });
+    
+        });
+
+
+        describe("Test DI in singleton context on application", ()=>{
+    
+            test("should be the same instance", ()=>{
+               
+        
+                DependecyService.RegisterFor(SampleServiceAbstract, SampleService, DIEscope.SINGLETON);
+                DependecyService.Register(ControllerTest);
+                DependecyService.Register(AnotherService, DIEscope.SINGLETON);
+
+                let controller1 = DependecyService.Resolve<ControllerTest>(ControllerTest)!; 
+    
+                let dependency = controller1.SomeDepency;
+
+                let scoped = DependecyService.Resolve<SampleServiceAbstract>(SampleServiceAbstract, controller1);
+                let scoped2 = DependecyService.Resolve<SampleServiceAbstract>(SampleServiceAbstract);
+                let infered = DependecyService.Resolve<AnotherService>(AnotherService, controller1);
+
+                expect(dependency).not.toBeUndefined();
+                expect(dependency.Id).toBe(controller1.AnotherDepency.Id);
+                expect(dependency.Id).toBe(scoped?.Id);    
+                expect(dependency.Id).toBe(scoped2?.Id);    
+                expect(controller1.TypeInferedInjection?.Id).toBe(infered?.Id);    
+                            
+            });
+    
+        });
 
     });
 

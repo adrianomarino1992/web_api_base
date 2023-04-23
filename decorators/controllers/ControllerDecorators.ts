@@ -79,10 +79,11 @@ export default class ControllersDecorators
     }
 
 
-    public static Verb(verb : HTTPVerbs)  
+    public static Verb(verb : HTTPVerbs, actionName? : String )  
     {
         return function( target : Object, methodName : string, propertyDescriptor : PropertyDescriptor)
         {
+            ControllersDecorators.SetMetaData(ControllersDecorators.ActionNameKeyMetadata, target, methodName, actionName ?? methodName.toLocaleLowerCase());
             ControllersDecorators.SetMetaData(ControllersDecorators.ActionVerbKeyMetadata, target, methodName, verb);
             
         }
@@ -126,6 +127,7 @@ export default class ControllersDecorators
     {
         return function( target : Object, methodName : string, propertyDescriptor : PropertyDescriptor)
         {
+            ControllersDecorators.SetMetaData(ControllersDecorators.ActionNameKeyMetadata, target, methodName, methodName.toLocaleLowerCase());
             ControllersDecorators.SetMetaData(ControllersDecorators.ArgumentsHandlerKeyMetadata, target, methodName, 
                 {
                     

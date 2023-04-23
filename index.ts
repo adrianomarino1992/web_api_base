@@ -39,10 +39,29 @@ export function Route(route? : string)
     return ControllersDecorators.Route(route); 
 } ;
 
+export function GET(action? : string)       
+{
+    return ControllersDecorators.Verb(HTTPVerbs.GET, action); 
+} ;
+
+export function POST(action? : string)       
+{
+    return ControllersDecorators.Verb(HTTPVerbs.POST, action); 
+} ;
+
+export function PUT(action? : string)       
+{
+    return ControllersDecorators.Verb(HTTPVerbs.PUT, action); 
+} ;
+
+export function DELETE(action? : string)       
+{
+    return ControllersDecorators.Verb(HTTPVerbs.DELETE, action); 
+} ;
+
 
 export function Verb(verb : HTTPVerbs)      
 {
-
     return ControllersDecorators.Verb(verb); 
 } ;
 

@@ -14,10 +14,14 @@ export class ControllerBase implements IController, IDIContext
         
     }   
     
-    public OK<T>(result : T)
+    public OK<T>(result? : T)
     {
         this.Response.status(200);
-        this.Response.json(result);
+
+        if(result)
+            this.Response.json(result);
+        else
+            this.Response.end();
     }
 
     public Created()
@@ -25,23 +29,55 @@ export class ControllerBase implements IController, IDIContext
         this.Response.status(201);
         this.Response.end();
     }
+
+    public Accepted()
+    {
+        this.Response.status(204);
+        this.Response.end();
+    }
+
+    public NoContent()
+    {
+        this.Response.status(204);
+        this.Response.end();
+    }
+
     
-    public BadRequest<T>(result : T)
+    
+    public BadRequest<T>(result? : T)
     {
         this.Response.status(400);
-        this.Response.json(result);
+
+        if(result)
+            this.Response.json(result);
+        else
+            this.Response.end();
     }
 
-    public Error<T>(result : T)
+    public NotFound()
+    {
+        this.Response.status(404);
+        this.Response.end();
+    }
+
+
+    public Error<T>(result? : T)
     {
         this.Response.status(500);
-        this.Response.json(result);
+        if(result)
+            this.Response.json(result);
+        else
+            this.Response.end();
     }
 
-    public SendResponse<T>(status : number, result : T)
+    public SendResponse<T>(status : number, result? : T)
     {
         this.Response.status(status);
-        this.Response.json(result);
+
+        if(result)
+            this.Response.json(result);
+        else
+            this.Response.end();
     }
     
 }

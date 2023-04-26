@@ -15,6 +15,7 @@ export { default as IApplicatiIControllernConfiguration } from "./interfaces/ICo
 
 
 import ControllersDecorators from "./decorators/controllers/ControllerDecorators";
+import ValidationDecorators from "./decorators/validations/ValidationDecorators";
 import DependecyService from "./dependencyInjection/DependecyService";
 import { HTTPVerbs } from "./enums/httpVerbs/HttpVerbs";
 import IMidleware from "./midlewares/IMidleware";
@@ -75,6 +76,45 @@ export function InjectAbstract(cTor : Function)
     return DependecyService.InjectOne(cTor);
 }
 
+export function Validate()
+{
+    return ControllersDecorators.Validate();
+}
+
+export function Required(message?: string)
+{
+    return ValidationDecorators.Required(message);
+}
+
+export function MaxLenght(max : number, message?: string)
+{
+    return ValidationDecorators.MaxLenght(max, message);
+}
+
+export function MinLenght(min : number, message?: string)
+{
+    return ValidationDecorators.MinLenght(min, message);
+}
+
+export function Regex(regex: RegExp, message?: string)
+{
+    return ValidationDecorators.Regex(regex, message);
+}
+
+export function Rule<T>(action: (a : T) => boolean, message?: string)
+{
+    return ValidationDecorators.Rule<T>(action, message);
+}
+
+export function FromBody()
+{
+    return ControllersDecorators.FromBody();
+}
+
+export function FromQuery()
+{
+    return ControllersDecorators.FromQuery();
+}
 
 
 export function Argument<T>(argName1 : string) : ( target : Object, methodName : string, propertyDescriptor : PropertyDescriptor) => void;

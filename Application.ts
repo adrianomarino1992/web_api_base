@@ -12,6 +12,7 @@ import { Request, Response } from "express";
 import File from 'fs';
 import Path from 'path';
 import { HTTPRequestContext } from "./midlewares/IMidleware";
+import ValidationDecorators from "./decorators/validations/ValidationDecorators";
 
 export default abstract class Application implements IApplication
 {
@@ -98,6 +99,7 @@ export default abstract class Application implements IApplication
             })     
 
         let route = ControllersDecorators.GetRoute(empty);
+        let validateBody = ControllersDecorators.IsToValidate(empty);
 
         if(!route)
             return;
@@ -112,6 +114,8 @@ export default abstract class Application implements IApplication
             }
             
             let verb = ControllersDecorators.GetVerb(empty, method.toString());
+            let fromBody = ControllersDecorators.GetFromBodyArgs(empty.constructor, method.toString());
+            let fromQuery = ControllersDecorators.GetFromQueryArgs(empty.constructor, method.toString());
 
             if(!verb)
                 verb = HTTPVerbs.GET;
@@ -130,14 +134,121 @@ export default abstract class Application implements IApplication
                     let args = ControllersDecorators.GetArgumentsHandler(empty, method.toString());
                     let params = [];
                     
+                    let ts = Reflect.getMetadata("design:paramtypes", empty, method.toString()) ?? 
+                             Reflect.getMetadata("design:paramtypes", empty.constructor, method.toString());
+
+                    let fromBodyParams: any[] = [];
+                    if(fromBody.length > 0)
+                    { 
+                        fromBody.forEach(f => 
+                        {
+                            let obj = undefined;
+
+                            if(!f.Field)
+                                obj =request.body;
+                            else 
+                               obj = request.body[f.Field];
+                            
+                            try{
+                                obj.__proto__ = ts[f.Index];
+                            }catch{}
+
+                            fromBodyParams.push(obj);
+                            params.push(obj);
+                        });
+                    }
+
+                    let fromQueryParams : any[] = [];
+                    if(fromQuery.length > 0)
+                    {   
+                        fromQuery.forEach(f => 
+                        {                 
+                            let obj : string | undefined;
+
+                            if(!f.Field){
+
+                                let keys = Object.keys(request.query);
+
+                                if(keys.length > 0){
+
+                                    obj = request.query[keys[0]]?.toString();                                   
+                                }
+                            }
+                            else {
+
+                                obj = request.query[f.Field]?.toString();
+                                                              
+                            }
+
+                            if(obj && ts[f.Index].name.toLocaleLowerCase() == "number")
+                            {
+                                let number = Number.parseFloat(obj.toString());
+
+                                if(number != Number.NaN){
+                                    fromQueryParams.push(number);
+                                    params.push(number);
+                                }
+
+                            }else{
+                                fromQueryParams.push(obj);
+                                params.push(obj);
+                            }
+                        });
+                    }
+
                     if(args)
                     {
                         if(args.Arguments.length > 0)
                         {
-                            if(context.Request.body && verb == (HTTPVerbs.POST || verb == HTTPVerbs.PUT))
+                            if(context.Request.body && (verb == HTTPVerbs.POST || verb == HTTPVerbs.PUT))
                                 params = args.CreateArgumentsList(context.Request.body);
                             if(context.Request.query)
-                                params.push(...args.CreateArgumentsList(context.Request.query))
+                                params.push(...args.CreateArgumentsList(context.Request.query));                             
+                        }
+                    }
+
+                    if(params.length > 0)
+                    {
+                        if(validateBody){
+                            let erros : string[] = [];
+
+                            if(fromBody.length  > fromBodyParams.filter(s => s != undefined).length)
+                            {
+                                response.status(400);
+                                response.json(
+                                    {
+                                        Message : "Model binding fail", 
+                                        Detailts : [ "Some expected body parameter was not provided" ]
+                                    });
+                                return;
+                            }
+
+                            if(fromQuery.length  > fromQueryParams.filter(s => s != undefined).length)
+                            {
+                                response.status(400);
+                                response.json(
+                                    {
+                                        Message : "Model binding fail", 
+                                        Detailts : [ "Some expected url query string parameter was not provided" ]
+                                    });
+                                return;
+                            }
+
+                            for(let a of fromBodyParams)
+                            {
+                                erros.push(...ValidationDecorators.Validate<typeof a>(a));
+                            }
+
+                            if(erros.length > 0)
+                            {
+                                response.status(400);
+                                response.json(
+                                    {
+                                        Message : "Validation fail", 
+                                        Detailts : erros
+                                    });
+                                return;
+                            }
                         }
                     }
     
@@ -146,7 +257,7 @@ export default abstract class Application implements IApplication
                     if(controller == undefined)
                         controller = new ctor() as IController;
                     
-                    DependecyService.CheckForDependenciesAndResolve(controller);
+                    DependecyService.CheckForDependenciesAndResolve(controller);                    
 
                     controller.Request = context.Request;
                     controller.Response = context.Response;

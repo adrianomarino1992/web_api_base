@@ -106,25 +106,16 @@ export function Rule<T>(action: (a : T) => boolean, message?: string)
     return ValidationDecorators.Rule<T>(action, message);
 }
 
-export function FromBody()
+export function FromBody(paramName? : string)
 {
-    return ControllersDecorators.FromBody();
+    return ControllersDecorators.FromBody(paramName);
 }
 
-export function FromQuery()
+export function FromQuery(paramName? : string)
 {
-    return ControllersDecorators.FromQuery();
+    return ControllersDecorators.FromQuery(paramName);
 }
 
-
-export function Argument<T>(argName1 : string) : ( target : Object, methodName : string, propertyDescriptor : PropertyDescriptor) => void;
-export function Argument<T, U>(argName1 : string, argName2? : string) : ( target : Object, methodName : string, propertyDescriptor : PropertyDescriptor) => void ;
-export function Argument<T, U, K>(argName1 : string, argName2? : string, argName3? : string) : ( target : Object, methodName : string, propertyDescriptor : PropertyDescriptor) => void;
-export function Argument<T, U, K, Y>(argName1 : string, argName2? : string, argName3? : string, argName4? : string) : ( target : Object, methodName : string, propertyDescriptor : PropertyDescriptor) => void; 
-export function Argument<T, U , K, Y, J>(argName1 : string, argName2? : string, argName3? : string, argName4? : string, argName5? : string) : ( target : Object, methodName : string, propertyDescriptor : PropertyDescriptor) => void
-{
-    return ControllersDecorators.Argument<T, U , K, Y, J>(argName1, argName2, argName3, argName4, argName5);
-}
 
 
 

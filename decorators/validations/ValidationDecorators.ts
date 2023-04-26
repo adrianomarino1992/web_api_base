@@ -156,7 +156,7 @@ export default class ValidationDecorators
 
             if(max)
             {
-                if(!o[k] || (typeof o[k] == "string" && o[k].length > max.Max))
+                if(o[k] && (typeof o[k] == "string" && o[k].length > max.Max))
                     result.push(max.Message);
             }
 
@@ -164,6 +164,24 @@ export default class ValidationDecorators
             {
                 if(!o[k] || (typeof o[k] == "string" && o[k].length > min.Min))
                     result.push(min.Message);
+            }
+
+            if(regex)
+            {
+                if(!o[k] || (typeof o[k] == "string" && !regex.RegExp.test(o[k] )))
+                    result.push(regex.Message);
+            }
+
+            if(action)
+            {
+                let actionResult = false;
+
+                try{
+                    actionResult = action.Function(o[k]);
+                }catch{}
+
+                if(!actionResult)
+                    result.push(action.Message);
             }
         }
 

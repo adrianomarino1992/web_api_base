@@ -181,61 +181,6 @@ export default class ControllersDecorators
         return Reflect.getMetadata(ControllersDecorators._fromQueryKeyMetadata, target, method) ?? [];
     }
     
-    public static Argument<T>(argName1 : string) : ( target : Object, methodName : string, propertyDescriptor : PropertyDescriptor) => void
-    public static Argument<T, U>(argName1 : string, argName2?: string)  : ( target : Object, methodName : string, propertyDescriptor : PropertyDescriptor) => void
-    public static Argument<T, U, K>(argName1 : string, argName2?: string, argName3? : string)  : ( target : Object, methodName : string, propertyDescriptor : PropertyDescriptor) => void
-    public static Argument<T, U, K, Y>(argName1 : string, argName2?: string, argName3? : string, argName4? : string)  : ( target : Object, methodName : string, propertyDescriptor : PropertyDescriptor) => void
-    public static Argument<T, U, K, Y, J>(argName1 : string, argName2?: string, argName3? : string, argName4? : string, argName5? : string)  : ( target : Object, methodName : string, propertyDescriptor : PropertyDescriptor) => void
-    public static Argument<T, U, K, Y, J, V>(argName1 : string, argName2?: string, argName3? : string, argName4? : string, argName5? : string, argName6? : string)  : ( target : Object, methodName : string, propertyDescriptor : PropertyDescriptor) => void
-    {
-        return function( target : Object, methodName : string, propertyDescriptor : PropertyDescriptor)
-        {
-            ControllersDecorators.SetMetaData(ControllersDecorators._actionNameKeyMetadata, target, methodName, methodName.toLocaleLowerCase());
-            ControllersDecorators.SetMetaData(ControllersDecorators._argumentsHandlerKeyMetadata, target, methodName, 
-                {
-                    
-
-                    Arguments : [argName1, argName2, argName3, argName4, argName5, argName6],
-
-                    CreateArgumentsList : (args : any) => 
-                    {
-                        let results = [] as any[];
-
-                        
-                        if (argName1 && (args[argName1] as unknown as T) != undefined) 
-                            results[0] = args[argName1] as T;
-
-                        if (argName2 && (args[argName2] as unknown as U) != undefined) 
-                            results[1] = args[argName2] as U;
-            
-                        if (argName3 && (args[argName3] as unknown as K) != undefined) 
-                            results[2] = args[argName3] as K;
-            
-                        if (argName4 && (args[argName4] as unknown as Y) != undefined) 
-                            results[3] = args[argName4] as Y;
-            
-                        if (argName5 && (args[argName5] as unknown as J) != undefined) 
-                            results[4] = args[argName5] as J;
-            
-                        if (argName6 && (args[argName6] as unknown as V) != undefined) 
-                            results[5] = args[argName6] as V;
-
-                        return results;
-
-                    } 
-                });
-            
-        }
-    }
-
-    
-
-    public static GetArgumentsHandler(target : IController, methodName : string ) : IArgumentResolverHandler | undefined
-    {
-        let handler = this.GetMetaData<IArgumentResolverHandler>(ControllersDecorators._argumentsHandlerKeyMetadata, target, methodName);
-
-        return handler;
-    }
     
     private static SetMetaData<T>(key: string, target : Object, methodName : string, value : T)
     {
@@ -257,10 +202,4 @@ export default class ControllersDecorators
     }    
 
 }
-interface IArgumentResolverHandler
-{
-    Arguments : string[];
-    CreateArgumentsList : (args :any) => any[];
-}
-
 

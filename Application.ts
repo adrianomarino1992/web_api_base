@@ -131,8 +131,8 @@ export default abstract class Application implements IApplication
 
                 let handler = (context : HTTPRequestContext) => 
                 {
-                    let args = ControllersDecorators.GetArgumentsHandler(empty, method.toString());
-                    let params = [];
+                    
+                    let params : any[]= [];
                     
                     let ts = Reflect.getMetadata("design:paramtypes", empty, method.toString()) ?? 
                              Reflect.getMetadata("design:paramtypes", empty.constructor, method.toString());
@@ -153,8 +153,11 @@ export default abstract class Application implements IApplication
                                 obj.__proto__ = ts[f.Index];
                             }catch{}
 
-                            fromBodyParams.push(obj);
-                            params.push(obj);
+                            let t = Reflect.construct(ts[f.Index], []) as any;
+                            Object.assign(t, obj);
+
+                            fromBodyParams.push(t);
+                            params.push(t);
                         });
                     }
 
@@ -195,18 +198,7 @@ export default abstract class Application implements IApplication
                             }
                         });
                     }
-
-                    if(args)
-                    {
-                        if(args.Arguments.length > 0)
-                        {
-                            if(context.Request.body && (verb == HTTPVerbs.POST || verb == HTTPVerbs.PUT))
-                                params = args.CreateArgumentsList(context.Request.body);
-                            if(context.Request.query)
-                                params.push(...args.CreateArgumentsList(context.Request.query));                             
-                        }
-                    }
-
+                   
                     if(params.length > 0)
                     {
                         if(validateBody){

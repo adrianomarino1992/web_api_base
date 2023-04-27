@@ -2,7 +2,7 @@
 
 import { AnotherService, SampleServiceAbstract } from "./SampleServiceTest";
 
-import {Inject, ControllerBase, Action, Route, Verb, Argument, HTTPVerbs, IApplication, InjectAbstract} from '../../index';
+import {Inject, ControllerBase, Action, Route, GET, POST , FromBody, FromQuery, InjectAbstract, PUT, DELETE} from '../../index';
 
 @Route("/test")
 export class ControllerTest extends ControllerBase
@@ -31,20 +31,36 @@ export class ControllerTest extends ControllerBase
         this.TypeInferedInjection = undefined;
     }
 
-    @Action("Test")
-    @Verb(HTTPVerbs.GET)
-    @Argument<string>('name')
-    public TestAction(name : string)
+    @GET() 
+    @Action("Test")       
+    public TestAction(@FromQuery()name : string)
     {
         console.log(name);
     }
 
-    @Action("Test")
-    @Verb(HTTPVerbs.GET)
-    @Argument<string, number>('name', 'age')
-    public TestActionTwo(name : string, age : number)
+    @GET()  
+    @Action("Test")   
+    public TestActionTwo(@FromQuery("name")name : string, @FromQuery("age")age : number)
     {
         console.log(name, age);
+    }    
+
+    @POST()
+    public PostAction(@FromBody()user : { Name : string, Age : number}) : { Name : string, Age : number}
+    {
+        return user;
+    }
+
+    @PUT()
+    public PutAction(@FromBody()user : { Name : string, Age : number}) : { Name : string, Age : number}
+    {
+        return user;
+    }
+
+    @DELETE()
+    public DeleteAction(@FromQuery()id : number) : number
+    {
+        return id;
     }
 
 }

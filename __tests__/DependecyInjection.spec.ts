@@ -6,12 +6,12 @@ import { DIEscope } from "../dist/dependencyInjection/DependecyService";
 
 
 
-describe("testing the dependecy injection service", ()=>{
+describe("Testing the dependecy injection service", ()=>{
 
     DependecyService.RegisterFor(SampleServiceAbstract, SampleService, DIEscope.TRANSIENT);
     DependecyService.Register(AnotherService, DIEscope.SCOPED);
     
-    test("testing the creation of a controller", ()=>
+    test("Testing the creation of a controller", ()=>
     {
         let controller = DependecyService.Build(ControllerTest) as unknown as ControllerTest;
 
@@ -20,7 +20,7 @@ describe("testing the dependecy injection service", ()=>{
     });
 
 
-    test("testing Inject decorator", ()=>
+    test("Testing Inject decorator", ()=>
     {
         let controller = DependecyService.Build(ControllerTest) as unknown as ControllerTest;
 
@@ -31,7 +31,7 @@ describe("testing the dependecy injection service", ()=>{
         expect(controller.SomeDepency instanceof SampleService).toBeTruthy();
     });
 
-    test("testing InjectAbstract decorator", ()=>
+    test("Testing InjectAbstract decorator", ()=>
     {
         let controller = DependecyService.Build(ControllerTest) as unknown as ControllerTest;
 
@@ -43,7 +43,7 @@ describe("testing the dependecy injection service", ()=>{
     });
 
 
-    test("testing injection on a private property", ()=>
+    test("Testing injection on a private property", ()=>
     {
         let controller = DependecyService.Build(ControllerTest) as unknown as ControllerTest;
 

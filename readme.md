@@ -327,10 +327,10 @@ Determine the maximun number of characters of a string
 Determine the minumun number of characters of a string
 
 ### @Regex(exp : RegExp)
-Determine is a string field match determined pattern 
+Determine the pattern expression to validate the string property 
 
 ### @Rule<T>(action : (arg : T) => boolean)
-Check whether some property respect some validation rule
+Determine the delegate used to validate the property 
 
 
 ### Sample of a complete object

@@ -96,6 +96,16 @@ export function MinLenght(min : number, message?: string)
     return ValidationDecorators.MinLenght(min, message);
 }
 
+export function Max(max : number, message?: string)
+{
+    return ValidationDecorators.MaxValue(max, message);
+}
+
+export function Min(min : number, message?: string)
+{
+    return ValidationDecorators.MinValue(min, message);
+}
+
 export function Regex(regex: RegExp, message?: string)
 {
     return ValidationDecorators.Regex(regex, message);

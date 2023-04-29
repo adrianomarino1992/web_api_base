@@ -230,29 +230,6 @@ In the example above, the __model binding system__ will get the first query argu
 We can also determine the name of parameter: __@FromQuery('id')__. 
 
 
-# Validation decorators
-
-### @Validate() 
-Say that all arguments from model bind will be validated before injected on the controller action. 
-This decorator must be used in the controller declaration.
-```typescript
-@Validate()
-@Route('v1/users/')
-export default class UserController extends ControllerBase
-```
-
-### @Required()
-Determine whether a property of a class is required
-
-### @MaxLenght(max : number)
-Determine the maximun number of characters of a string
-
-### @MaxLenght(min : number)
-Determine the minumun number of characters of a string
-
-### @Regex(exp : RegExp)
-Determine is a string field match determined pattern 
-
 
 ## Sample of a complete controller
 
@@ -322,6 +299,87 @@ export default class UserController extends ControllerBase
 
 ```
 
+
+# Validation decorators
+
+### @Validate() 
+Say that all arguments from model bind will be validated before injected on the controller action. 
+This decorator must be used in the controller declaration.
+```typescript
+@Validate()
+@Route('v1/users/')
+export default class UserController extends ControllerBase
+```
+
+### @Required()
+Determine whether a property of a class is required
+
+### @Max(max : number)
+Determine the maximun value of a number property
+
+### @Min(min: number)
+Determine the minimun value of a number property
+
+### @MaxLenght(max : number)
+Determine the maximun number of characters of a string
+
+### @MaxLenght(min : number)
+Determine the minumun number of characters of a string
+
+### @Regex(exp : RegExp)
+Determine is a string field match determined pattern 
+
+### @Rule<T>(action : (arg : T) => boolean)
+Check whether some property respect some validation rule
+
+
+### Sample of a complete object
+
+```typescript
+
+import {Required, MaxLenght, MinLenght, Rule, Max, Min, Regex}  from 'web_api_base';
+
+
+export default class ValidatedObject
+{
+    @Max(10)
+    public MaxValue : number;
+
+    @Min(10)
+    public MinValue : number;
+
+    @Min(10)
+    @Max(20)
+    public Range: number;
+
+    @Regex(/^[^\s@]+@[^\s@]+\.[^\s@]+$/)
+    public RegExp : string;
+
+    @Required()    
+    public Required : string;
+
+    @MaxLenght(20)    
+    public MaxLenght : string;
+
+    @MinLenght(10)
+    public MinLenght : string;
+    
+    @Rule<string[]>(p => p.length > 5)    
+    public Permissions : string[];
+
+    constructor()
+    {
+        this.MaxValue = -1;
+        this.MinValue = -1;
+        this.Range = -1;
+        this.Required = "";
+        this.MaxLenght = ""; 
+        this.MinLenght = ""; 
+        this.RegExp = "";
+        this.Permissions = [];
+    }
+}
+```
 
 
 ## Contributing

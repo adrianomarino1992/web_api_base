@@ -160,9 +160,9 @@ export default class ValidationDecorators
     }
 
 
-    public static Validate<T>(object : T) : string[]
+    public static Validate<T>(object : T) : {Field : string, Message: string}[]
     {
-        let result : string[] = [];
+        let result : {Field : string, Message: string}[] = [];
         let o = object as any;
         let cache : {f : string, k : string}[] = [];
 
@@ -181,42 +181,42 @@ export default class ValidationDecorators
                 cache.push({f : k, k : "r"});
 
                 if(!o[k])
-                    result.push(required.Message);
+                    result.push({Field : k , Message : required.Message});
             }
 
             if(maxLenght && cache.filter(c => c.f == k && c.k == "ml").length == 0)
             {
                 cache.push({f : k, k : "ml"});
                 if(o[k] && (typeof o[k] == "string" && o[k].length > maxLenght.Max))
-                    result.push(maxLenght.Message);
+                    result.push({Field : k , Message : maxLenght.Message});
             }
 
             if(minLenght && cache.filter(c => c.f == k && c.k == "nl").length == 0)
             {
                 cache.push({f : k, k : "nl"});
                 if(!o[k] || (typeof o[k] == "string" && o[k].length < minLenght.Min))
-                    result.push(minLenght.Message);
+                    result.push({Field : k , Message : minLenght.Message});
             }
 
             if(regex && cache.filter(c => c.f == k && c.k == "rg").length == 0)
             {
                 cache.push({f : k, k : "rg"});
                 if(!o[k] || (typeof o[k] == "string" && !regex.RegExp.test(o[k] )))
-                    result.push(regex.Message);
+                    result.push({Field : k , Message : regex.Message});
             }
 
             if(minValue && cache.filter(c => c.f == k && c.k == "mv").length == 0)
             {
                 cache.push({f : k, k : "mv"});
                 if(!o[k] || (typeof o[k] == "number" && o[k] < minValue.Min))
-                    result.push(minValue.Message);
+                    result.push({Field : k , Message : minValue.Message});
             }
 
             if(maxValue && cache.filter(c => c.f == k && c.k == "nv").length == 0)
             {
                 cache.push({f : k, k : "nv"});
                 if(!o[k] || (typeof o[k] == "number" && o[k] > maxValue.Max))
-                    result.push(maxValue.Message);
+                    result.push({Field : k , Message : maxValue.Message});
             }
 
             if(action && cache.filter(c => c.f == k && c.k == "a").length == 0)
@@ -230,7 +230,7 @@ export default class ValidationDecorators
                 }catch{}
 
                 if(!actionResult)
-                    result.push(action.Message);
+                    result.push({Field : k , Message : action.Message});
             }
         }
 

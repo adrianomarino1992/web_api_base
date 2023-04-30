@@ -228,7 +228,7 @@ export default abstract class Application implements IApplication
 
                             for(let a of fromBodyParams)
                             {
-                                erros.push(...ValidationDecorators.Validate<typeof a>(a));
+                                erros.push(...ValidationDecorators.Validate<typeof a>(a).map(s => s.Message));
                             }
 
                             if(erros.length > 0)

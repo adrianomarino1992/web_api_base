@@ -81,6 +81,11 @@ export function Validate()
     return ControllersDecorators.Validate();
 }
 
+export function ValidateObject<T>(obj : T)
+{
+    return ValidationDecorators.Validate<T>(obj);
+}
+
 export function Required(message?: string)
 {
     return ValidationDecorators.Required(message);

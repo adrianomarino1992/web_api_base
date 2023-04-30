@@ -36,6 +36,13 @@ export default class ControllersDecorators
     {
        let meta = Reflect.getMetadata(ControllersDecorators._routeKeyMetadata, controller.constructor);
 
+       let cName = controller.constructor.name.toLocaleLowerCase().replace("controller", "");
+
+       if(!meta)
+            meta = cName;
+        
+        meta = meta.toLocaleLowerCase().replace("[controller]", cName);
+
        if(meta && meta[0] != '/')
        {
             return `/${meta}`.toLocaleLowerCase();

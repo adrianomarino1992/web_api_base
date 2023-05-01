@@ -16,58 +16,48 @@ export class ControllerBase implements IController, IDIContext
     
     public OK<T>(result? : T)
     {
-        this.Response.status(200);
-
-        if(result)
-            this.Response.json(result);
-        else
-            this.Response.end();
+        this.SendResponse<T>(200,result);
     }
 
-    public Created()
+    public Created<T>(result? : T)
     {
-        this.Response.status(201);
-        this.Response.end();
+        this.SendResponse<T>(201,result);
     }
 
-    public Accepted()
+    public Accepted<T>(result? : T)
     {
-        this.Response.status(204);
-        this.Response.end();
+        this.SendResponse<T>(202,result);
     }
 
-    public NoContent()
+    public NoContent<T>(result? : T)
     {
-        this.Response.status(204);
-        this.Response.end();
-    }
-
-    
+        this.SendResponse<T>(204,result);
+    }    
     
     public BadRequest<T>(result? : T)
     {
-        this.Response.status(400);
-
-        if(result)
-            this.Response.json(result);
-        else
-            this.Response.end();
+        this.SendResponse<T>(400,result);
     }
 
-    public NotFound()
+    public Unauthorized<T>(result? : T)
     {
-        this.Response.status(404);
-        this.Response.end();
+        this.SendResponse<T>(401,result);
+    }
+
+    public Forbidden<T>(result? : T)
+    {
+        this.SendResponse<T>(403,result);
+    }
+
+    public NotFound<T>(result? : T)
+    {
+        this.SendResponse<T>(404,result);
     }
 
 
     public Error<T>(result? : T)
     {
-        this.Response.status(500);
-        if(result)
-            this.Response.json(result);
-        else
-            this.Response.end();
+        this.SendResponse<T>(500,result);
     }
 
     public SendResponse<T>(status : number, result? : T)

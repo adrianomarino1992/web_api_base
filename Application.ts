@@ -140,31 +140,54 @@ export default abstract class Application implements IApplication
                     let fromBodyParams: any[] = [];
                     if(fromBody.length > 0)
                     { 
-                        fromBody.forEach(f => 
+                        fromBody.sort((a, b) => a.Index - b.Index).forEach(f => 
                         {
                             let obj = undefined;
 
                             if(!f.Field)
                                 obj =request.body;
                             else 
-                               obj = request.body[f.Field];
+                               obj = request.body[f.Field];                            
                             
-                            try{
-                                obj.__proto__ = ts[f.Index];
-                            }catch{}
+                            if(["string", "number", "boolean", "bigint"].filter(s => s == ts[f.Index].name.toLocaleLowerCase()).length == 0){
+                                try{
+                                    obj.__proto__ = ts[f.Index];
+                                }catch{}
+                            
+                                let t = Reflect.construct(ts[f.Index], []) as any;
+                                Object.assign(t, obj);
 
-                            let t = Reflect.construct(ts[f.Index], []) as any;
-                            Object.assign(t, obj);
+                                fromBodyParams.push(t);
+                                params.push(t);
+                            }else
+                            {
+                                if(obj && ts[f.Index].name.toLocaleLowerCase() == "number")
+                                {
+                                    let number = Number.parseFloat(obj.toString());
 
-                            fromBodyParams.push(t);
-                            params.push(t);
+                                    if(number != Number.NaN){
+                                        fromBodyParams.push(number);
+                                        params.push(number);
+                                    }
+
+                                }else if(obj && ts[f.Index].name.toLocaleLowerCase() == "string")
+                                {
+                                    fromBodyParams.push(obj.toString());
+                                    params.push(obj.toString());
+                                }
+                                else
+                                {
+                                    fromBodyParams.push(obj);
+                                    params.push(obj);
+                                }
+                            }
                         });
                     }
 
                     let fromQueryParams : any[] = [];
                     if(fromQuery.length > 0)
                     {   
-                        fromQuery.forEach(f => 
+                        fromQuery.sort((a, b) => a.Index - b.Index).forEach(f => 
                         {                 
                             let obj : string | undefined;
 
@@ -192,7 +215,13 @@ export default abstract class Application implements IApplication
                                     params.push(number);
                                 }
 
-                            }else{
+                            }else if(obj && ts[f.Index].name.toLocaleLowerCase() == "string")
+                            {
+                                fromBodyParams.push(obj.toString());
+                                params.push(obj.toString());
+                            }
+                            else
+                            {
                                 fromQueryParams.push(obj);
                                 params.push(obj);
                             }

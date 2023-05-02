@@ -11,7 +11,7 @@ import { Request, Response } from "express";
 
 import File from 'fs';
 import Path from 'path';
-import { HTTPRequestContext } from "./midlewares/IMidleware";
+import { IHTTPRequestContext } from "./midlewares/IMidleware";
 import ValidationDecorators from "./decorators/validations/ValidationDecorators";
 
 export default abstract class Application implements IApplication
@@ -129,7 +129,7 @@ export default abstract class Application implements IApplication
 
                 midlewares.push(...ControllersDecorators.GetBefores(empty, method.toString()).reverse());
 
-                let handler = (context : HTTPRequestContext) => 
+                let handler = (context : IHTTPRequestContext) => 
                 {
                     
                     let params : any[]= [];
@@ -288,7 +288,7 @@ export default abstract class Application implements IApplication
                 if(midlewares && midlewares.length > 0)
                 {
                     
-                    let httpRequestContexts : HTTPRequestContext[] = [];
+                    let httpRequestContexts : IHTTPRequestContext[] = [];
 
                     let pipeline : any[] = [];
 

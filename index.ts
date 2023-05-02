@@ -12,7 +12,7 @@ export { default as IMidleware } from './midlewares/IMidleware';
 export { default as IApplicationConfiguration } from "./interfaces/IApplicationConfiguration"; 
 export { default as IApplication } from "./interfaces/IApplication"; 
 export { default as IApplicatiIControllernConfiguration } from "./interfaces/IController"; 
-
+export { IHTTPRequestContext } from "./midlewares/IMidleware";
 
 import ControllersDecorators from "./decorators/controllers/ControllerDecorators";
 import ValidationDecorators from "./decorators/validations/ValidationDecorators";
@@ -29,6 +29,7 @@ export function Run(midleware : IMidleware)
 {
     return ControllersDecorators.Before(midleware); 
 } ;
+
 
 export function Action(actionName? : String)     
 {

@@ -2,13 +2,13 @@ import { Request, Response } from "express";
 
 export default interface IMidleware
 {
-    (context : HTTPRequestContext) : void;
+    (context : IHTTPRequestContext) : void;
     
 }
 
-export interface HTTPRequestContext
+export interface IHTTPRequestContext
 {
     Request : Request;
     Response : Response;
-    Next : (context : HTTPRequestContext) => void;
+    Next : (context : IHTTPRequestContext) => void;
 }

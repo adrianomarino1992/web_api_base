@@ -28,6 +28,18 @@
             "runtimeArgs": ["jest", "./__tests__/${fileBasename}"],
             "console": "integratedTerminal", 
             "internalConsoleOptions": "neverOpen"
+        }, 
+        {
+            "type": "node",
+            "request": "launch",
+            "name": "degub temp aplication index file",
+            "skipFiles": [
+                "<node_internals>/**"
+            ],
+            "runtimeExecutable": "node",
+            "runtimeArgs": ["./dist/temp/index.js"],
+            "console": "integratedTerminal", 
+            "internalConsoleOptions": "neverOpen"
         }
     ]
 }

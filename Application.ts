@@ -9,7 +9,7 @@ import DependecyService from './dependencyInjection/DependecyService';
 import { HTTPVerbs } from "./enums/httpVerbs/HttpVerbs";
 import { Request, Response } from "express";
 
-import File from 'fs';
+import File, { Dirent } from 'fs';
 import Path from 'path';
 import { IHTTPRequestContext } from "./midlewares/IMidleware";
 import ValidationDecorators from "./decorators/validations/ValidationDecorators";
@@ -18,7 +18,7 @@ export default abstract class Application implements IApplication
 {
 
     private ApplicationConfiguration : IApplicationConfiguration;
-
+    
     public Express : Express;
 
 
@@ -39,10 +39,15 @@ export default abstract class Application implements IApplication
 
         await this.ConfigureAsync(this.ApplicationConfiguration);
 
+        for(let k in this.ApplicationConfiguration.EnviromentVariables)
+        {
+            process.env[k] = this.ApplicationConfiguration.EnviromentVariables[k];
+        }        
+
         this.Express.listen(this.ApplicationConfiguration.Port, this.ApplicationConfiguration.Host, ()=>
         {
             console.log(`App running on ${this.ApplicationConfiguration.Host}:${this.ApplicationConfiguration.Port}`);
-        })
+        });
     }
 
     public UseCors() : void 
@@ -50,17 +55,61 @@ export default abstract class Application implements IApplication
         this.Express.use(require('cors')());
     }
 
+    private GetIgnoredPaths() : string[]
+    {
+        return [
+            ".git",
+            ".vscode",
+            "coverage",             
+            "node_modules"
+        ]
+    }
+
+    private TryFindControllerFolder(path : string) : string | undefined
+    {
+
+        if(this.GetIgnoredPaths().filter(s => path.endsWith(s)).length > 0)
+            return undefined;
+       
+        if(!File.existsSync(path))
+            return undefined;
+        
+        if(File.readdirSync(path).filter(s => s.toLowerCase().endsWith("controller.js")).length > 0)
+            return path;
+        
+        let folder = File.readdirSync(path).filter(s => !File.lstatSync(Path.join(path, s)).isFile());
+
+        if(folder.length == 0)
+            return undefined;
+            
+        for(let f of folder)
+        {
+            let find = this.TryFindControllerFolder(Path.join(path, f));
+
+            if(find && find.toLowerCase().endsWith("controllers"))
+                return find;                
+    
+        }
+
+        return undefined;
+    }
+
+    
+
     protected UseControllers(root? : string) : Promise<void>
     {
         return new Promise<void>(async (resolve, reject) =>
         {
+            
+            let controllersPath : string | undefined = this.TryFindControllerFolder(Path.join(root ?? this.ApplicationConfiguration.RootPath, "controllers"));
 
-            let controllersPath : string = Path.join(root ?? this.ApplicationConfiguration.RootPath, "controllers");
+            if(!controllersPath)
+                controllersPath = this.TryFindControllerFolder(root ?? this.ApplicationConfiguration.RootPath);
+           
+            if(!controllersPath || !File.existsSync(controllersPath!))
+                return;  
 
             console.debug(`reading controllers in ${controllersPath}`);
-
-            if(!File.existsSync(controllersPath))
-                return;  
 
             let files : string[] = File.readdirSync(controllersPath).filter(s => s.toLocaleLowerCase().endsWith("controller.js"));
 

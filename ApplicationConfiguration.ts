@@ -9,12 +9,15 @@ export default class Configuration implements IApplicationConfiguration
     public Host : string = "0.0.0.0";    
     public Port : number = 5555;
     public RootPath : string;
+    public EnviromentVariables : {[ket : string] : string} = {};
 
     constructor()
     {        
-        this.RootPath = process.mainModule?.path ?? __dirname;
+        this.RootPath = process.cwd() ?? __dirname;
+        this.EnviromentVariables["ROOT"] = this.RootPath;
+        this.EnviromentVariables["HOST"] = this.Host;
+        this.EnviromentVariables["PORT"] = this.Port.toString();
     }
-
 
    
     AddScoped(type: Function, ctor?: (new (...args: any[]) => any) | undefined, builder?: (() => any) | undefined): void

@@ -13,10 +13,7 @@ export default class Configuration implements IApplicationConfiguration
 
     constructor()
     {        
-        this.RootPath = process.cwd() ?? __dirname;
-        this.EnviromentVariables["ROOT"] = this.RootPath;
-        this.EnviromentVariables["HOST"] = this.Host;
-        this.EnviromentVariables["PORT"] = this.Port.toString();
+        this.RootPath = process.cwd() ?? __dirname;        
     }
 
    
@@ -51,32 +48,22 @@ export default class Configuration implements IApplicationConfiguration
 
             DependecyService.Register(type, DIEscope.SINGLETON, builder);
         }
-    }
-       
-   
+    }    
 
-    public async StartAsync() : Promise<void>
-    {
-        if(!await this.CheckFileAsync())
-        {
-            await this.CreateFileAsync();
-            
-        }else{
-
-            await this.ReadFileAsync();
-        }
-    }
-
+    
     private async CheckFileAsync() : Promise<boolean>
     {
-        return new Promise<boolean>((resolve, _) => resolve(File.existsSync(`${__dirname}\\config.json`)));        
+        return new Promise<boolean>((resolve, _) => resolve(File.existsSync(`${this.RootPath}\\config.json`)));        
     }
 
-    private async ReadFileAsync() : Promise<boolean>
+    public async LoadAsync() : Promise<boolean>
     {
-        return new Promise<boolean>((resolve, _) => 
+        return new Promise<boolean>(async (resolve, _) => 
         {
-            File.readFile(`${__dirname}\\config.json`, 'utf-8', (error, data) => 
+            if(!await this.CheckFileAsync())
+                return false;
+
+            File.readFile(`${this.RootPath}\\config.json`, 'utf-8', (error, data) => 
             {
                 if(error)
                 {
@@ -90,8 +77,11 @@ export default class Configuration implements IApplicationConfiguration
                     if(json[key] != undefined)
                     {
                         this[key] = json[key];
+                        
                     }
                 }
+
+                this.UpdateEnviroment();
 
                 resolve(true);
 
@@ -99,14 +89,23 @@ export default class Configuration implements IApplicationConfiguration
         })
     }
 
-    private async CreateFileAsync() : Promise<boolean>
+    public async SaveAsync() : Promise<boolean>
     {
 
         return new Promise<boolean>((resolve, _)=>{
 
-            File.writeFile(`${__dirname}\\config.json`, JSON.stringify(this), 'utf-8', error => 
-            {
+            try{
                 
+                delete this.EnviromentVariables.ROOT;
+                delete this.EnviromentVariables.HOST;
+                delete this.EnviromentVariables.PORT;
+
+            }catch{}
+
+            File.writeFile(`${this.RootPath}\\config.json`, JSON.stringify(this), 'utf-8', error => 
+            {                
+                this.UpdateEnviroment();
+
                 if(error)
                 {
                     throw error;
@@ -117,6 +116,18 @@ export default class Configuration implements IApplicationConfiguration
             });   
         })
              
+    }
+
+    private UpdateEnviroment() : void
+    {
+        for(let k in this.EnviromentVariables)
+        {
+            process.env[k] = this.EnviromentVariables[k];
+        }  
+
+        this.EnviromentVariables["ROOT"] = this.RootPath;
+        this.EnviromentVariables["HOST"] = this.Host;
+        this.EnviromentVariables["PORT"] = `${this.Port}`;
     }
 
 }

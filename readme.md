@@ -181,6 +181,44 @@ Create a POST endpoint
 ### @DELETE()
 Create a DELETE endpoint 
 
+# HTTP response status code response
+
+All instances of Controller was the default HTTP response status code response method implementeds
+
+###  OK<T>(result? : T) 
+Send status 200 and a optional body
+
+### Created<T>(result? : T)
+Send status 201 and a optional body
+
+### Accepted<T>(result? : T) 
+Send status 202 and a optional body
+
+### NoContent<T>(result? : T)
+Send status 204 and a optional body
+
+### BadRequest<T>(result? : T)
+Send status 400 and a optional body
+
+###  Unauthorized<T>(result? : T)
+Send status 401 and a optional body
+
+###  Forbidden<T>(result? : T)
+Send status 403 and a optional body
+
+###  NotFound<T>(result? : T)
+Send status 404 and a optional body
+
+###  Error<T>(result? : T)
+Send status 500 and a optional body
+
+
+###  SendResponse<T>(status : number, result? : T)
+Send a status code and a optional body
+
+
+
+
 
 # Model Bind decorators
 

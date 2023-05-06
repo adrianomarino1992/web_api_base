@@ -33,16 +33,13 @@ export default abstract class Application implements IApplication
 
     public async StartAsync() : Promise<void>
     {
-        await (this.ApplicationConfiguration as ApplicationConfiguration).StartAsync();
+        await (this.ApplicationConfiguration as ApplicationConfiguration).LoadAsync();
 
         this.Express.use(ExpressModule.json({limit : 50 * 1024 * 1024}));    
 
         await this.ConfigureAsync(this.ApplicationConfiguration);
 
-        for(let k in this.ApplicationConfiguration.EnviromentVariables)
-        {
-            process.env[k] = this.ApplicationConfiguration.EnviromentVariables[k];
-        }        
+        await (this.ApplicationConfiguration as ApplicationConfiguration).SaveAsync();             
 
         this.Express.listen(this.ApplicationConfiguration.Port, this.ApplicationConfiguration.Host, ()=>
         {
@@ -69,6 +66,9 @@ export default abstract class Application implements IApplication
     {
 
         if(this.GetIgnoredPaths().filter(s => path.endsWith(s)).length > 0)
+            return undefined;
+
+        if(path.indexOf("node_modules") > -1)
             return undefined;
        
         if(!File.existsSync(path))

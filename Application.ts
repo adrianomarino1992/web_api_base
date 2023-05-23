@@ -282,7 +282,7 @@ export default abstract class Application implements IApplication
                         if(validateBody){
                             let erros : string[] = [];
 
-                            if(fromBody.length  > fromBodyParams.filter(s => s != undefined).length)
+                            if(fromBody.length  > fromBodyParams.filter(s => s != undefined).length || (fromBody.length > 0 && request.headers["content-length"] == '0'))
                             {
                                 response.status(400);
                                 response.json(

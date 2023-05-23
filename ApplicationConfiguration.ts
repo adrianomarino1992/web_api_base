@@ -61,7 +61,7 @@ export default class Configuration implements IApplicationConfiguration
         return new Promise<boolean>(async (resolve, _) => 
         {
             if(!await this.CheckFileAsync())
-                return false;
+                return resolve(false);
 
             File.readFile(`${this.RootPath}\\config.json`, 'utf-8', (error, data) => 
             {
@@ -70,16 +70,20 @@ export default class Configuration implements IApplicationConfiguration
                     throw error;
                 }
 
-                let json : any = JSON.parse(data);
+                try{
 
-                for(let key in this)
-                {
-                    if(json[key] != undefined)
+                    let json : any = JSON.parse(data);
+
+                    for(let key in this)
                     {
-                        this[key] = json[key];
-                        
+                        if(json[key] != undefined)
+                        {
+                            this[key] = json[key];
+                            
+                        }
                     }
-                }
+                    
+                }catch{}
 
                 this.UpdateEnviroment();
 

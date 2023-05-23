@@ -10,5 +10,5 @@ export interface IHTTPRequestContext
 {
     Request : Request;
     Response : Response;
-    Next : (context : IHTTPRequestContext) => void;
+    Next : () => void;
 }

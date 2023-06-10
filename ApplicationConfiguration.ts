@@ -75,9 +75,12 @@ export default class Configuration implements IApplicationConfiguration
                     let json : any = JSON.parse(data);
 
                     for(let key in this)
-                    {
+                    { 
                         if(json[key] != undefined)
                         {
+                            if(key == "RootPath" && !File.existsSync("json[key]"))
+                                continue;
+                                
                             this[key] = json[key];
                             
                         }

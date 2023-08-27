@@ -6,9 +6,23 @@ export default interface IMidleware
     
 }
 
+export interface IRequestResultHandler
+{
+    (result : IRequestResult) : void;
+    
+}
+
 export interface IHTTPRequestContext
 {
     Request : Request;
     Response : Response;
     Next : () => void;
+}
+
+export interface IRequestResult
+{
+    Exception? : Error, 
+    Result? : any, 
+    Request : Request, 
+    Response : Response
 }

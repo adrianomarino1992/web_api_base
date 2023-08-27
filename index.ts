@@ -12,22 +12,32 @@ export { default as IMidleware } from './midlewares/IMidleware';
 export { default as IApplicationConfiguration } from "./interfaces/IApplicationConfiguration"; 
 export { default as IApplication } from "./interfaces/IApplication"; 
 export { default as IApplicatiIControllernConfiguration } from "./interfaces/IController"; 
-export { IHTTPRequestContext } from "./midlewares/IMidleware";
+export { IHTTPRequestContext, IRequestResult, IRequestResultHandler } from "./midlewares/IMidleware";
 
 import ControllersDecorators from "./decorators/controllers/ControllerDecorators";
 import ValidationDecorators from "./decorators/validations/ValidationDecorators";
 import DependecyService from "./dependencyInjection/DependecyService";
 import { HTTPVerbs } from "./enums/httpVerbs/HttpVerbs";
-import IMidleware from "./midlewares/IMidleware";
+import IMidleware, { IRequestResultHandler } from "./midlewares/IMidleware";
 
-export function Use(midleware : IMidleware)  
+export function UseBefore(midleware : IMidleware)  
 {
-    return ControllersDecorators.Use(midleware); 
+    return ControllersDecorators.UseBefore(midleware); 
 } ;
 
-export function Run(midleware : IMidleware)    
+export function RunBefore(midleware : IMidleware)    
 {
-    return ControllersDecorators.Before(midleware); 
+    return ControllersDecorators.RunBefore(midleware); 
+} ;
+
+export function UseAfter(resultHandler : IRequestResultHandler)  
+{
+    return ControllersDecorators.UseAfter(resultHandler); 
+} ;
+
+export function RunAfter(resultHandler : IRequestResultHandler)    
+{
+    return ControllersDecorators.RunAfter(resultHandler); 
 } ;
 
 

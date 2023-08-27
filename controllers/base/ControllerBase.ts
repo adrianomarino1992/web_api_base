@@ -14,53 +14,52 @@ export class ControllerBase implements IController, IDIContext
         
     }   
     
-    public OK<T>(result? : T)
+    public OK<T>(result? : T) : T | undefined
     {
-        this.SendResponse<T>(200,result);
+        return this.SendResponse<T>(200,result);
     }
 
-    public Created<T>(result? : T)
+    public Created<T>(result? : T) : T | undefined
     {
-        this.SendResponse<T>(201,result);
+        return this.SendResponse<T>(201,result);
     }
 
-    public Accepted<T>(result? : T)
+    public Accepted<T>(result? : T) : T | undefined
     {
-        this.SendResponse<T>(202,result);
+        return this.SendResponse<T>(202,result);
     }
 
-    public NoContent<T>(result? : T)
+    public NoContent<T>(result? : T) : T | undefined
     {
-        this.SendResponse<T>(204,result);
+        return this.SendResponse<T>(204,result);
     }    
     
-    public BadRequest<T>(result? : T)
+    public BadRequest<T>(result? : T) : T | undefined
     {
-        this.SendResponse<T>(400,result);
+        return this.SendResponse<T>(400,result);
     }
 
-    public Unauthorized<T>(result? : T)
+    public Unauthorized<T>(result? : T) : T | undefined
     {
-        this.SendResponse<T>(401,result);
+        return this.SendResponse<T>(401,result);
     }
 
-    public Forbidden<T>(result? : T)
+    public Forbidden<T>(result? : T) : T | undefined
     {
-        this.SendResponse<T>(403,result);
+        return this.SendResponse<T>(403,result);
     }
 
-    public NotFound<T>(result? : T)
+    public NotFound<T>(result? : T) : T | undefined
     {
-        this.SendResponse<T>(404,result);
+        return this.SendResponse<T>(404,result);
     }
 
-
-    public Error<T>(result? : T)
+    public Error<T>(result? : T) : T | undefined
     {
-        this.SendResponse<T>(500,result);
+        return this.SendResponse<T>(500,result);
     }
 
-    public SendResponse<T>(status : number, result? : T)
+    public SendResponse<T>(status : number, result? : T) : T | undefined
     {
         this.Response.status(status);
 
@@ -68,6 +67,8 @@ export class ControllerBase implements IController, IDIContext
             this.Response.json(result);
         else
             this.Response.end();
+        
+        return result;
     }
     
 }

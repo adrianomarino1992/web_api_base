@@ -1,7 +1,7 @@
 import { Express } from "express";
 import ExpressModule from "express";
 import ApplicationConfiguration from "./ApplicationConfiguration"
-import IApplication from "./interfaces/IApplication";
+import IApplication, { ApplicationExceptionHandler } from "./interfaces/IApplication";
 import IApplicationConfiguration from "./interfaces/IApplicationConfiguration";
 import IController from "./interfaces/IController";
 import ControllersDecorators from './decorators/controllers/ControllerDecorators';
@@ -13,24 +13,26 @@ import File, { Dirent } from 'fs';
 import Path from 'path';
 import { IHTTPRequestContext } from "./midlewares/IMidleware";
 import ValidationDecorators from "./decorators/validations/ValidationDecorators";
+import ControllerLoadException from "./exceptions/ControllerLoadException";
+import Exception from "./exceptions/Exception";
 
 export default abstract class Application implements IApplication
 {
 
-    private ApplicationConfiguration : IApplicationConfiguration;
+    public ApplicationConfiguration : IApplicationConfiguration;
     
     public Express : Express;
 
+    public ApplicationErrorHandler?: ApplicationExceptionHandler;
 
     constructor()
     {
         this.ApplicationConfiguration = new ApplicationConfiguration();
 
-        this.Express = ExpressModule();
+        this.Express = ExpressModule();       
 
     }
-    
-
+ 
     public async StartAsync() : Promise<void>
     {
         await (this.ApplicationConfiguration as ApplicationConfiguration).LoadAsync();
@@ -115,18 +117,41 @@ export default abstract class Application implements IApplication
 
             for(let controllerFile of files)
             {
-                try{
+                
 
-                let controllerClass = await import(Path.join(controllersPath, controllerFile));
+                let controllerModule = await import(Path.join(controllersPath, controllerFile));
 
-                let controller = Reflect.construct(controllerClass.default.prototype.constructor, []) as IController;
+                let controllerClass : any | undefined = undefined;
+
+                if(controllerModule.default == undefined)
+                {
+
+                    for(let c in controllerModule)
+                    {
+                        if(c.toLocaleLowerCase().endsWith("controller"))
+                        {
+                            controllerClass = controllerModule[c];
+                        }
+                    }
+
+                }else 
+                    controllerClass = controllerModule.default;
+
+                if(controllerClass == undefined)
+                    throw new ControllerLoadException(`Can find any controller from file : ${controllerFile}`);
+
+                let controller = Reflect.construct(controllerClass.prototype.constructor, []) as IController;
 
                 if(controller != undefined && controller != null)
                 {
-                    this.AppendController(controllerClass.default.prototype.constructor);
+                    this.AppendController(controllerClass.prototype.constructor);
+
+                }else{
+
+                    throw new ControllerLoadException(`Can not load ${controllerClass.name} controller from file : ${controllerFile}`);
                 }
 
-                }catch{}
+                
             }
 
             resolve();
@@ -177,6 +202,11 @@ export default abstract class Application implements IApplication
                 let midlewares = ControllersDecorators.GetMidlewares(empty).reverse();
 
                 midlewares.push(...ControllersDecorators.GetBefores(empty, method.toString()).reverse());
+
+
+                let afters = ControllersDecorators.GetMidlewaresAfter(empty).reverse();
+
+                afters.push(...ControllersDecorators.GetAfters(empty, method.toString()).reverse());
 
                 let handler = (context : IHTTPRequestContext) => 
                 {
@@ -331,7 +361,87 @@ export default abstract class Application implements IApplication
 
                     controller.Request = context.Request;
                     controller.Response = context.Response;
-                    (controller as any)[method](...params);
+
+                    try{
+                        
+                        let exceutionTask = (controller as any)[method](...params);
+                        
+                        if(exceutionTask instanceof Promise)
+                        {
+                            exceutionTask.then(c => 
+                                {
+                                    for(let afterHandler of afters)
+                                    {
+                                        afterHandler(
+                                            {                                   
+                                                Request : request, 
+                                                Response : response, 
+                                                Result : exceutionTask
+                                            });
+                                    }
+                                }).catch(err => 
+                                    {
+                                        for(let afterHandler of afters)
+                                        {
+                                            afterHandler(
+                                                {                      
+                                                    Exception: err as Error,             
+                                                    Request : request, 
+                                                    Response : response
+                                                });
+                                        }
+
+                                        if(afters.length == 0)                                        
+                                            this.CallErrorHandler(request, response, new Exception((err as any).message));
+                                        
+
+                                    });
+
+                        }
+                        else
+                        {
+
+                            for(let afterHandler of afters)
+                            {
+                                try{
+                                    afterHandler(
+                                    {                                   
+                                        Request : request, 
+                                        Response : response, 
+                                        Result : exceutionTask
+                                    });
+                                }catch(err)
+                                {
+                                    this.CallErrorHandler(request, response, new Exception((err as any).message));
+                                }
+                            }
+                        }
+
+                        
+
+                    }
+                    catch(ex)
+                    {
+                        for(let afterHandler of afters)
+                        {
+                            try{
+                                
+                                afterHandler(
+                                {
+                                    Exception : ex as Error, 
+                                    Request : request, 
+                                    Response : response
+                                });
+
+                            }catch(err)
+                            {
+                                this.CallErrorHandler(request, response, new Exception((err as any).message));
+                            }
+                        }
+
+                        if(afters.length == 0)
+                            this.CallErrorHandler(request, response, new Exception((ex as any).message));
+                    }
                 }
 
                 if(midlewares && midlewares.length > 0)
@@ -374,17 +484,18 @@ export default abstract class Application implements IApplication
                     for(let i = 0; i < pipeline.length; i++)
                     {
                         httpRequestContexts[i].Next = i == pipeline.length - 1 ? ()=>{} : () => pipeline[i + 1].Execute(); 
-                    }
+                    }                    
 
                     pipeline[0].Execute();
                 }
                 else{
-
+                   
                     handler({
                         Request : request, 
                         Response : response, 
                         Next : () => {}
                     });
+                    
                 }
 
                 
@@ -392,9 +503,48 @@ export default abstract class Application implements IApplication
         }
                 
     }
+    
 
+    private CallErrorHandler(request : Request, response : Response, exception : Error)
+    {
+        let defaultHandler = (request : Request, response : Response, exception : Exception) : void =>
+        {
+            try{
+
+                response.status(500);
+                response.json(exception);
+
+            }catch(err)
+            {
+                console.log("Error while trying handle the error");
+                console.log(err);
+               
+            }finally
+            {
+                console.log("Inner exception");
+                console.log(exception);
+            }
+        }
+
+        if(this.ApplicationErrorHandler != undefined)
+        {
+            try{
+                this.ApplicationErrorHandler!(request, response, new Exception(exception.message));
+
+            }catch(err)
+            {
+                console.log("Error while trying handle the error with custom delegate");
+                console.log(err);                
+                defaultHandler(request, response, new Exception(exception.message));
+            }
+        }else
+        {
+            defaultHandler(request, response, new Exception(exception.message));
+        }
+    }
 
     public abstract ConfigureAsync(appConfig : IApplicationConfiguration): Promise<void>;
     
     
 }
+

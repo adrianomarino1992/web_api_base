@@ -2,7 +2,7 @@ import 'reflect-metadata';
 
 import { HTTPVerbs } from '../../enums/httpVerbs/HttpVerbs';
 import IController from '../../interfaces/IController';
-import IMidleware from '../../midlewares/IMidleware';
+import IMidleware, { IRequestResultHandler } from '../../midlewares/IMidleware';
 
 export default class ControllersDecorators
 {
@@ -20,6 +20,9 @@ export default class ControllersDecorators
     private static _validateBodyKeyMetadata = "meta:validateBodyKey";
     private static _fromQueryKeyMetadata = "meta:fromQueryKey";
     private static _fromBodyKeyMetadata = "meta:fromBodyKey";
+    private static _controllerMidlewaresAfterKeyMetadata = "meta:controllerMidlewaresAfterKey";
+    private static _actionsMidlewaresAfterKeyMetadata = "meta:actionMidlewaresAfterKey";
+
     
 
     public static Route(route? : string)  
@@ -66,7 +69,7 @@ export default class ControllersDecorators
        return Reflect.getMetadata(ControllersDecorators._validateBodyKeyMetadata, controller.constructor) ?? false;
     }
 
-    public static Use(midleware : IMidleware)  
+    public static UseBefore(midleware : IMidleware)  
     {
         return function( target : Function)
         {
@@ -78,12 +81,31 @@ export default class ControllersDecorators
         }
     }
 
+    public static UseAfter(resultHandler : IRequestResultHandler)  
+    {
+        return function( target : Function)
+        {
+            let current : IRequestResultHandler[] = Reflect.getMetadata(ControllersDecorators._controllerMidlewaresAfterKeyMetadata, target) ?? [];
+
+            current.push(resultHandler);
+
+            Reflect.defineMetadata(ControllersDecorators._controllerMidlewaresAfterKeyMetadata, current, target);            
+        }
+    }
+    
+
     public static GetMidlewares(controller : IController) : IMidleware[]
     {
        return Reflect.getMetadata(ControllersDecorators._controllerMidlewaresKeyMetadata, controller.constructor) ?? [];
     }
 
-    public static Before(midleware : IMidleware)  
+    public static GetMidlewaresAfter(controller : IController) : IRequestResultHandler[]
+    {
+       return Reflect.getMetadata(ControllersDecorators._controllerMidlewaresAfterKeyMetadata, controller.constructor) ?? [];
+    }
+
+
+    public static RunBefore(midleware : IMidleware)  
     {
         return function( target : Object, methodName : string, propertyDescriptor : PropertyDescriptor)
         {
@@ -96,13 +118,31 @@ export default class ControllersDecorators
         }
     }
 
+
+    public static RunAfter(resultHandler : IRequestResultHandler)  
+    {
+        return function( target : Object, methodName : string, propertyDescriptor : PropertyDescriptor)
+        {
+            let current : IRequestResultHandler[] = Reflect.getMetadata(ControllersDecorators._controllerMidlewaresAfterKeyMetadata, target, methodName) ?? [];
+
+            current.push(resultHandler);
+
+            ControllersDecorators.SetMetaData(ControllersDecorators._controllerMidlewaresAfterKeyMetadata, target, methodName, current);
+            
+        }
+    }
+    
+
     public static GetBefores(controller : IController, methodName : string) : IMidleware[]
     {
        return this.GetMetaData<IMidleware[]>(ControllersDecorators._actionsMidlewaresKeyMetadata, controller, methodName) ?? [];
     }
 
-    
 
+    public static GetAfters(controller : IController, methodName : string) : IRequestResultHandler[]
+    {
+       return this.GetMetaData<IRequestResultHandler[]>(ControllersDecorators._controllerMidlewaresAfterKeyMetadata, controller, methodName) ?? [];
+    } 
 
     public static Verb(verb : HTTPVerbs, actionName? : String )  
     {
@@ -113,7 +153,7 @@ export default class ControllersDecorators
             
         }
     }
-
+    
     public static GetVerb(target : IController, methodName : string ) : HTTPVerbs | undefined
     {
         let meta = this.GetMetaData<HTTPVerbs>(ControllersDecorators._actionVerbKeyMetadata, target, methodName);

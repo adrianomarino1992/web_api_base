@@ -55,6 +55,8 @@ describe('Testing controllers decorators', ()=>
         let fromQuery = ControllersDecorators.GetFromQueryArgs(controller.constructor, "TestActionTwo");
         expect(fromBody.length).toBe(0);
         expect(fromQuery.length).toBe(2);
+        fromQuery = ControllersDecorators.GetFromQueryArgs(controller.constructor, "TestAction");
+        expect(fromQuery.length).toBe(1);
 
     });
 

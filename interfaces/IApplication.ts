@@ -6,7 +6,7 @@ export default interface IApplication
 {
     Express : Express;
 
-    ApplicationErrorHandler? : ApplicationExceptionHandler;
+    ApplicationThreadExeptionHandler? : ApplicationExceptionHandler;
 
     StartAsync() : Promise<void>;    
 

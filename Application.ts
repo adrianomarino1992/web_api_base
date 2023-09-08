@@ -23,7 +23,7 @@ export default abstract class Application implements IApplication
     
     public Express : Express;
 
-    public ApplicationErrorHandler?: ApplicationExceptionHandler;
+    public ApplicationThreadExeptionHandler?: ApplicationExceptionHandler;
 
     constructor()
     {
@@ -266,26 +266,13 @@ export default abstract class Application implements IApplication
                     let fromQueryParams : any[] = [];
                     if(fromQuery.length > 0)
                     {   
-                        fromQuery.sort((a, b) => a.Index - b.Index).forEach(f => 
+                        fromQuery.sort((a, b) => a.Index - b.Index).forEach((f, j) => 
                         {                 
                             let obj : string | undefined;
 
-                            if(!f.Field){
+                            obj = request.query[f.Field]?.toString();   
 
-                                let keys = Object.keys(request.query);
-
-                                if(keys.length > 0){
-
-                                    obj = request.query[keys[0]]?.toString();                                   
-                                }
-                            }
-                            else {
-
-                                obj = request.query[f.Field]?.toString();
-                                                              
-                            }
-
-                            if(obj && ts[f.Index].name.toLocaleLowerCase() == "number")
+                            if(obj && f.Type.name.toLocaleLowerCase() == "number")
                             {
                                 let number = Number.parseFloat(obj.toString());
 
@@ -294,10 +281,20 @@ export default abstract class Application implements IApplication
                                     params.push(number);
                                 }
 
-                            }else if(obj && ts[f.Index].name.toLocaleLowerCase() == "string")
+                            }else if(obj && f.Type.name.toLocaleLowerCase() == "string")
                             {
-                                fromBodyParams.push(obj.toString());
+                                fromQueryParams.push(obj.toString());
                                 params.push(obj.toString());
+                            }
+                            else if(obj && f.Type.name.toLocaleLowerCase() == "date")
+                            {
+                                try{
+
+                                    fromQueryParams.push(new Date(obj));
+                                    params.push(new Date(obj));
+
+                                }catch{}
+                                
                             }
                             else
                             {
@@ -484,7 +481,8 @@ export default abstract class Application implements IApplication
                     for(let i = 0; i < pipeline.length; i++)
                     {
                         httpRequestContexts[i].Next = i == pipeline.length - 1 ? ()=>{} : () => pipeline[i + 1].Execute(); 
-                    }                    
+                    }  
+                                        
 
                     pipeline[0].Execute();
                 }
@@ -526,10 +524,10 @@ export default abstract class Application implements IApplication
             }
         }
 
-        if(this.ApplicationErrorHandler != undefined)
+        if(this.ApplicationThreadExeptionHandler != undefined)
         {
             try{
-                this.ApplicationErrorHandler!(request, response, new Exception(exception.message));
+                this.ApplicationThreadExeptionHandler!(request, response, new Exception(exception.message));
 
             }catch(err)
             {

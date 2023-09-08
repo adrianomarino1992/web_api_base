@@ -3,6 +3,7 @@ import 'reflect-metadata';
 import { HTTPVerbs } from '../../enums/httpVerbs/HttpVerbs';
 import IController from '../../interfaces/IController';
 import IMidleware, { IRequestResultHandler } from '../../midlewares/IMidleware';
+import FunctionAnalizer from '../../metadata/FunctionAnalizer';
 
 export default class ControllersDecorators
 {
@@ -209,21 +210,28 @@ export default class ControllersDecorators
     {
         return function( target : Object, methodName: string , parameterIndex: number)
         {
-            let meta = ControllersDecorators.GetFromQueryArgs(target.constructor, methodName);
+            let meta = ControllersDecorators.GetFromQueryArgs(target.constructor, methodName); 
+
+            let params = FunctionAnalizer.ExtractParamsList(target, (target as any)[methodName]);
+
+            let thisParam = params.filter(s => s.Index == parameterIndex)[0];
 
             let item = meta.filter(x => x.Index == parameterIndex);
 
             if(item.length == 0)
-                meta.push({Index : parameterIndex, Field : bodyPropName });
+                meta.push({Index : parameterIndex, Field : bodyPropName ?? thisParam.Name, Type : thisParam.Type});
+            
             else {
-                item[0].Field = bodyPropName;
+
+                item[0].Field = bodyPropName ?? thisParam.Name;
+                item[0].Type = thisParam.Type;
             }
 
             Reflect.defineMetadata(ControllersDecorators._fromQueryKeyMetadata, meta, target.constructor, methodName);             
         }
     }
    
-    public static GetFromQueryArgs(target : Function, method : string) :  {Index : number, Field? : string }[]
+    public static GetFromQueryArgs(target : Function, method : string) :  {Index : number, Field : string, Type : Function }[]
     {
         return Reflect.getMetadata(ControllersDecorators._fromQueryKeyMetadata, target, method) ?? [];
     }

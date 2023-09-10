@@ -1,4 +1,5 @@
 import { Request, Response } from "express";
+import Exception from "../exceptions/Exception";
 
 export default interface IMidleware
 {
@@ -21,7 +22,7 @@ export interface IHTTPRequestContext
 
 export interface IRequestResult
 {
-    Exception? : Error, 
+    Exception? : Exception, 
     Result? : any, 
     Request : Request, 
     Response : Response

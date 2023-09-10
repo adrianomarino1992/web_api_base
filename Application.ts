@@ -254,6 +254,15 @@ export default abstract class Application implements IApplication
                                     fromBodyParams.push(obj.toString());
                                     params.push(obj.toString());
                                 }
+                                else if(obj && ts[f.Index].name.toLocaleLowerCase() == "date")
+                                {
+                                    try{
+
+                                        fromBodyParams.push(new Date(obj));
+                                        params.push(new Date(obj));
+
+                                    }catch{}                                
+                                }
                                 else
                                 {
                                     fromBodyParams.push(obj);
@@ -380,16 +389,17 @@ export default abstract class Application implements IApplication
                                     {
                                         for(let afterHandler of afters)
                                         {
+                                            
                                             afterHandler(
                                                 {                      
-                                                    Exception: err as Error,             
+                                                    Exception: this.CastToExpection(err as Error),             
                                                     Request : request, 
                                                     Response : response
                                                 });
                                         }
 
                                         if(afters.length == 0)                                        
-                                            this.CallErrorHandler(request, response, new Exception((err as any).message));
+                                            this.CallErrorHandler(request, response, this.CastToExpection(err as Error));
                                         
 
                                     });
@@ -409,7 +419,7 @@ export default abstract class Application implements IApplication
                                     });
                                 }catch(err)
                                 {
-                                    this.CallErrorHandler(request, response, new Exception((err as any).message));
+                                    this.CallErrorHandler(request, response, this.CastToExpection(err as Error))
                                 }
                             }
                         }
@@ -417,27 +427,27 @@ export default abstract class Application implements IApplication
                         
 
                     }
-                    catch(ex)
+                    catch(err)
                     {
                         for(let afterHandler of afters)
                         {
-                            try{
+                            try{                               
                                 
                                 afterHandler(
                                 {
-                                    Exception : ex as Error, 
+                                    Exception : this.CastToExpection(err as Error), 
                                     Request : request, 
                                     Response : response
                                 });
 
                             }catch(err)
                             {
-                                this.CallErrorHandler(request, response, new Exception((err as any).message));
+                                this.CallErrorHandler(request, response, this.CastToExpection(err as Error));
                             }
                         }
 
                         if(afters.length == 0)
-                            this.CallErrorHandler(request, response, new Exception((ex as any).message));
+                            this.CallErrorHandler(request, response, this.CastToExpection(err as Error));
                     }
                 }
 
@@ -502,6 +512,20 @@ export default abstract class Application implements IApplication
                 
     }
     
+    private CastToExpection(err : Error) : Exception
+    {
+        let ex : Exception | undefined;
+
+        if(err instanceof Exception)
+            ex = err;
+        else 
+        {
+            ex = new Exception(err.message);
+            ex.stack = err.stack;
+        }
+
+        return ex;
+    }
 
     private CallErrorHandler(request : Request, response : Response, exception : Error)
     {
@@ -527,17 +551,17 @@ export default abstract class Application implements IApplication
         if(this.ApplicationThreadExeptionHandler != undefined)
         {
             try{
-                this.ApplicationThreadExeptionHandler!(request, response, new Exception(exception.message));
+                this.ApplicationThreadExeptionHandler!(request, response, this.CastToExpection(exception));
 
             }catch(err)
             {
                 console.log("Error while trying handle the error with custom delegate");
                 console.log(err);                
-                defaultHandler(request, response, new Exception(exception.message));
+                defaultHandler(request, response,  this.CastToExpection(err as Error));
             }
         }else
         {
-            defaultHandler(request, response, new Exception(exception.message));
+            defaultHandler(request, response,  this.CastToExpection(exception));
         }
     }
 

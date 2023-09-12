@@ -15,9 +15,12 @@ import { IHTTPRequestContext } from "./midlewares/IMidleware";
 import ValidationDecorators from "./decorators/validations/ValidationDecorators";
 import ControllerLoadException from "./exceptions/ControllerLoadException";
 import Exception from "./exceptions/Exception";
+import Documentation from "./documentation/Documentation";
 
 export default abstract class Application implements IApplication
 {
+
+    private _createdControllers : { new (...args : any[]) : IController} [] = [];
 
     public ApplicationConfiguration : IApplicationConfiguration;
     
@@ -32,6 +35,7 @@ export default abstract class Application implements IApplication
         this.Express = ExpressModule();       
 
     }
+    
  
     public async StartAsync() : Promise<void>
     {
@@ -178,6 +182,7 @@ export default abstract class Application implements IApplication
         if(!route)
             return;
 
+        this._createdControllers.push(ctor);
 
         for(let method of methods)
         {
@@ -511,6 +516,10 @@ export default abstract class Application implements IApplication
         }
                 
     }
+
+    public CreateDocumentation(): void {        
+        new Documentation().CreateDocumentation(this._createdControllers);
+    }
     
     private CastToExpection(err : Error) : Exception
     {
@@ -565,8 +574,11 @@ export default abstract class Application implements IApplication
         }
     }
 
+
+
     public abstract ConfigureAsync(appConfig : IApplicationConfiguration): Promise<void>;
     
     
 }
+
 

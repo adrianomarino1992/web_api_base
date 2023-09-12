@@ -11,6 +11,8 @@ export default interface IApplication
     StartAsync() : Promise<void>;    
 
     ConfigureAsync (appConfig : IApplicationConfiguration): Promise<void>;
+
+    CreateDocumentation() : void;
 }
 
 export interface ApplicationExceptionHandler

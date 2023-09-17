@@ -64,7 +64,7 @@ export default class App extends Application
         this.UseCors();
 
         //if the controlles follow the naming rules, the method UseControllers will automatically append them
-        this.UseControllers();   
+        this.UseControllersAsync();   
 
     }  
 }
@@ -217,7 +217,44 @@ Send status 500 and a optional body
 Send a status code and a optional body
 
 
+# Filters
+### @UseBefore()
+Append a delegate to execute **before** the controller´s action
+```typescript
+@Route("/status")
+@UseBefore(context => 
+{
 
+    if(context.Request.headers["token"] != "we have access to request object")
+         context.Response.json({Message : "we have access to response object"});
+    else
+         context.Next(); // call next function in the pipeline
+})
+export default class StatusController extends ControllerBase
+{
+```
+
+### @UseAfter()
+Append a delegate to execute **after** the controller´s action
+```typescript
+@Route("/status")
+@UseAfter(actionResult => 
+{
+
+      if(actionResult.Exception) // if a exception was launched
+      {
+          actionResult.Response.status(500);  // we can access the original request
+          actionResult.Response.json({Error : actionResult.Exception.Message});
+          return;
+      }
+
+      actionResult.Response.status(200);  // we can access the original response
+      actionResult.Response.json(actionResult.Result); // we can acess the return of controller´s action   
+
+})
+export default class StatusController extends ControllerBase
+{
+```
 
 
 # Model Bind decorators
@@ -418,6 +455,32 @@ export default class ValidatedObject
     }
 }
 ```
+
+# Auto-generated documentation
+
+We can create a API playground(host/playground) using the Aplication.CreateDocumentation method inside the Application.ConfigureAsync
+
+```typescript
+ public override async ConfigureAsync(appConfig: IApplicationConfiguration): Promise<void>
+    {  
+        this.UseCors();         
+        
+        await this.UseControllersAsync();
+
+        appConfig.AddScoped(SampleServiceAbstract, AnotherService);
+
+        if(Application.DEBUG)
+            this.CreateDocumentation();
+
+    }    
+```
+
+### To use the default theme, run the API with **--debug** argument
+
+[![Alt text](https://raw.githubusercontent.com/adrianomarino1992/web_api_base/master/light.png)](https://raw.githubusercontent.com/adrianomarino1992/web_api_base/master/light.png)
+
+### To use the dark theme, run the API with **--debug --dark** arguments
+[![Alt text](https://raw.githubusercontent.com/adrianomarino1992/web_api_base/5057c23221750ea4315142e88c7af80c2370682c/dark.png)](https://raw.githubusercontent.com/adrianomarino1992/web_api_base/5057c23221750ea4315142e88c7af80c2370682c/dark.png)
 
 
 ## Contributing

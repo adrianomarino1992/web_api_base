@@ -36,3 +36,5 @@ export interface ArgumentOfFunction
     Index : number,
     Type : Function 
 }
+
+

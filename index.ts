@@ -17,6 +17,7 @@ export { default as IApplicatiIControllernConfiguration } from "./interfaces/ICo
 export { IHTTPRequestContext, IRequestResult, IRequestResultHandler } from "./midlewares/IMidleware";
 
 import ControllersDecorators from "./decorators/controllers/ControllerDecorators";
+import { DocumentationDecorators } from "./decorators/documentation/DocumentationDecorators";
 import ValidationDecorators from "./decorators/validations/ValidationDecorators";
 import DependecyService from "./dependencyInjection/DependecyService";
 import { HTTPVerbs } from "./enums/httpVerbs/HttpVerbs";
@@ -71,6 +72,23 @@ export function PUT(action? : string)
 export function DELETE(action? : string)       
 {
     return ControllersDecorators.Verb(HTTPVerbs.DELETE, action); 
+} ;
+
+
+export function Description(description : string)       
+{
+    return DocumentationDecorators.Description(description); 
+} ;
+
+export function RequestJson(json : string)       
+{
+    return DocumentationDecorators.RequestJson(json); 
+} ;
+
+
+export function ProducesResponse(response : Parameters<typeof DocumentationDecorators.ProducesResponse>[0])       
+{
+    return DocumentationDecorators.ProducesResponse(response); 
 } ;
 
 

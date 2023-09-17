@@ -1,5 +1,7 @@
 import 'reflect-metadata';
 import IDIContext from './IDIContext';
+import Exception from '../exceptions/Exception';
+import FindDependencyException from '../exceptions/FindDependencyException';
 
 export default class DependecyService
 {
@@ -141,7 +143,7 @@ export default class DependecyService
                     let tp = DependecyService.GetDIType(object, k);
 
                     if(tp == undefined)
-                        throw new Error(`Can not resolve the dependecy of ${object.constructor.name}.${k}`);
+                        throw new FindDependencyException(`Can not resolve the dependecy of ${object.constructor.name}.${k}`);
 
                     let service = this._services.find(u => u.Type == tp);
 
@@ -158,7 +160,7 @@ export default class DependecyService
                     let instance = DependecyService.Resolve(tp);                    
 
                     if(instance == undefined)
-                        throw new Error(`Can not resolve the dependecy of ${object.constructor.name}.${k}`);                   
+                        throw new FindDependencyException(`Can not resolve the dependecy of ${object.constructor.name}.${k}`);                   
                    
 
                     if(DependecyService.IsDIConext(object) && service?.Scope == DIEscope.SCOPED)

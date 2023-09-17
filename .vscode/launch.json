@@ -37,7 +37,7 @@
                 "<node_internals>/**"
             ],
             "runtimeExecutable": "node",
-            "runtimeArgs": ["./dist/temp/index.js"],
+            "runtimeArgs": ["./dist/temp/index.js", "--debug"],
             "console": "integratedTerminal", 
             "internalConsoleOptions": "neverOpen"
         }

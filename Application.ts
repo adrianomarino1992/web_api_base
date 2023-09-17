@@ -8,8 +8,7 @@ import ControllersDecorators from './decorators/controllers/ControllerDecorators
 import DependecyService from './dependencyInjection/DependecyService';
 import { HTTPVerbs } from "./enums/httpVerbs/HttpVerbs";
 import { Request, Response } from "express";
-
-import File, { Dirent } from 'fs';
+import File from 'fs';
 import Path from 'path';
 import { IHTTPRequestContext } from "./midlewares/IMidleware";
 import ValidationDecorators from "./decorators/validations/ValidationDecorators";
@@ -19,6 +18,8 @@ import Documentation from "./documentation/Documentation";
 
 export default abstract class Application implements IApplication
 {
+
+    public static Configurations : IApplicationConfiguration;
 
     private _createdControllers : { new (...args : any[]) : IController} [] = [];
 
@@ -41,15 +42,17 @@ export default abstract class Application implements IApplication
     {
         await (this.ApplicationConfiguration as ApplicationConfiguration).LoadAsync();
 
+        Application.Configurations =  this.ApplicationConfiguration;
+
         this.Express.use(ExpressModule.json({limit : 50 * 1024 * 1024}));    
 
-        await this.ConfigureAsync(this.ApplicationConfiguration);
+        await this.ConfigureAsync(this.ApplicationConfiguration);        
 
         await (this.ApplicationConfiguration as ApplicationConfiguration).SaveAsync();             
 
         this.Express.listen(this.ApplicationConfiguration.Port, this.ApplicationConfiguration.Host, ()=>
         {
-            console.log(`App running on ${this.ApplicationConfiguration.Host}:${this.ApplicationConfiguration.Port}`);
+            console.log(`Application running on ${this.ApplicationConfiguration.Host}:${this.ApplicationConfiguration.Port}`);
         });
     }
 
@@ -102,7 +105,7 @@ export default abstract class Application implements IApplication
 
     
 
-    protected UseControllers(root? : string) : Promise<void>
+    protected UseControllersAsync(root? : string) : Promise<void>
     {
         return new Promise<void>(async (resolve, reject) =>
         {
@@ -228,7 +231,7 @@ export default abstract class Application implements IApplication
                         {
                             let obj = undefined;
 
-                            if(!f.Field)
+                            if(!f.Field || f.Type.name == "Object")
                                 obj =request.body;
                             else 
                                obj = request.body[f.Field];                            
@@ -238,13 +241,24 @@ export default abstract class Application implements IApplication
                                     obj.__proto__ = ts[f.Index];
                                 }catch{}
                             
-                                let t = Reflect.construct(ts[f.Index], []) as any;
-                                Object.assign(t, obj);
+                                if(f.Type.name == "Object")
+                                {
+                                    fromBodyParams.push(obj);
+                                    params.push(obj);
 
-                                fromBodyParams.push(t);
-                                params.push(t);
+                                }else{
+
+                                    let t = Reflect.construct(ts[f.Index], []) as any;
+                                    Object.assign(t, obj);                               
+
+                                    fromBodyParams.push(t);
+                                    params.push(t);
+                                }
                             }else
                             {
+                                if(obj && obj.indexOf('"') == 0 && obj.lastIndexOf('"') == obj.length -1)
+                                    obj = obj.substring(1, obj.length -1);
+
                                 if(obj && ts[f.Index].name.toLocaleLowerCase() == "number")
                                 {
                                     let number = Number.parseFloat(obj.toString());
@@ -286,6 +300,9 @@ export default abstract class Application implements IApplication
 
                             obj = request.query[f.Field]?.toString();   
 
+                            if(obj && obj.indexOf('"') == 0 && obj.lastIndexOf('"') == obj.length -1)
+                                    obj = obj.substring(1, obj.length -1);
+
                             if(obj && f.Type.name.toLocaleLowerCase() == "number")
                             {
                                 let number = Number.parseFloat(obj.toString());
@@ -296,7 +313,7 @@ export default abstract class Application implements IApplication
                                 }
 
                             }else if(obj && f.Type.name.toLocaleLowerCase() == "string")
-                            {
+                            {                              
                                 fromQueryParams.push(obj.toString());
                                 params.push(obj.toString());
                             }
@@ -368,7 +385,14 @@ export default abstract class Application implements IApplication
                     if(controller == undefined)
                         controller = new ctor() as IController;
                     
-                    DependecyService.CheckForDependenciesAndResolve(controller);                    
+                    try{
+
+                        DependecyService.CheckForDependenciesAndResolve(controller);  
+
+                    }catch(err)
+                    {
+                        this.CallErrorHandler(request, response, this.CastToExpection(err as Error));
+                    }               
 
                     controller.Request = context.Request;
                     controller.Response = context.Response;
@@ -518,7 +542,7 @@ export default abstract class Application implements IApplication
     }
 
     public CreateDocumentation(): void {        
-        new Documentation().CreateDocumentation(this._createdControllers);
+        new Documentation().CreateDocumentation(this._createdControllers, this.Express);
     }
     
     private CastToExpection(err : Error) : Exception

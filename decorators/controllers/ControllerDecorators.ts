@@ -5,24 +5,21 @@ import IController from '../../interfaces/IController';
 import IMidleware, { IRequestResultHandler } from '../../midlewares/IMidleware';
 import FunctionAnalizer from '../../metadata/FunctionAnalizer';
 
+
 export default class ControllersDecorators
 {
-    constructor()
-    {
-
-    }
+    constructor(){}
 
     private static _routeKeyMetadata = "meta:controllerRoute";
     private static _actionVerbKeyMetadata = "meta:actionVerb";
-    private static _actionNameKeyMetadata = "meta:actionName";
-    private static _argumentsHandlerKeyMetadata = "meta:argHandler";
+    private static _actionNameKeyMetadata = "meta:actionName";    
     private static _controllerMidlewaresKeyMetadata = "meta:controllerMidlewaresKey";
     private static _actionsMidlewaresKeyMetadata = "meta:actionMidlewaresKey";
     private static _validateBodyKeyMetadata = "meta:validateBodyKey";
     private static _fromQueryKeyMetadata = "meta:fromQueryKey";
     private static _fromBodyKeyMetadata = "meta:fromBodyKey";
-    private static _controllerMidlewaresAfterKeyMetadata = "meta:controllerMidlewaresAfterKey";
-    private static _actionsMidlewaresAfterKeyMetadata = "meta:actionMidlewaresAfterKey";
+    private static _controllerMidlewaresAfterKeyMetadata = "meta:controllerMidlewaresAfterKey";   
+    
 
     
 
@@ -189,19 +186,26 @@ export default class ControllersDecorators
         {
             let meta = ControllersDecorators.GetFromBodyArgs(target.constructor, methodName);
 
+            let params = FunctionAnalizer.ExtractParamsList(target, (target as any)[methodName]);
+
             let item = meta.filter(x => x.Index == parameterIndex);
 
+            let thisParam = params.filter(s => s.Index == parameterIndex)[0];            
+
             if(item.length == 0)
-                meta.push({Index : parameterIndex, Field : bodyPropName });
+                meta.push({Index : parameterIndex, Field : bodyPropName ?? thisParam.Name, Type : thisParam.Type});
+            
             else {
-                item[0].Field = bodyPropName;
+
+                item[0].Field = bodyPropName ?? thisParam.Name;
+                item[0].Type = thisParam.Type;
             }
 
             Reflect.defineMetadata(ControllersDecorators._fromBodyKeyMetadata, meta, target.constructor, methodName);            
         }
     }
 
-    public static GetFromBodyArgs(target : Function, method : string) : {Index : number, Field? : string }[]
+    public static GetFromBodyArgs(target : Function, method : string) : {Index : number, Field : string, Type : Function }[]
     {
         return Reflect.getMetadata(ControllersDecorators._fromBodyKeyMetadata, target, method) ?? [];
     }
@@ -235,6 +239,8 @@ export default class ControllersDecorators
     {
         return Reflect.getMetadata(ControllersDecorators._fromQueryKeyMetadata, target, method) ?? [];
     }
+
+    
     
     
     private static SetMetaData<T>(key: string, target : Object, methodName : string, value : T)
@@ -257,4 +263,5 @@ export default class ControllersDecorators
     }    
 
 }
+
 

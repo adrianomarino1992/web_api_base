@@ -3,19 +3,24 @@ import File from 'fs';
 import IApplicationConfiguration from './interfaces/IApplicationConfiguration';
 import DependecyService, { DIEscope } from './dependencyInjection/DependecyService';
 
-export default class Configuration implements IApplicationConfiguration
+export default class ApplicationConfiguration implements IApplicationConfiguration
 {
 
-    public Host : string = "0.0.0.0";    
-    public Port : number = 5555;
+    public Host : string = "localhost";    
+    public Port : number = 60000;
     public RootPath : string;
-    public EnviromentVariables : {[ket : string] : string} = {};
+    public DEBUG : boolean;
+    public EnviromentVariables : {[key : string] : any} = {};
 
-    constructor()
-    {        
-        this.RootPath = process.cwd() ?? __dirname;        
+    constructor(){
+
+        this.RootPath = process.cwd();    
+        
+        if(process.argv.indexOf("--debug") > -1 || process.argv.indexOf("--DEBUG")  > 1)
+            this.DEBUG = true; 
+        else 
+            this.DEBUG = false;
     }
-
    
     AddScoped(type: Function, ctor?: (new (...args: any[]) => any) | undefined, builder?: (() => any) | undefined): void
     {
@@ -77,12 +82,8 @@ export default class Configuration implements IApplicationConfiguration
                     for(let key in this)
                     { 
                         if(json[key] != undefined)
-                        {
-                            if(key == "RootPath" && !File.existsSync("json[key]"))
-                                continue;
-                                
-                            this[key] = json[key];
-                            
+                        {      
+                            this[key] = json[key];                            
                         }
                     }
                     
@@ -101,15 +102,12 @@ export default class Configuration implements IApplicationConfiguration
 
         return new Promise<boolean>((resolve, _)=>{
 
-            try{
-                
-                delete this.EnviromentVariables.ROOT;
-                delete this.EnviromentVariables.HOST;
-                delete this.EnviromentVariables.PORT;
+            let copy = JSON.parse(JSON.stringify(this));
 
-            }catch{}
+            delete copy.RootPath;
+            delete copy.DEBUG; 
 
-            File.writeFile(`${this.RootPath}\\config.json`, JSON.stringify(this), 'utf-8', error => 
+            File.writeFile(`${this.RootPath}\\config.json`, JSON.stringify(copy), 'utf-8', error => 
             {                
                 this.UpdateEnviroment();
 
@@ -130,11 +128,7 @@ export default class Configuration implements IApplicationConfiguration
         for(let k in this.EnviromentVariables)
         {
             process.env[k] = this.EnviromentVariables[k];
-        }  
-
-        this.EnviromentVariables["ROOT"] = this.RootPath;
-        this.EnviromentVariables["HOST"] = this.Host;
-        this.EnviromentVariables["PORT"] = `${this.Port}`;
+        }            
     }
 
 }

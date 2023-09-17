@@ -122,6 +122,6 @@ interface IDocument
         Response : ReturnType<typeof DocumentationDecorators.GetProducesResponse>,
         Verb : string,
         FromQuery : {Field : string, Type : string }[], 
-        FromBody : {Field : string, Type : string }[]  
+        FromBody : {Field? : string, Type : string }[]  
     }[]
 }

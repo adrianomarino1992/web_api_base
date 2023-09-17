@@ -193,11 +193,11 @@ export default class ControllersDecorators
             let thisParam = params.filter(s => s.Index == parameterIndex)[0];            
 
             if(item.length == 0)
-                meta.push({Index : parameterIndex, Field : bodyPropName ?? thisParam.Name, Type : thisParam.Type});
+                meta.push({Index : parameterIndex, Field : bodyPropName, Type : thisParam.Type});
             
             else {
 
-                item[0].Field = bodyPropName ?? thisParam.Name;
+                item[0].Field = bodyPropName;
                 item[0].Type = thisParam.Type;
             }
 
@@ -205,7 +205,7 @@ export default class ControllersDecorators
         }
     }
 
-    public static GetFromBodyArgs(target : Function, method : string) : {Index : number, Field : string, Type : Function }[]
+    public static GetFromBodyArgs(target : Function, method : string) : {Index : number, Field? : string, Type : Function }[]
     {
         return Reflect.getMetadata(ControllersDecorators._fromBodyKeyMetadata, target, method) ?? [];
     }

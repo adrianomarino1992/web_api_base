@@ -21,7 +21,10 @@ export default class ${AppName} extends Application
       
         this.UseCors();     
         
-        this.UseControllers();
+        await this.UseControllersAsync();
+
+        if(appConfig.DEBUG)
+            this.CreateDocumentation();
 
     }        
 

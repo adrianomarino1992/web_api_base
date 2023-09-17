@@ -3,7 +3,30 @@ import FS from 'fs';
 
 export default class CSS
 {
-    private static _css = `
+
+    private static _dark = `
+    :root
+    {
+        --c-from : rgb(39, 39, 39);
+        --c-to : rgba(53, 53, 53, 0);
+        --g-from : rgb(24, 24, 24);
+        --g-to : rgb(34, 33, 33);
+        --b-from : rgba(78, 121, 185, 0.87);
+        --b-to : rgba(33, 95, 189, 0.842);
+        --t-from : rgb(27, 27, 27);
+        --t-to : rgb(10, 10, 10);
+        --b-from-hover : rgba(5, 42, 85, 0.733);
+        --b-to-hover : rgba(6, 52, 150, 0.705);
+        --borders : rgba(116, 116, 116, 0.384);
+        --h1-color : rgb(231, 231, 231);
+        --h2-color : rgb(211, 210, 210);
+        --h-from : rgb(7, 7, 7);
+        --h-to : rgb(26, 26, 26);
+        --tx-color : rgb(199, 226, 136);
+        --b-color : rgb(233, 233, 233);
+    }`;
+
+    private static _light = `
     :root
     {
         --c-from : rgb(245, 245, 245);
@@ -22,6 +45,9 @@ export default class CSS
         --tx-color : rgb(73, 73, 73);
         --b-color : rgb(233, 233, 233);
     }
+    `;
+
+    private static _css = `    
     
     body
     {
@@ -30,13 +56,13 @@ export default class CSS
     
     .header
     {
-        background-image: linear-gradient(to right, var(--h1-color) , var(--h2-color));
+        background-image: linear-gradient(to right, var(--h-from) , var(--h-to));
         height: 40px;
         display: flex;
         flex-direction: row;
         justify-content: center;
         align-items: center;
-        color: aliceblue;
+        color: var(--h1-color);
         padding: 10px;
     }
 
@@ -60,7 +86,7 @@ export default class CSS
     {
         font-weight: 600;
         cursor: pointer;
-        color: aliceblue;
+        color: var(--h1-color);
         text-decoration: none;
     }
     
@@ -254,10 +280,17 @@ export default class CSS
     
     
     
+    
+    
     `;    
 
     public static Save() : void
-    {
-        FS.writeFileSync(`${__dirname}\\style.css`, CSS._css, 'utf-8');
+    {       
+        let theme = CSS._light;
+
+        if(process.argv.indexOf("--dark") > -1 || process.argv.indexOf("--DARK") > -1)
+            theme = CSS._dark;
+
+        FS.writeFileSync(`${__dirname}\\style.css`, theme + '\r\n'+ CSS._css, 'utf-8');
     }
 }

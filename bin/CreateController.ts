@@ -6,7 +6,7 @@ var currentDirectoryPath = Path.join(process.cwd());
 var controllerName = "SampleController";
 
 var controller = `
-import { ControllerBase, Route, Verb, Action, HTTPVerbs as verbs, Inject, InjectAbstract, Use } from "web_api_base";
+import { ControllerBase, Route, Action, ProducesResponse } from "web_api_base";
 
 
 @Route()
@@ -19,6 +19,7 @@ export default class ${controllerName} extends ControllerBase
     }
     
     @Action()
+    @ProducesResponse({ Status : 200, Description: "OK", JSON : JSON.stringify({status : "pong"}, null, 2)})
     public Ping() : void
     {       
         this.OK({status : "pong"});

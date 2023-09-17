@@ -185,7 +185,7 @@ export default class JS
                     });
                 });            
                 
-                container.innerHTML += '<textarea id="response-area-'+r.Id+'" spellcheck="false" ></textarea>';          
+                container.innerHTML += '<textarea id="response-area-'+r.Id+'" style="margin-top:5px"; spellcheck="false" ></textarea>';          
                 
                
                 document.addEventListener('DOMContentLoaded', function() {

@@ -171,6 +171,15 @@ export default class CSS
         outline: none;
         height: 80px;
     }
+
+    textarea
+    {
+        height: 150px;
+        width: calc(100% - 20px);
+        min-width: calc(100% - 20px);
+        min-height: 80px;
+        max-width: calc(100% - 20px);
+    }
     
     input
     {

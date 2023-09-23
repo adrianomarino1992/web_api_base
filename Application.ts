@@ -244,7 +244,7 @@ export default abstract class Application implements IApplication
                                 if(f.Type.name == "Object")
                                 {
                                     fromBodyParams.push(obj);
-                                    params.push(obj);
+                                    params[f.Index] = obj;
 
                                 }else{
 
@@ -252,7 +252,7 @@ export default abstract class Application implements IApplication
                                     Object.assign(t, obj);                               
 
                                     fromBodyParams.push(t);
-                                    params.push(t);
+                                    params[f.Index] = t;
                                 }
                             }else
                             {
@@ -265,27 +265,27 @@ export default abstract class Application implements IApplication
 
                                     if(number != Number.NaN){
                                         fromBodyParams.push(number);
-                                        params.push(number);
+                                        params[f.Index] = number;
                                     }
 
                                 }else if(obj && ts[f.Index].name.toLocaleLowerCase() == "string")
                                 {
                                     fromBodyParams.push(obj.toString());
-                                    params.push(obj.toString());
+                                    params[f.Index] = obj.toString();
                                 }
                                 else if(obj && ts[f.Index].name.toLocaleLowerCase() == "date")
                                 {
                                     try{
 
                                         fromBodyParams.push(new Date(obj));
-                                        params.push(new Date(obj));
+                                        params[f.Index] = new Date(obj);
 
                                     }catch{}                                
                                 }
                                 else
                                 {
                                     fromBodyParams.push(obj);
-                                    params.push(obj);
+                                    params[f.Index] = obj;
                                 }
                             }
                         });
@@ -309,20 +309,20 @@ export default abstract class Application implements IApplication
 
                                 if(number != Number.NaN){
                                     fromQueryParams.push(number);
-                                    params.push(number);
+                                    params[f.Index] = number;
                                 }
 
                             }else if(obj && f.Type.name.toLocaleLowerCase() == "string")
                             {                              
                                 fromQueryParams.push(obj.toString());
-                                params.push(obj.toString());
+                                params[f.Index] = obj.toString();
                             }
                             else if(obj && f.Type.name.toLocaleLowerCase() == "date")
                             {
                                 try{
 
                                     fromQueryParams.push(new Date(obj));
-                                    params.push(new Date(obj));
+                                    params[f.Index] = new Date(obj);
 
                                 }catch{}
                                 
@@ -330,7 +330,7 @@ export default abstract class Application implements IApplication
                             else
                             {
                                 fromQueryParams.push(obj);
-                                params.push(obj);
+                                params[f.Index] = obj;
                             }
                         });
                     }

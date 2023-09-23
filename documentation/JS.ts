@@ -58,7 +58,7 @@ export default class JS
                
                 container.innerHTML += '<div class="btn-container" ><button id="bt-'+expandId.ID+'">Send</button></div>';
                 
-                if(r.Response.length > 0 && r.Response[0].JSON?.length > 0)
+                if(r.Response.length > 0)
                 {
                     container.innerHTML += '<h3 id="response-bar-'+r.Id+'">Response'+(r.Response.length > 1 ? 's': '')+':</h3>';
     

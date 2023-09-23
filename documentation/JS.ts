@@ -39,8 +39,11 @@ export default class JS
     
                 for(let c of r.FromQuery)
                 {
-                    container.innerHTML += '<div class="token-container"><input type="text" id="key-'+r.Id+r.FromQuery.indexOf(c)+'" placeholder="'+c.Field+'"></div>';
+                    container.innerHTML += '<div class="token-container"><input type="text" id="key-'+r.Id+r.FromQuery.indexOf(c)+'" placeholder="'+c.Field+'"></div>';                   
                 }
+
+                if(r.FromQuery.length > 0 && r.FromBody.length > 0)
+                    container.innerHTML +='</br>'
     
                 if(r.FromBody.length > 0)
                     container.innerHTML += '<textarea id="body-'+r.Id+'" placeholder="{}" spellcheck="false">'+r.Template+'</textarea>';

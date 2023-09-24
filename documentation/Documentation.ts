@@ -99,7 +99,7 @@ export default class Documentation {
             });
 
             console.log(Application.Configurations);
-            cmd.exec(`start chrome.exe "http://${Application.Configurations.Host}:${Application.Configurations.Port}/playground"`, (error, stdout, stdin) => 
+            cmd.exec(`start "" "http://${Application.Configurations.Host}:${Application.Configurations.Port}/playground"`, (error, stdout, stdin) => 
             {
                 if(error)
                     console.error(error);                

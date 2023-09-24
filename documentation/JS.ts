@@ -46,7 +46,39 @@ export default class JS
                     container.innerHTML +='</br>'
     
                 if(r.FromBody.length > 0)
-                    container.innerHTML += '<textarea id="body-'+r.Id+'" placeholder="{}" spellcheck="false">'+r.Template+'</textarea>';
+                {
+                    container.innerHTML += '<textarea id="body-'+r.Id+'" placeholder="{}" spellcheck="false">'+r.Template+'</textarea>';                  
+
+                    document.addEventListener('DOMContentLoaded', function() {
+    
+                        let checkTimeOut;
+
+                        let  textarea = document.getElementById('body-'+r.Id);                          
+
+                        textarea.addEventListener('keydown', function(evt) 
+                        {
+                            if(checkTimeOut)
+                                clearTimeout(checkTimeOut);                               
+
+                            checkTimeOut = setTimeout(()=>{
+
+                                try{
+
+                                    textarea.value = JSON.stringify(JSON.parse(textarea.value), null, 2);
+                                    textarea.style.border = "";
+
+                                }catch
+                                {
+                                    textarea.style.border = "2px solid rgb(201, 111, 89)";
+                                }
+
+                            }, 2000);
+
+                        });
+
+                       
+                    });
+                }
     
                     
                 if(r.Description)

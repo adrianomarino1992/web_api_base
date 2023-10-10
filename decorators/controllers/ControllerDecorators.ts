@@ -185,6 +185,11 @@ export default class ControllersDecorators
         return ControllersDecorators.FromBody(bodyPropName, true);
     }
 
+    public static OptionalFromBodyArg(bodyPropName? : string) 
+    {
+        return ControllersDecorators.FromBody(bodyPropName, false);
+    }
+
     public static FromBody(bodyPropName? : string, required? : boolean)
     {
         return function( target : Object, methodName: string , parameterIndex: number)
@@ -198,7 +203,7 @@ export default class ControllersDecorators
             let thisParam = params.filter(s => s.Index == parameterIndex)[0];            
 
             if(item.length == 0)
-                meta.push({Index : parameterIndex, Field : bodyPropName, Type : thisParam.Type, Required : required ?? false});
+                meta.push({Index : parameterIndex, Field : bodyPropName, Type : thisParam.Type, Required : required ?? true});
             
             else {
 
@@ -220,6 +225,11 @@ export default class ControllersDecorators
         return ControllersDecorators.FromQuery(bodyPropName, true);
     }
 
+    public static OptionalFromQueryArg(bodyPropName? : string) 
+    {
+        return ControllersDecorators.FromQuery(bodyPropName, true);
+    }
+
     public static FromQuery(bodyPropName? : string, required? : boolean)
     {
         return function( target : Object, methodName: string , parameterIndex: number)
@@ -233,7 +243,7 @@ export default class ControllersDecorators
             let item = meta.filter(x => x.Index == parameterIndex);
 
             if(item.length == 0)
-                meta.push({Index : parameterIndex, Field : bodyPropName ?? thisParam.Name, Type : thisParam.Type, Required : required ?? false});
+                meta.push({Index : parameterIndex, Field : bodyPropName ?? thisParam.Name, Type : thisParam.Type, Required : required ?? true});
             
             else {
 

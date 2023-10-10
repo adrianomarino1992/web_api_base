@@ -157,9 +157,15 @@ export function RequiredFromBodyArg(paramName? : string)
     return ControllersDecorators.RequiredFromBodyArg(paramName);
 }
 
-export function FromBody(paramName? : string)
+
+export function OptionalFromBodyArg(paramName? : string)
 {
-    return ControllersDecorators.FromBody(paramName);
+    return ControllersDecorators.OptionalFromBodyArg(paramName);
+}
+
+export function FromBody(paramName? : string, required? : boolean)
+{
+    return ControllersDecorators.FromBody(paramName, required);
 }
 
 export function RequiredFromQueryArg(paramName? : string)
@@ -167,9 +173,15 @@ export function RequiredFromQueryArg(paramName? : string)
     return ControllersDecorators.RequiredFromQueryArg(paramName);
 }
 
-export function FromQuery(paramName? : string)
+export function OptionalFromQueryArg(paramName? : string)
 {
-    return ControllersDecorators.FromQuery(paramName);
+    return ControllersDecorators.OptionalFromQueryArg(paramName);
+}
+
+
+export function FromQuery(paramName? : string, required? : boolean)
+{
+    return ControllersDecorators.FromQuery(paramName, required);
 }
 
 

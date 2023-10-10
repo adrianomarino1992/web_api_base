@@ -16,196 +16,177 @@ import ControllerLoadException from "./exceptions/ControllerLoadException";
 import Exception from "./exceptions/Exception";
 import Documentation from "./documentation/Documentation";
 
-export default abstract class Application implements IApplication
-{
+export default abstract class Application implements IApplication {
 
-    public static Configurations : IApplicationConfiguration;
+    public static Configurations: IApplicationConfiguration;
 
-    private _createdControllers : { new (...args : any[]) : IController} [] = [];
+    private _createdControllers: { new(...args: any[]): IController }[] = [];
 
-    public ApplicationConfiguration : IApplicationConfiguration;
-    
-    public Express : Express;
+    public ApplicationConfiguration: IApplicationConfiguration;
+
+    public Express: Express;
 
     public ApplicationThreadExeptionHandler?: ApplicationExceptionHandler;
 
-    constructor()
-    {
+    constructor() {
         this.ApplicationConfiguration = new ApplicationConfiguration();
 
-        this.Express = ExpressModule();       
+        this.Express = ExpressModule();
 
     }
-    
- 
-    public async StartAsync() : Promise<void>
-    {
+
+
+    public async StartAsync(): Promise<void> {
         await (this.ApplicationConfiguration as ApplicationConfiguration).LoadAsync();
 
-        Application.Configurations =  this.ApplicationConfiguration;
+        Application.Configurations = this.ApplicationConfiguration;
 
-        this.Express.use(ExpressModule.json({limit : 50 * 1024 * 1024}));    
+        this.Express.use(ExpressModule.json({ limit: 50 * 1024 * 1024 }));
 
-        await this.ConfigureAsync(this.ApplicationConfiguration);        
+        await this.ConfigureAsync(this.ApplicationConfiguration);
 
-        await (this.ApplicationConfiguration as ApplicationConfiguration).SaveAsync();             
+        await (this.ApplicationConfiguration as ApplicationConfiguration).SaveAsync();
 
-        this.Express.listen(this.ApplicationConfiguration.Port, this.ApplicationConfiguration.Host, ()=>
-        {
+        this.Express.listen(this.ApplicationConfiguration.Port, this.ApplicationConfiguration.Host, () => {
             console.log(`Application running on ${this.ApplicationConfiguration.Host}:${this.ApplicationConfiguration.Port}`);
         });
     }
 
-    public UseCors() : void 
-    {
+    public UseCors(): void {
         this.Express.use(require('cors')());
     }
 
-    private GetIgnoredPaths() : string[]
-    {
+    private GetIgnoredPaths(): string[] {
         return [
             ".git",
             ".vscode",
-            "coverage",             
+            "coverage",
             "node_modules"
         ]
     }
 
-    private TryFindControllerFolder(path : string) : string | undefined
-    {
+    private TryFindControllerFolder(path: string): string | undefined {
 
-        if(this.GetIgnoredPaths().filter(s => path.endsWith(s)).length > 0)
+        if (this.GetIgnoredPaths().filter(s => path.endsWith(s)).length > 0)
             return undefined;
 
-        if(path.indexOf("node_modules") > -1)
+        if (path.indexOf("node_modules") > -1)
             return undefined;
-       
-        if(!File.existsSync(path))
+
+        if (!File.existsSync(path))
             return undefined;
-        
-        if(File.readdirSync(path).filter(s => s.toLowerCase().endsWith("controller.js")).length > 0)
+
+        if (File.readdirSync(path).filter(s => s.toLowerCase().endsWith("controller.js")).length > 0)
             return path;
-        
+
         let folder = File.readdirSync(path).filter(s => !File.lstatSync(Path.join(path, s)).isFile());
 
-        if(folder.length == 0)
+        if (folder.length == 0)
             return undefined;
-            
-        for(let f of folder)
-        {
+
+        for (let f of folder) {
             let find = this.TryFindControllerFolder(Path.join(path, f));
 
-            if(find && find.toLowerCase().endsWith("controllers"))
-                return find;                
-    
+            if (find && find.toLowerCase().endsWith("controllers"))
+                return find;
+
         }
 
         return undefined;
     }
 
-    
 
-    protected UseControllersAsync(root? : string) : Promise<void>
-    {
-        return new Promise<void>(async (resolve, reject) =>
-        {
-            
-            let controllersPath : string | undefined = this.TryFindControllerFolder(Path.join(root ?? this.ApplicationConfiguration.RootPath, "controllers"));
 
-            if(!controllersPath)
+    protected UseControllersAsync(root?: string): Promise<void> {
+        return new Promise<void>(async (resolve, reject) => {
+
+            let controllersPath: string | undefined = this.TryFindControllerFolder(Path.join(root ?? this.ApplicationConfiguration.RootPath, "controllers"));
+
+            if (!controllersPath)
                 controllersPath = this.TryFindControllerFolder(root ?? this.ApplicationConfiguration.RootPath);
-           
-            if(!controllersPath || !File.existsSync(controllersPath!))
-                return;  
+
+            if (!controllersPath || !File.existsSync(controllersPath!))
+                return;
 
             console.debug(`reading controllers in ${controllersPath}`);
 
-            let files : string[] = File.readdirSync(controllersPath).filter(s => s.toLocaleLowerCase().endsWith("controller.js"));
+            let files: string[] = File.readdirSync(controllersPath).filter(s => s.toLowerCase().endsWith("controller.js"));
 
-            for(let controllerFile of files)
-            {
-                
+            for (let controllerFile of files) {
+
 
                 let controllerModule = await import(Path.join(controllersPath, controllerFile));
 
-                let controllerClass : any | undefined = undefined;
+                let controllerClass: any | undefined = undefined;
 
-                if(controllerModule.default == undefined)
-                {
+                if (controllerModule.default == undefined) {
 
-                    for(let c in controllerModule)
-                    {
-                        if(c.toLocaleLowerCase().endsWith("controller"))
-                        {
+                    for (let c in controllerModule) {
+                        if (c.toLowerCase().endsWith("controller")) {
                             controllerClass = controllerModule[c];
                         }
                     }
 
-                }else 
+                } else
                     controllerClass = controllerModule.default;
 
-                if(controllerClass == undefined)
+                if (controllerClass == undefined)
                     throw new ControllerLoadException(`Can find any controller from file : ${controllerFile}`);
 
                 let controller = Reflect.construct(controllerClass.prototype.constructor, []) as IController;
 
-                if(controller != undefined && controller != null)
-                {
+                if (controller != undefined && controller != null) {
                     this.AppendController(controllerClass.prototype.constructor);
 
-                }else{
+                } else {
 
                     throw new ControllerLoadException(`Can not load ${controllerClass.name} controller from file : ${controllerFile}`);
                 }
 
-                
+
             }
 
             resolve();
 
 
         })
-        
+
 
     }
 
-    
-    protected AppendController<T extends IController>(ctor : { new (...args : any[]) : T;}) : void
-    {
+
+    protected AppendController<T extends IController>(ctor: { new(...args: any[]): T; }): void {
         let empty = new ctor() as any;
-                
-        let methods = Reflect.ownKeys(empty.constructor.prototype).filter(m => 
-            {
-                return typeof empty[m] == "function" ;
-            })     
+
+        let methods = Reflect.ownKeys(empty.constructor.prototype).filter(m => {
+            return typeof empty[m] == "function";
+        })
 
         let route = ControllersDecorators.GetRoute(empty);
         let validateBody = ControllersDecorators.IsToValidate(empty);
 
-        if(!route)
+        if (!route)
             return;
 
         this._createdControllers.push(ctor);
 
-        for(let method of methods)
-        {
+        for (let method of methods) {
             let action = ControllersDecorators.GetAction(empty, method.toString());
 
-            if(!action){
-                continue;                
+            if (!action) {
+                continue;
             }
-            
+
             let verb = ControllersDecorators.GetVerb(empty, method.toString());
             let fromBody = ControllersDecorators.GetFromBodyArgs(empty.constructor, method.toString());
             let fromQuery = ControllersDecorators.GetFromQueryArgs(empty.constructor, method.toString());
 
-            if(!verb)
+            if (!verb)
                 verb = HTTPVerbs.GET;
 
-            console.debug("appended : " , verb,`${route}${action}`);
+            console.debug("appended : ", verb, `${route}${action}`);
 
-            (this.Express as any)[verb.toString().toLowerCase()](`${route}${action}`, (request : Request, response : Response) => 
-            {
+            (this.Express as any)[verb.toString().toLowerCase()](`${route}${action}`, (request: Request, response: Response) => {
 
                 let midlewares = ControllersDecorators.GetMidlewares(empty).reverse();
 
@@ -216,74 +197,65 @@ export default abstract class Application implements IApplication
 
                 afters.push(...ControllersDecorators.GetAfters(empty, method.toString()).reverse());
 
-                let handler = (context : IHTTPRequestContext) => 
-                {
-                    
-                    let params : any[]= [];
-                    
-                    let ts = Reflect.getMetadata("design:paramtypes", empty, method.toString()) ?? 
-                             Reflect.getMetadata("design:paramtypes", empty.constructor, method.toString());
+                let handler = (context: IHTTPRequestContext) => {
+
+                    let params: any[] = [];
+
+                    let ts = Reflect.getMetadata("design:paramtypes", empty, method.toString()) ??
+                        Reflect.getMetadata("design:paramtypes", empty.constructor, method.toString());
 
                     let fromBodyParams: any[] = [];
-                    if(fromBody.length > 0)
-                    { 
-                        fromBody.sort((a, b) => a.Index - b.Index).forEach(f => 
-                        {
+                    if (fromBody.length > 0) {
+                        fromBody.sort((a, b) => a.Index - b.Index).forEach(f => {
                             let obj = undefined;
 
-                            if(!f.Field || f.Type.name == "Object")
-                                obj =request.body;
-                            else 
-                               obj = request.body[f.Field];                            
-                            
-                            if(["string", "number", "boolean", "bigint"].filter(s => s == ts[f.Index].name.toLocaleLowerCase()).length == 0){
-                                try{
+                            if (!f.Field || f.Type.name == "Object")
+                                obj = request.body;
+                            else
+                                obj = request.body[f.Field];
+
+                            if (["string", "number", "boolean", "bigint"].filter(s => s == ts[f.Index].name.toLowerCase()).length == 0) {
+                                try {
                                     obj.__proto__ = ts[f.Index];
-                                }catch{}
-                            
-                                if(f.Type.name == "Object")
-                                {
+                                } catch { }
+
+                                if (f.Type.name == "Object") {
                                     fromBodyParams.push(obj);
                                     params[f.Index] = obj;
 
-                                }else{
+                                } else {
 
                                     let t = Reflect.construct(ts[f.Index], []) as any;
-                                    Object.assign(t, obj);                               
+                                    Object.assign(t, obj);
 
                                     fromBodyParams.push(t);
                                     params[f.Index] = t;
                                 }
-                            }else
-                            {
-                                if(obj && obj.indexOf('"') == 0 && obj.lastIndexOf('"') == obj.length -1)
-                                    obj = obj.substring(1, obj.length -1);
+                            } else {
+                                if (obj != undefined && obj.indexOf('"') == 0 && obj.lastIndexOf('"') == obj.length - 1)
+                                    obj = obj.substring(1, obj.length - 1);
 
-                                if(obj && ts[f.Index].name.toLocaleLowerCase() == "number")
-                                {
+                                if (obj != undefined && ts[f.Index].name.toLowerCase() == "number") {
                                     let number = Number.parseFloat(obj.toString());
 
-                                    if(number != Number.NaN){
+                                    if (number != Number.NaN) {
                                         fromBodyParams.push(number);
                                         params[f.Index] = number;
                                     }
 
-                                }else if(obj && ts[f.Index].name.toLocaleLowerCase() == "string")
-                                {
+                                } else if (obj != undefined && ts[f.Index].name.toLowerCase() == "string") {
                                     fromBodyParams.push(obj.toString());
                                     params[f.Index] = obj.toString();
                                 }
-                                else if(obj && ts[f.Index].name.toLocaleLowerCase() == "date")
-                                {
-                                    try{
+                                else if (obj != undefined && ts[f.Index].name.toLowerCase() == "date") {
+                                    try {
 
                                         fromBodyParams.push(new Date(obj));
                                         params[f.Index] = new Date(obj);
 
-                                    }catch{}                                
+                                    } catch { }
                                 }
-                                else
-                                {
+                                else {
                                     fromBodyParams.push(obj);
                                     params[f.Index] = obj;
                                 }
@@ -291,268 +263,279 @@ export default abstract class Application implements IApplication
                         });
                     }
 
-                    let fromQueryParams : any[] = [];
-                    if(fromQuery.length > 0)
-                    {   
-                        fromQuery.sort((a, b) => a.Index - b.Index).forEach((f, j) => 
-                        {                 
-                            let obj : string | undefined;
+                    let fromQueryParams: any[] = [];
+                    if (fromQuery.length > 0) {
+                        fromQuery.sort((a, b) => a.Index - b.Index).forEach((f, j) => {
+                            let obj: string | undefined;
 
-                            obj = request.query[f.Field]?.toString();   
+                            obj = request.query[f.Field]?.toString();
 
-                            if(obj && obj.indexOf('"') == 0 && obj.lastIndexOf('"') == obj.length -1)
-                                    obj = obj.substring(1, obj.length -1);
+                            if (obj != undefined && obj.indexOf('"') == 0 && obj.lastIndexOf('"') == obj.length - 1)
+                                obj = obj.substring(1, obj.length - 1);
 
-                            if(obj && f.Type.name.toLocaleLowerCase() == "number")
-                            {
+                            if (obj != undefined && f.Type.name.toLowerCase() == "number") {
                                 let number = Number.parseFloat(obj.toString());
 
-                                if(number != Number.NaN){
+                                if (number != Number.NaN) {
                                     fromQueryParams.push(number);
                                     params[f.Index] = number;
                                 }
 
-                            }else if(obj && f.Type.name.toLocaleLowerCase() == "string")
-                            {                              
+                            } else if (obj != undefined && f.Type.name.toLowerCase() == "string") {
                                 fromQueryParams.push(obj.toString());
                                 params[f.Index] = obj.toString();
                             }
-                            else if(obj && f.Type.name.toLocaleLowerCase() == "date")
-                            {
-                                try{
+                            else if (obj != undefined && f.Type.name.toLowerCase() == "date") {
+                                try {
 
                                     fromQueryParams.push(new Date(obj));
                                     params[f.Index] = new Date(obj);
 
-                                }catch{}
-                                
+                                } catch { }
+
                             }
-                            else
-                            {
+                            else if (obj != undefined && f.Type.name.toLowerCase() == "boolean") {
+                                try {
+
+                                    if (typeof obj != "boolean") {
+
+                                        let v = obj.toString().toLowerCase() == "true";
+                                        fromQueryParams.push(v);
+                                        params[f.Index] = v;
+                                    }
+                                    else {
+                                        fromQueryParams.push(obj);
+                                        params[f.Index] = obj;
+                                    }
+
+                                } catch { }
+
+                            }
+                            else {
                                 fromQueryParams.push(obj);
                                 params[f.Index] = obj;
                             }
                         });
                     }
-                   
-                    if(params.length > 0)
-                    {
-                        if(validateBody){
-                            let erros : string[] = [];
 
-                            if(fromBody.length  > fromBodyParams.filter(s => s != undefined).length || (fromBody.length > 0 && request.headers["content-length"] == '0'))
-                            {
+
+                    if (validateBody) {
+
+                        if (fromBody.length > 0) {
+                            let modelBindErros = [];
+
+                            for (let p of fromBody) {
+                                if (p.Required && (params.length <= p.Index || params[p.Index] == undefined)) {
+                                    modelBindErros.push(p);
+                                }
+                            }
+
+                            if (modelBindErros.length > 0) {
                                 response.status(400);
                                 response.json(
                                     {
-                                        Message : "Model binding fail", 
-                                        Detailts : [ "Some expected body parameter was not provided" ]
+                                        Message: "Model binding fail",
+                                        Detailts: modelBindErros.map(s => `Parameter "${s.Field}" is required`)
                                     });
                                 return;
                             }
 
-                            if(fromQuery.length  > fromQueryParams.filter(s => s != undefined).length)
-                            {
+                        }
+
+                        if (fromQuery.length > 0) {
+                            let modelBindErros = [];
+
+                            for (let p of fromQuery) {
+                                if (p.Required && (params.length <= p.Index || params[p.Index] == undefined)) {
+                                    modelBindErros.push(p);
+                                }
+                            }
+
+                            if (modelBindErros.length > 0) {
                                 response.status(400);
                                 response.json(
                                     {
-                                        Message : "Model binding fail", 
-                                        Detailts : [ "Some expected url query string parameter was not provided" ]
+                                        Message: "Model binding fail",
+                                        Detailts: modelBindErros.map(s => `Parameter "${s.Field}" is required`)
                                     });
                                 return;
                             }
 
-                            for(let a of fromBodyParams)
-                            {
-                                erros.push(...ValidationDecorators.Validate<typeof a>(a).map(s => s.Message));
-                            }
+                        }
 
-                            if(erros.length > 0)
-                            {
-                                response.status(400);
-                                response.json(
-                                    {
-                                        Message : "Validation fail", 
-                                        Detailts : erros
-                                    });
-                                return;
-                            }
+                        let validationsErrors: string[] = [];
+
+                        for (let a of fromBodyParams) {
+                            validationsErrors.push(...ValidationDecorators.Validate<typeof a>(a).map(s => s.Message));
+                        }
+
+                        if (validationsErrors.length > 0) {
+                            response.status(400);
+                            response.json(
+                                {
+                                    Message: "Validation fail",
+                                    Detailts: validationsErrors
+                                });
+                            return;
                         }
                     }
-    
+
+
                     let controller = DependecyService.ResolveCtor(empty.constructor) as IController;
 
-                    if(controller == undefined)
+                    if (controller == undefined)
                         controller = new ctor() as IController;
-                    
-                    try{
 
-                        DependecyService.CheckForDependenciesAndResolve(controller);  
+                    try {
 
-                    }catch(err)
-                    {
+                        DependecyService.CheckForDependenciesAndResolve(controller);
+
+                    } catch (err) {
                         this.CallErrorHandler(request, response, this.CastToExpection(err as Error));
-                    }               
+                    }
 
                     controller.Request = context.Request;
                     controller.Response = context.Response;
 
-                    try{
-                        
+                    try {
+
                         let exceutionTask = (controller as any)[method](...params);
-                        
-                        if(exceutionTask instanceof Promise)
-                        {
-                            exceutionTask.then(c => 
-                                {
-                                    for(let afterHandler of afters)
-                                    {
-                                        afterHandler(
-                                            {                                   
-                                                Request : request, 
-                                                Response : response, 
-                                                Result : exceutionTask
-                                            });
-                                    }
-                                }).catch(err => 
-                                    {
-                                        for(let afterHandler of afters)
+
+                        if (exceutionTask instanceof Promise) {
+                            exceutionTask.then(c => {
+                                for (let afterHandler of afters) {
+                                    afterHandler(
                                         {
-                                            
-                                            afterHandler(
-                                                {                      
-                                                    Exception: this.CastToExpection(err as Error),             
-                                                    Request : request, 
-                                                    Response : response
-                                                });
-                                        }
+                                            Request: request,
+                                            Response: response,
+                                            Result: exceutionTask
+                                        });
+                                }
+                            }).catch(err => {
+                                for (let afterHandler of afters) {
 
-                                        if(afters.length == 0)                                        
-                                            this.CallErrorHandler(request, response, this.CastToExpection(err as Error));
-                                        
+                                    afterHandler(
+                                        {
+                                            Exception: this.CastToExpection(err as Error),
+                                            Request: request,
+                                            Response: response
+                                        });
+                                }
 
-                                    });
+                                if (afters.length == 0)
+                                    this.CallErrorHandler(request, response, this.CastToExpection(err as Error));
+
+
+                            });
 
                         }
-                        else
-                        {
+                        else {
 
-                            for(let afterHandler of afters)
-                            {
-                                try{
+                            for (let afterHandler of afters) {
+                                try {
                                     afterHandler(
-                                    {                                   
-                                        Request : request, 
-                                        Response : response, 
-                                        Result : exceutionTask
-                                    });
-                                }catch(err)
-                                {
+                                        {
+                                            Request: request,
+                                            Response: response,
+                                            Result: exceutionTask
+                                        });
+                                } catch (err) {
                                     this.CallErrorHandler(request, response, this.CastToExpection(err as Error))
                                 }
                             }
                         }
 
-                        
+
 
                     }
-                    catch(err)
-                    {
-                        for(let afterHandler of afters)
-                        {
-                            try{                               
-                                
-                                afterHandler(
-                                {
-                                    Exception : this.CastToExpection(err as Error), 
-                                    Request : request, 
-                                    Response : response
-                                });
+                    catch (err) {
+                        for (let afterHandler of afters) {
+                            try {
 
-                            }catch(err)
-                            {
+                                afterHandler(
+                                    {
+                                        Exception: this.CastToExpection(err as Error),
+                                        Request: request,
+                                        Response: response
+                                    });
+
+                            } catch (err) {
                                 this.CallErrorHandler(request, response, this.CastToExpection(err as Error));
                             }
                         }
 
-                        if(afters.length == 0)
+                        if (afters.length == 0)
                             this.CallErrorHandler(request, response, this.CastToExpection(err as Error));
                     }
                 }
 
-                if(midlewares && midlewares.length > 0)
-                {
-                    
-                    let httpRequestContexts : IHTTPRequestContext[] = [];
+                if (midlewares && midlewares.length > 0) {
 
-                    let pipeline : any[] = [];
+                    let httpRequestContexts: IHTTPRequestContext[] = [];
 
-                    for(let i = 0; i <= midlewares.length; i++)
-                    {
+                    let pipeline: any[] = [];
+
+                    for (let i = 0; i <= midlewares.length; i++) {
 
                         httpRequestContexts.push(
                             {
-                                Request : request, 
-                                Response : response, 
-                                Next : ()=> {}
+                                Request: request,
+                                Response: response,
+                                Next: () => { }
                             });
-                        
+
                     }
 
-                    for(let i = 0; i < httpRequestContexts.length; i++)
-                    {
+                    for (let i = 0; i < httpRequestContexts.length; i++) {
                         let box =
                         {
-                            v : i
+                            v: i
                         };
-                        
-                        
+
+
                         pipeline.push(
                             {
-                                Execute : () => {
+                                Execute: () => {
 
-                                    pipeline.length - 1  == box.v ? handler(httpRequestContexts[box.v]) : midlewares[box.v](httpRequestContexts[box.v])
-                                
-                                }                                
+                                    pipeline.length - 1 == box.v ? handler(httpRequestContexts[box.v]) : midlewares[box.v](httpRequestContexts[box.v])
+
+                                }
                             });
                     }
 
-                    for(let i = 0; i < pipeline.length; i++)
-                    {
-                        httpRequestContexts[i].Next = i == pipeline.length - 1 ? ()=>{} : () => pipeline[i + 1].Execute(); 
-                    }  
-                                        
+                    for (let i = 0; i < pipeline.length; i++) {
+                        httpRequestContexts[i].Next = i == pipeline.length - 1 ? () => { } : () => pipeline[i + 1].Execute();
+                    }
+
 
                     pipeline[0].Execute();
                 }
-                else{
-                   
+                else {
+
                     handler({
-                        Request : request, 
-                        Response : response, 
-                        Next : () => {}
+                        Request: request,
+                        Response: response,
+                        Next: () => { }
                     });
-                    
+
                 }
 
-                
+
             })
         }
-                
+
     }
 
-    public CreateDocumentation(): void {        
+    public CreateDocumentation(): void {
         new Documentation().CreateDocumentation(this._createdControllers, this.Express);
     }
-    
-    private CastToExpection(err : Error) : Exception
-    {
-        let ex : Exception | undefined;
 
-        if(err instanceof Exception)
+    private CastToExpection(err: Error): Exception {
+        let ex: Exception | undefined;
+
+        if (err instanceof Exception)
             ex = err;
-        else 
-        {
+        else {
             ex = new Exception(err.message);
             ex.stack = err.stack;
         }
@@ -560,49 +543,42 @@ export default abstract class Application implements IApplication
         return ex;
     }
 
-    private CallErrorHandler(request : Request, response : Response, exception : Error)
-    {
-        let defaultHandler = (request : Request, response : Response, exception : Exception) : void =>
-        {
-            try{
+    private CallErrorHandler(request: Request, response: Response, exception: Error) {
+        let defaultHandler = (request: Request, response: Response, exception: Exception): void => {
+            try {
 
                 response.status(500);
                 response.json(exception);
 
-            }catch(err)
-            {
+            } catch (err) {
                 console.log("Error while trying handle the error");
                 console.log(err);
-               
-            }finally
-            {
+
+            } finally {
                 console.log("Inner exception");
                 console.log(exception);
             }
         }
 
-        if(this.ApplicationThreadExeptionHandler != undefined)
-        {
-            try{
+        if (this.ApplicationThreadExeptionHandler != undefined) {
+            try {
                 this.ApplicationThreadExeptionHandler!(request, response, this.CastToExpection(exception));
 
-            }catch(err)
-            {
+            } catch (err) {
                 console.log("Error while trying handle the error with custom delegate");
-                console.log(err);                
-                defaultHandler(request, response,  this.CastToExpection(err as Error));
+                console.log(err);
+                defaultHandler(request, response, this.CastToExpection(err as Error));
             }
-        }else
-        {
-            defaultHandler(request, response,  this.CastToExpection(exception));
+        } else {
+            defaultHandler(request, response, this.CastToExpection(exception));
         }
     }
 
 
 
-    public abstract ConfigureAsync(appConfig : IApplicationConfiguration): Promise<void>;
-    
-    
+    public abstract ConfigureAsync(appConfig: IApplicationConfiguration): Promise<void>;
+
+
 }
 
 

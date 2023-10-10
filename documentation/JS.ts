@@ -160,7 +160,9 @@ export default class JS
                         {
                             let input = document.getElementById('key-'+r.Id+r.FromQuery.indexOf(c));
     
-                            args+= c.Field + '="' + input.value + '"&';
+                            if(input.value.trim() != ''){
+                                args+= c.Field + '="' + input.value + '"&';
+                            }
                         }
     
                         if(args.length > 1){

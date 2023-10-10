@@ -152,15 +152,26 @@ export function Rule<T>(action: (a : T) => boolean, message?: string)
     return ValidationDecorators.Rule<T>(action, message);
 }
 
+export function RequiredFromBodyArg(paramName? : string)
+{
+    return ControllersDecorators.RequiredFromBodyArg(paramName);
+}
+
 export function FromBody(paramName? : string)
 {
     return ControllersDecorators.FromBody(paramName);
+}
+
+export function RequiredFromQueryArg(paramName? : string)
+{
+    return ControllersDecorators.RequiredFromQueryArg(paramName);
 }
 
 export function FromQuery(paramName? : string)
 {
     return ControllersDecorators.FromQuery(paramName);
 }
+
 
 
 

@@ -180,7 +180,12 @@ export default class ControllersDecorators
         return meta?.toLocaleLowerCase();
     }
 
-    public static FromBody(bodyPropName? : string)
+    public static RequiredFromBodyArg(bodyPropName? : string) 
+    {
+        return ControllersDecorators.FromBody(bodyPropName, true);
+    }
+
+    public static FromBody(bodyPropName? : string, required? : boolean)
     {
         return function( target : Object, methodName: string , parameterIndex: number)
         {
@@ -193,7 +198,7 @@ export default class ControllersDecorators
             let thisParam = params.filter(s => s.Index == parameterIndex)[0];            
 
             if(item.length == 0)
-                meta.push({Index : parameterIndex, Field : bodyPropName, Type : thisParam.Type});
+                meta.push({Index : parameterIndex, Field : bodyPropName, Type : thisParam.Type, Required : required ?? false});
             
             else {
 
@@ -205,12 +210,17 @@ export default class ControllersDecorators
         }
     }
 
-    public static GetFromBodyArgs(target : Function, method : string) : {Index : number, Field? : string, Type : Function }[]
+    public static GetFromBodyArgs(target : Function, method : string) : {Index : number, Field? : string, Type : Function, Required : boolean }[]
     {
         return Reflect.getMetadata(ControllersDecorators._fromBodyKeyMetadata, target, method) ?? [];
     }
 
-    public static FromQuery(bodyPropName? : string)
+    public static RequiredFromQueryArg(bodyPropName? : string) 
+    {
+        return ControllersDecorators.FromQuery(bodyPropName, true);
+    }
+
+    public static FromQuery(bodyPropName? : string, required? : boolean)
     {
         return function( target : Object, methodName: string , parameterIndex: number)
         {
@@ -223,7 +233,7 @@ export default class ControllersDecorators
             let item = meta.filter(x => x.Index == parameterIndex);
 
             if(item.length == 0)
-                meta.push({Index : parameterIndex, Field : bodyPropName ?? thisParam.Name, Type : thisParam.Type});
+                meta.push({Index : parameterIndex, Field : bodyPropName ?? thisParam.Name, Type : thisParam.Type, Required : required ?? false});
             
             else {
 
@@ -235,7 +245,7 @@ export default class ControllersDecorators
         }
     }
    
-    public static GetFromQueryArgs(target : Function, method : string) :  {Index : number, Field : string, Type : Function }[]
+    public static GetFromQueryArgs(target : Function, method : string) :  {Index : number, Field : string, Type : Function, Required : boolean }[]
     {
         return Reflect.getMetadata(ControllersDecorators._fromQueryKeyMetadata, target, method) ?? [];
     }

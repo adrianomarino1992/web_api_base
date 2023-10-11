@@ -69,18 +69,20 @@ export default class Documentation {
                 });                          
                 
                
-            }     
-
-            if(doc.Resources.length > 0){
-
-                JS.Append(`AddResource(${JSON.stringify(doc)});`);
-                documentations.push(doc); 
-            }
-                 
-        }
+            }                      
+        }      
 
         if(documentations.length > 0)
         {
+            for(let doc of documentations.sort((c, e) =>  c.Controller.toLowerCase().localeCompare(e.Controller.toLocaleLowerCase())))
+            {
+                if(doc.Resources.length > 0){               
+    
+                    JS.Append(`AddResource(${JSON.stringify(doc)});`);
+                    documentations.push(doc); 
+                }
+            }
+
             JS.Save();
             HTML.Save();
             CSS.Save();

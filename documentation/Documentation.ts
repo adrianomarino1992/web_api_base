@@ -68,7 +68,8 @@ export default class Documentation {
                     FromQuery : fromQuery.map(s => { return {Field : s.Field, Type : s.Type.name }})
                 });                          
                 
-               
+                if(doc.Resources.length > 0)  
+                    documentations.push(doc); 
             }                      
         }      
 
@@ -76,11 +77,7 @@ export default class Documentation {
         {
             for(let doc of documentations.sort((c, e) =>  c.Controller.toLowerCase().localeCompare(e.Controller.toLocaleLowerCase())))
             {
-                if(doc.Resources.length > 0){               
-    
-                    JS.Append(`AddResource(${JSON.stringify(doc)});`);
-                    documentations.push(doc); 
-                }
+                JS.Append(`AddResource(${JSON.stringify(doc)});`);
             }
 
             JS.Save();

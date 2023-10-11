@@ -67,10 +67,12 @@ export default class Documentation {
                     FromBody : fromBody.map(s => { return {Field : s.Field, Type : s.Type.name }}) , 
                     FromQuery : fromQuery.map(s => { return {Field : s.Field, Type : s.Type.name }})
                 });                          
-                
-                if(doc.Resources.length > 0)  
-                    documentations.push(doc); 
-            }                      
+               
+            }   
+            
+             
+            if(doc.Resources.length > 0)  
+                documentations.push(doc); 
         }      
 
         if(documentations.length > 0)

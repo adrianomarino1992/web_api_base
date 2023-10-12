@@ -5,12 +5,14 @@ class Person
     public Name : string;
     public Age : number;
     public Gender : Gender;
+    public DOCs : number[];
 
     constructor(name: string, age: number, gender : Gender)
     {
         this.Name = name;
         this.Age = age;
         this.Gender = gender;
+        this.DOCs = [];
     }
 }
 
@@ -80,7 +82,7 @@ describe("Testing linq", ()=>{
     test("Testing first clause", ()=>
     {
         expect(stringArray.First()).toBe("adriano");
-        expect(stringArray.First(s => s == "camila")).toBe("camila");
+        expect(stringArray.First(s => s == "camila")).toBe("camila");        
         
         let e : any; 
         try{
@@ -106,14 +108,14 @@ describe("Testing linq", ()=>{
        expect(stringArray[2]).toBe("balera");
 
 
-       let u = objectArray.OrderBy("Name");
+       let u = objectArray.OrderBy(p => p.Name);
 
        expect(u[0].Name).toBe("adriano");
        expect(u[1].Name).toBe("andre");
        expect(u[2].Name).toBe("camila");
        expect(u[3].Name).toBe("juliana");
 
-       u = objectArray.OrderByDescending("Name");
+       u = objectArray.OrderByDescending(p => p.Name);
 
        expect(u[3].Name).toBe("adriano");
        expect(u[2].Name).toBe("andre");
@@ -138,7 +140,7 @@ describe("Testing linq", ()=>{
 
     test("Testing group by clause", ()=>
     {        
-        let g = objectArray.GroupBy("Gender");
+        let g = objectArray.GroupBy(u => u.Gender);
 
         expect(g.Count()).toBe(2);
 
@@ -157,7 +159,7 @@ describe("Testing linq", ()=>{
 
         expect(g.Count()).toBe(6);
 
-        let v = g.OrderByDescending("Count");
+        let v = g.OrderByDescending(s => s.Count);
 
         expect(v[0].Count).toBe(2);
         expect(v[0].Values.Count()).toBe(2);
@@ -173,8 +175,7 @@ describe("Testing linq", ()=>{
 
         expect(g[0]).toBe(1);
         expect(g[1]).toBe(25);
-        expect(g[2]).toBe(9);
-
+        expect(g[2]).toBe(9);       
 
         let u = objectArray.Select(s => s.Age);
 
@@ -185,6 +186,67 @@ describe("Testing linq", ()=>{
 
         expect(typeof p[0]).toBe(typeof new Person("", 1, Gender.MALE));
         expect(p[0].Age).toBe(numberArray[0]);       
+        
+    });
+
+    test("Testing sum clause", ()=>
+    {        
+        expect([1,2,3,4,5].Sum()).toBe(15);   
+        
+        expect(objectArray.Sum(s => s.Age)).toBe(1035);   
+        
+        let e : any; 
+        try{
+            stringArray.Sum();
+        }catch(err)
+        {e = err;}
+        
+        expect(e).not.toBeUndefined();      
+        
+    });
+
+    test("Testing max clause", ()=>
+    {        
+        expect([1,2,3,4,5].Max()).toBe(5);
+        expect(objectArray.Max(s => s.Age)).toBe(950);     
+        
+        let e : any; 
+        try{
+            stringArray.Max();
+        }catch(err)
+        {e = err;}
+        
+        expect(e).not.toBeUndefined();      
+        
+    });
+
+    test("Testing min clause", ()=>
+    {        
+        expect([1,2,3,4,5].Min()).toBe(1);  
+        expect(objectArray.Min(s => s.Age)).toBe(25);            
+        
+        let e : any; 
+        try{
+            stringArray.Min();
+        }catch(err)
+        {e = err;}
+        
+        expect(e).not.toBeUndefined();      
+        
+    });
+
+    test("Testing avg clause", ()=>
+    {        
+        expect([1,2,3,4,5].Avg()).toBe(3);  
+        expect(objectArray.Avg(s => s.Age)).toBe(1035/4);            
+        
+        let e : any; 
+        try{
+            stringArray.Avg();
+        }catch(err)
+        {e = err;}
+        
+        expect(e).not.toBeUndefined();      
         
     });
     

@@ -1,18 +1,5 @@
-
-declare interface Array<T>
-{
-  Count(predicate? : (element : T) => boolean) : number;
-  Any(predicate? : (element : T) => boolean) : boolean;
-  All(predicate : (element : T) => boolean) : boolean;
-  FirstOrDefault(predicate? : (element : T) => boolean) : T | undefined;
-  First(predicate? : (element : T) => boolean) : T;
-  OrderBy(key? : keyof T) : Array<T>;
-  OrderByDescending(key? : keyof T) : Array<T>;
-  GroupBy(key : keyof T) : IGroupBy<T>[] 
-  Aggregate() : IAggregate<T>[]   
-  Where(predicate : (element : T) => boolean) : Array<T>;
-  Select<U>(translate : (element : T) => U) : U[];
-}
+import './ArrayExtension';
+import Exception from "../exceptions/Exception";
 
 
 Array.prototype.Count = function<T>(predicate? :  (element : T) => boolean)
@@ -58,6 +45,22 @@ Array.prototype.FirstOrDefault = function<T>(predicate? :  (element : T) => bool
   }
 }
 
+Array.prototype.Add = function<T>(obj : T) : void
+{
+  this.push(obj);
+}
+
+Array.prototype.AddRange = function<T>(objs : T[]) : void
+{
+  this.concat(...objs);
+}
+
+Array.prototype.Clear = function() : void
+{
+  while(this.Any())
+    this.pop()
+}
+
 Array.prototype.First = function<T>(predicate? :  (element : T) => boolean) : T
 {
   if(!predicate)
@@ -65,14 +68,14 @@ Array.prototype.First = function<T>(predicate? :  (element : T) => boolean) : T
     else 
     {
         if(!this.Any(predicate))
-            throw new Error("The sequence do not contains elements");
+            throw new Exception("The sequence do not contains elements");
 
         return this.filter(s => predicate(s))[0];
     }
 }
 
 
-Array.prototype.OrderBy = function<T>(key? : keyof T) : Array<T>
+Array.prototype.OrderBy = function<T, U>(memberExpression? : (element : T) => U) : Array<T> 
 {
   let clone = Array.from(this);
 
@@ -88,15 +91,15 @@ Array.prototype.OrderBy = function<T>(key? : keyof T) : Array<T>
       let compareObj1 : any;
       let compareObj2 : any;
 
-      if(key == undefined)
+      if(memberExpression == undefined)
       {
           compareObj1 = s;  
           compareObj2 = u;
 
       }else
       {
-        compareObj1 = s[key];
-        compareObj2 = u[key];
+        compareObj1 = memberExpression(s);
+        compareObj2 = memberExpression(u);
       }  
         
       if(typeof compareObj1 == "string")
@@ -114,7 +117,7 @@ Array.prototype.OrderBy = function<T>(key? : keyof T) : Array<T>
       else
       {
           if(!(IsComparable(compareObj1)))
-            throw new Error(`Must implemente the IComparable interface`);
+            throw new Exception(`Must implemente the IComparable interface`);
 
           let r =  compareObj1.Compare(compareObj2);
 
@@ -127,9 +130,9 @@ Array.prototype.OrderBy = function<T>(key? : keyof T) : Array<T>
   });    
 }
 
-Array.prototype.OrderByDescending = function<T>(key? : keyof T) : Array<T>
+Array.prototype.OrderByDescending = function<T, U>(memberExpression? : (element : T) => U) : Array<T>
 {
-    return this.OrderBy(key).reverse();
+    return this.OrderBy(memberExpression).reverse();
 }
 
 
@@ -143,17 +146,30 @@ Array.prototype.Select = function<T,U>(translate : (element : T) => U) : U[]
   return this.map(s => translate(s));
 }
 
-Array.prototype.GroupBy = function<T>(key : keyof T) : IGroupBy<T>[] 
+Array.prototype.SelectMany = function<T, U>(memberExpression : (element : T) => U[]) : U[]
+{
+    let aggregate : any[] = [];
+
+    if(!this.Any(s => s != undefined))
+      return [] as U[];    
+
+    for(let s of this.Where(s => s != undefined))
+      aggregate.concat(memberExpression(s));    
+
+    return aggregate as U[];
+}
+
+Array.prototype.GroupBy = function<T,U>(memberExpression : (element : T) => U) : IGroupBy<T>[] 
 {
     let dic : {Key : any, Values : T[]}[] = []
 
     for(let i of this)
     {
-        let v = dic.FirstOrDefault(s => s.Key == i[key])
+        let v = dic.FirstOrDefault(s => s.Key == memberExpression(i))
         if(v)
             v.Values.push(i);
         else
-            dic.push({Key : i[key], Values : [i]});
+            dic.push({Key : memberExpression(i), Values : [i]});
     }
 
     return dic;
@@ -177,28 +193,81 @@ Array.prototype.Aggregate = function<T>() : IAggregate<T>[]
     return dic;
 }
 
+Array.prototype.Sum = function<T>(memberExpression? : (element : T) => number) : number
+{ 
+  let sum = 0;
+  
+  for(let i of this)
+  {
+    let v = memberExpression && i ? memberExpression(i) : i; 
+
+    if(typeof v == "bigint" || typeof v == "number")    
+      sum += v as number;
+    else
+      throw new Exception("This operation can only by perfomed in number fields");    
+  }
+
+  return sum;
+}
+
+Array.prototype.Max = function<T>(memberExpression? : (element : T) => number) : number
+{   
+  
+  if(!this.Any())
+    throw new Exception("The sequence do not contains elements"); 
+
+  let max = memberExpression ? memberExpression(this[0]) : this[0];
+
+  for(let i of this)
+  {
+    let v = memberExpression && i ? memberExpression(i) : i; 
+
+    if(typeof v == "bigint" || typeof v == "number")    
+      max = v as number > max ? v as number : max;
+    else
+      throw new Exception("This operation can only by perfomed in number fields");    
+  }
+
+  return max;
+}
+
+Array.prototype.Min = function<T>(memberExpression? : (element : T) => number) : number
+{  
+
+  if(!this.Any())
+    throw new Exception("The sequence do not contains elements"); 
+  
+  let min = memberExpression ? memberExpression(this[0]) : this[0];
+  
+  for(let i of this)
+  {
+    let v = memberExpression && i ? memberExpression(i) : i; 
+
+    if(typeof v == "bigint" || typeof v == "number")    
+      min = v as number < min ? v as number : min;
+    else
+      throw new Exception("This operation can only by perfomed in number fields");    
+  }
+
+  return min;
+}
+
+Array.prototype.Avg = function<T>(memberExpression? : (element : T) => number) : number
+{
+  if(!this.Any())
+    throw new Exception("The sequence do not contains elements"); 
+    
+  return this.Sum(memberExpression) / this.Count();
+
+}
+
 function IsNullOrUndefined(obj  : any) : boolean
 {
   return obj == undefined || obj == null;
 }
 
 
-declare interface IComparable<T>
-{
-  Compare(obj : T) : number;
-}
 
-declare interface IGroupBy<T>
-{
-    Key : any;
-    Values : Array<T>    
-}
-
-declare interface IAggregate<T>
-{
-    Count : number;
-    Values : Array<T>    
-}
 
 
 function IsComparable<T>(obj : any) : obj is IComparable<T>

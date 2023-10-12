@@ -44,6 +44,25 @@ export default class Type {
         return obj;
     }
 
+
+    public static Is<T extends object, U extends object>(obj : T, ctor : new(...args: any[]) => U) : boolean
+    {
+        if(obj == undefined)
+            return false;
+
+        if(obj.constructor == ctor)
+            return true;
+
+        let funcCtor = obj.constructor;
+
+        while(funcCtor)
+        {
+            if(funcCtor == ctor)
+                return true;
+        }
+
+        return false;
+    }
     
     
 }

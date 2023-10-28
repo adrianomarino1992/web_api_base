@@ -16,6 +16,18 @@ export { default as IApplication } from "./interfaces/IApplication";
 export { default as IApplicatiIControllernConfiguration } from "./interfaces/IController"; 
 export { IHTTPRequestContext, IRequestResult, IRequestResultHandler } from "./midlewares/IMidleware";
 
+export { default as ActionResult } from './controllers/ActionResult';
+export { default as AcceptedResult} from './controllers/AcceptedResult';
+export { default as BadRequestResult } from './controllers/BadRequestResult';
+export { default as CreatedResult } from './controllers/CreatedResult';
+export { default as ErrorResult } from './controllers/ErrorResult';
+export { default as ForbiddenResult } from './controllers/ForbiddenResult';
+export { default as GenericResult } from './controllers/GenericResult';
+export { default as NoContentResult } from './controllers/NoContentResult';
+export { default as NotFoundResult } from './controllers/NotFoundResult';
+export { default as OKResult } from './controllers/OKResult';
+export { default as UnauthorizedResult } from './controllers/UnauthorizedResult';
+
 import ControllersDecorators from "./decorators/controllers/ControllerDecorators";
 import { DocumentationDecorators } from "./decorators/documentation/DocumentationDecorators";
 import ValidationDecorators from "./decorators/validations/ValidationDecorators";

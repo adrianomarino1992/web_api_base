@@ -227,7 +227,7 @@ export default class ControllersDecorators
 
     public static OptionalFromQueryArg(bodyPropName? : string) 
     {
-        return ControllersDecorators.FromQuery(bodyPropName, true);
+        return ControllersDecorators.FromQuery(bodyPropName, false);
     }
 
     public static FromQuery(bodyPropName? : string, required? : boolean)

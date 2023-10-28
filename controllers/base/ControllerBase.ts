@@ -1,6 +1,17 @@
 import IDIContext, { IDIItem } from "../../dependencyInjection/IDIContext";
 import IController from "../../interfaces/IController";
 import {Request, Response} from 'express';
+import AcceptedResult from "../AcceptedResult";
+import BadRequestResult from "../BadRequestResult";
+import CreatedResult from "../CreatedResult";
+import ErrorResult from "../ErrorResult";
+import ForbiddenResult from "../ForbiddenResult";
+import NoContentResult from "../NoContentResult";
+import NotFoundResult from "../NotFoundResult";
+import OKResult from "../OKResult";
+import UnauthorizedResult from "../UnauthorizedResult";
+
+
 
 
 export class ControllerBase implements IController, IDIContext
@@ -14,57 +25,63 @@ export class ControllerBase implements IController, IDIContext
         
     }   
     
-    public OK<T>(result? : T) : T | undefined
+    public OK<T>(result? : T) : OKResult<T>
     {
-        return this.SendResponse<T>(200,result);
+        return new OKResult(result);
     }
 
-    public Created<T>(result? : T) : T | undefined
+    public Created<T>(result? : T) : CreatedResult<T>
     {
-        return this.SendResponse<T>(201,result);
+        return new CreatedResult(result);
     }
 
-    public Accepted<T>(result? : T) : T | undefined
+    public Accepted<T>(result? : T) : AcceptedResult<T>
     {
-        return this.SendResponse<T>(202,result);
+        return new AcceptedResult(result);
     }
 
-    public NoContent<T>(result? : T) : T | undefined
+    public NoContent<T>(result? : T) : NoContentResult<T>
     {
-        return this.SendResponse<T>(204,result);
+        return new NoContentResult(result);
     }    
     
-    public BadRequest<T>(result? : T) : T | undefined
+    public BadRequest<T>(result? : T) : BadRequestResult<T>
     {
-        return this.SendResponse<T>(400,result);
+        return new BadRequestResult(result);
     }
 
-    public Unauthorized<T>(result? : T) : T | undefined
+    public Unauthorized<T>(result? : T) : UnauthorizedResult<T>
     {
-        return this.SendResponse<T>(401,result);
+        return new UnauthorizedResult(result);
     }
 
-    public Forbidden<T>(result? : T) : T | undefined
+    public Forbidden<T>(result? : T) : ForbiddenResult<T>
     {
-        return this.SendResponse<T>(403,result);
+        return new ForbiddenResult(result);
     }
 
-    public NotFound<T>(result? : T) : T | undefined
+    public NotFound<T>(result? : T) : NotFoundResult<T>
     {
-        return this.SendResponse<T>(404,result);
+        return new NotFoundResult(result);
     }
 
-    public Error<T>(result? : T) : T | undefined
+    public Error<T>(result? : T) : ErrorResult<T>
     {
-        return this.SendResponse<T>(500,result);
+        return new ErrorResult(result);
     }
 
     public SendResponse<T>(status : number, result? : T) : T | undefined
     {
         this.Response.status(status);
 
-        if(result)
-            this.Response.json(result);
+        if(result){
+            if(typeof result == "object")
+                this.Response.json(result);
+            else if(typeof result == "number")
+                this.Response.send(result.toString());
+            else
+                this.Response.send(result);
+        }
         else
             this.Response.end();
         

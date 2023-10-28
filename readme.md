@@ -34,9 +34,9 @@ export default class SampleController extends ControllerBase
 {   
      
     @GET()
-    public Hello() : void
+    public Hello() : ActionResult
     {
-        this.OK({message: "Hello Word!"})
+        return this.OK({message: "Hello Word!"})
     }
     
 }
@@ -126,9 +126,9 @@ export default class SampleController extends ControllerBase
     }
      
     @GET()
-    public Hello() : void
+    public Hello() : ActionResult
     {
-        this.OK({message: "Hello Word!"})
+        return this.OK({message: "Hello Word!"})
     }
     
 }
@@ -185,35 +185,35 @@ Create a DELETE endpoint
 
 All instances of Controller was the default HTTP response status code response method implementeds
 
-###  OK<T>(result? : T) 
+###  OK<T>(result? : T) : OKResult<T>
 Send status 200 and a optional body
 
-### Created<T>(result? : T)
+### Created<T>(result? : T) : CreatedResult<T>
 Send status 201 and a optional body
 
-### Accepted<T>(result? : T) 
+### Accepted<T>(result? : T) : AcceptedResult<T>
 Send status 202 and a optional body
 
-### NoContent<T>(result? : T)
+### NoContent<T>(result? : T) : NoContentResult<T>
 Send status 204 and a optional body
 
-### BadRequest<T>(result? : T)
+### BadRequest<T>(result? : T) : BadRequestResult<T>
 Send status 400 and a optional body
 
-###  Unauthorized<T>(result? : T)
+###  Unauthorized<T>(result? : T) : UnauthorizedResult<T>
 Send status 401 and a optional body
 
-###  Forbidden<T>(result? : T)
+###  Forbidden<T>(result? : T) : ForbiddenResult<T>
 Send status 403 and a optional body
 
-###  NotFound<T>(result? : T)
+###  NotFound<T>(result? : T) : NotFoundResult<T>
 Send status 404 and a optional body
 
-###  Error<T>(result? : T)
+###  Error<T>(result? : T) : ErrorResult<T>
 Send status 500 and a optional body
 
 
-###  SendResponse<T>(status : number, result? : T)
+###  SendResponse<T>(status : number, result? : T) : void
 Send a status code and a optional body
 
 
@@ -272,9 +272,9 @@ Extract a method parameter type instance from body of request
 
 ```typescript
  @POST()
- public async Insert(@FromBody()user : User) : Promise<void>
+ public async InsertAsync(@FromBody()user : User) : Promise<User>
  {  
-     this.OK(await this._service.AddAsync(user));
+     return await this._service.AddAsync(user);
  }
 ```
 In the example above, the __model binding system__ will cast the body in a intance of type __User__.
@@ -296,9 +296,9 @@ Extract the method parameter from query string of request
 
 ```typescript
 @GET()    
-public async GetById(@FromQuery()id : number) : Promise<void>
+public async GetByIdAsync(@FromQuery()id : number) : Promise<OKResult<User>>
 { 
-     this.OK(await this._service.GetByIdAsync(id));
+     return this.OK(await this._service.GetByIdAsync(id));
 }     
 ```
 In the example above, the __model binding system__ will get the first query argument of request. 
@@ -328,47 +328,47 @@ export default class UserController extends ControllerBase
     }
     
     @GET("list")
-    public async GetAll() : Promise<void>
+    public async GetAllAsync() : Promise<OKResult<User[]>>
     {       
-        this.OK(await this._service.GetAllAsync());
+        return this.OK(await this._service.GetAllAsync());
     }
     
     @GET("permissions")
-    public async GetAllPermissions() : Promise<void>
+    public async GetAllPermissionsAsync() : Promise<OKResult<Permission>>
     {       
-        this.OK(await this._service.GetAllPermissions());
+        return this.OK(await this._service.GetAllPermissions());
     }
 
     @GET()    
-    public async GetById(@FromQuery("id")id : number) : Promise<void>
+    public async GetByIdAsync(@FromQuery("id")id : number) : Promise<OKResult<User>>
     { 
-       this.OK(await this._service.GetByIdAsync(id));
+       return this.OK(await this._service.GetByIdAsync(id));
     }          
     
     @POST()
-    public async Insert(@FromBody()user : User) : Promise<void>
+    public async InsertAsync(@FromBody()user : User) : Promise<CreatedResult<User>>
     {  
-        this.OK(await this._service.AddAsync(user));
+       return this.Created(await this._service.AddAsync(user));
     }
     
     @PUT()   
-    public async Update(@FromBody()user : User, ) : Promise<void>
+    public async UpdateAsync(@FromBody()user : User, ) : Promise<ActionResult>
     {        
         if(user.Id == undefined || user.Id <= 0)
             return this.BadRequest({ Message : "The ID must be greater than 0"});
 
-        this.OK(await this._service.UpdateAsync(user));
+        return this.OK(await this._service.UpdateAsync(user));
     }
 
     @DELETE()    
-    public async Delete(@FromQuery()id : number) : Promise<void>
+    public async DeleteAsync(@FromQuery()id : number) : Promise<ActionResult>
     {  
         let del = await this._service.GetByIdAsync(id);
 
         if(!del)
             return this.NotFound();
 
-        this.OK(await this._service.DeleteAsync(del));
+        return this.OK(await this._service.DeleteAsync(del));
     }
 }
 

@@ -15,12 +15,17 @@ import ValidationDecorators from "./decorators/validations/ValidationDecorators"
 import ControllerLoadException from "./exceptions/ControllerLoadException";
 import Exception from "./exceptions/Exception";
 import Documentation from "./documentation/Documentation";
+import { ControllerBase } from "./controllers/base/ControllerBase";
+import GenericResult from "./controllers/GenericResult";
+import ActionResult from "./controllers/ActionResult";
 
 export default abstract class Application implements IApplication {
 
     public static Configurations: IApplicationConfiguration;
 
     private _createdControllers: { new(...args: any[]): IController }[] = [];
+
+    private _URIs : {URI: string, Controller: string}[] = [];
 
     public ApplicationConfiguration: IApplicationConfiguration;
 
@@ -29,6 +34,7 @@ export default abstract class Application implements IApplication {
     public ApplicationThreadExeptionHandler?: ApplicationExceptionHandler;
 
     constructor() {
+
         this.ApplicationConfiguration = new ApplicationConfiguration();
 
         this.Express = ExpressModule();
@@ -155,7 +161,7 @@ export default abstract class Application implements IApplication {
     }
 
 
-    protected AppendController<T extends IController>(ctor: { new(...args: any[]): T; }): void {
+    protected AppendController<T extends ControllerBase>(ctor: { new(...args: any[]): T; }): void {
         let empty = new ctor() as any;
 
         let methods = Reflect.ownKeys(empty.constructor.prototype).filter(m => {
@@ -182,9 +188,19 @@ export default abstract class Application implements IApplication {
             let fromQuery = ControllersDecorators.GetFromQueryArgs(empty.constructor, method.toString());
 
             if (!verb)
-                verb = HTTPVerbs.GET;
+                verb = HTTPVerbs.GET;            
+
+            if(verb == HTTPVerbs.GET && fromBody.length > 0)
+                throw new ControllerLoadException(`GET method: ${ctor.name}.${method.toString()} can not have body params`);
+
+            let collision = this._URIs.filter(s => s.URI == `${route}${action}`);
+            
+            if(collision.length > 0)
+                throw new ControllerLoadException(`The URI: ${route}${action} exists in two controllers: ${collision[0].Controller} and ${ctor.name}.${method.toString()}`);
 
             console.debug("appended : ", verb, `${route}${action}`);
+
+            this._URIs.push({ URI : `${route}${action}`, Controller : `${ctor.name}.${method.toString()}`});
 
             (this.Express as any)[verb.toString().toLowerCase()](`${route}${action}`, (request: Request, response: Response) => {
 
@@ -381,10 +397,10 @@ export default abstract class Application implements IApplication {
                     }
 
 
-                    let controller = DependecyService.ResolveCtor(empty.constructor) as IController;
+                    let controller = DependecyService.ResolveCtor(empty.constructor) as ControllerBase;
 
                     if (controller == undefined)
-                        controller = new ctor() as IController;
+                        controller = new ctor() as ControllerBase;
 
                     try {
 
@@ -411,6 +427,11 @@ export default abstract class Application implements IApplication {
                                             Result: exceutionTask
                                         });
                                 }
+
+                                this.SendResponseIfNecessary(controller, response, c);
+
+                                
+
                             }).catch(err => {
                                 for (let afterHandler of afters) {
 
@@ -443,6 +464,9 @@ export default abstract class Application implements IApplication {
                                     this.CallErrorHandler(request, response, this.CastToExpection(err as Error))
                                 }
                             }
+
+                            this.SendResponseIfNecessary(controller, response, exceutionTask);                          
+
                         }
 
 
@@ -528,6 +552,26 @@ export default abstract class Application implements IApplication {
 
     public CreateDocumentation(): void {
         new Documentation().CreateDocumentation(this._createdControllers, this.Express);
+    }
+
+    private SendResponseIfNecessary(controller : ControllerBase, response : Response, result : any) : void
+    {
+        if(response.headersSent)return;
+
+        if(!result)
+        {           
+            controller.SendResponse(204); 
+            return;
+        }
+
+        if(result instanceof ActionResult)
+        {
+           controller.SendResponse(result.StatusCode, result.Result);
+           return;
+        }
+
+        controller.SendResponse(200, result);       
+
     }
 
     private CastToExpection(err: Error): Exception {

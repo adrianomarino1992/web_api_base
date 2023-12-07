@@ -1,5 +1,5 @@
 import File from 'fs';
-
+import Path from 'path';
 import IApplicationConfiguration from './interfaces/IApplicationConfiguration';
 import DependecyService, { DIEscope } from './dependencyInjection/DependecyService';
 
@@ -9,12 +9,18 @@ export default class ApplicationConfiguration implements IApplicationConfigurati
     public Host : string = "localhost";    
     public Port : number = 60000;
     public RootPath : string;
+    public CurrentWorkingDirectory : string;
+    public ExecutablePath : string;
     public DEBUG : boolean;
     public EnviromentVariables : {[key : string] : any} = {};
 
     constructor(){
+        
+        this.CurrentWorkingDirectory = process.cwd();  
+        
+        this.ExecutablePath = process.argv[1];       
 
-        this.RootPath = process.cwd();    
+        this.RootPath = Path.parse(this.ExecutablePath).dir;        
         
         if(process.argv.indexOf("--debug") > -1 || process.argv.indexOf("--DEBUG")  > 1)
             this.DEBUG = true; 

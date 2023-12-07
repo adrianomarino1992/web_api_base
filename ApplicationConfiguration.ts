@@ -112,6 +112,8 @@ export default class ApplicationConfiguration implements IApplicationConfigurati
 
             delete copy.RootPath;
             delete copy.DEBUG; 
+            delete copy.CurrentWorkingDirectory;
+            delete copy.ExecutablePath;
 
             File.writeFile(`${this.RootPath}\\config.json`, JSON.stringify(copy), 'utf-8', error => 
             {                

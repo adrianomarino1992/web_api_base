@@ -153,7 +153,7 @@ export default class JS
                         let resp = document.getElementById('response-area-'+r.Id);   
                         let bar = document.getElementById('status-bar-'+r.Id);
                         let h3 = document.getElementById('response-bar-'+r.Id);                
-    
+                        resp.value = '';
                         let req = new XMLHttpRequest();
                         let args = '?';
                         for(let c of r.FromQuery)
@@ -208,7 +208,11 @@ export default class JS
                             
                                 console.log(req);
                                 bar.innerHTML = '<div><status class="'+classValue+'"> '+req.status+ '</status> <tx>New request</tx></div>';
-                                resp.value = JSON.stringify(JSON.parse(req.responseText), null, 2);
+                                try{
+                                    resp.value = JSON.stringify(JSON.parse(req.responseText), null, 2);
+                                }catch{
+                                    resp.value = req.responseText;
+                                }
                             }
                         }
     

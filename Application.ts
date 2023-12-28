@@ -248,7 +248,7 @@ export default abstract class Application implements IApplication {
                                     params[f.Index] = t;
                                 }
                             } else {
-                                if (obj != undefined && obj.indexOf('"') == 0 && obj.lastIndexOf('"') == obj.length - 1)
+                                if (obj != undefined && typeof obj == "string" && obj.indexOf('"') == 0 && obj.lastIndexOf('"') == obj.length - 1)
                                     obj = obj.substring(1, obj.length - 1);
 
                                 if (obj != undefined && ts[f.Index].name.toLowerCase() == "number") {
@@ -286,7 +286,7 @@ export default abstract class Application implements IApplication {
 
                             obj = request.query[f.Field]?.toString();
 
-                            if (obj != undefined && obj.indexOf('"') == 0 && obj.lastIndexOf('"') == obj.length - 1)
+                            if (obj != undefined && typeof obj == "string" && obj.indexOf('"') == 0 && obj.lastIndexOf('"') == obj.length - 1)
                                 obj = obj.substring(1, obj.length - 1);
 
                             if (obj != undefined && f.Type.name.toLowerCase() == "number") {
@@ -382,7 +382,9 @@ export default abstract class Application implements IApplication {
                         let validationsErrors: string[] = [];
 
                         for (let a of fromBodyParams) {
+                           try{
                             validationsErrors.push(...ValidationDecorators.Validate<typeof a>(a).map(s => s.Message));
+                           }catch{}
                         }
 
                         if (validationsErrors.length > 0) {

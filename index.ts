@@ -35,6 +35,11 @@ import DependecyService from "./dependencyInjection/DependecyService";
 import { HTTPVerbs } from "./enums/httpVerbs/HttpVerbs";
 import IMidleware, { IRequestResultHandler } from "./midlewares/IMidleware";
 
+export {default as BodyParseException} from "./exceptions/BodyParseException";
+export {default as ControllerLoadException} from "./exceptions/ControllerLoadException";
+export {default as ArgumentNullException} from "./exceptions/ArgumentNullException";
+export {default as FindDependencyException} from "./exceptions/FindDependencyException";
+
 export function UseBefore(midleware : IMidleware)  
 {
     return ControllersDecorators.UseBefore(midleware); 

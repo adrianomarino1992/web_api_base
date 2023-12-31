@@ -18,6 +18,7 @@ import Documentation from "./documentation/Documentation";
 import { ControllerBase } from "./controllers/base/ControllerBase";
 import GenericResult from "./controllers/GenericResult";
 import ActionResult from "./controllers/ActionResult";
+import BodyParseException from "./exceptions/BodyParseException";
 
 export default abstract class Application implements IApplication {
 
@@ -47,9 +48,22 @@ export default abstract class Application implements IApplication {
 
         Application.Configurations = this.ApplicationConfiguration;
 
-        this.Express.use(ExpressModule.json({ limit: 50 * 1024 * 1024 }));
+        this.Express.use(ExpressModule.json({ limit: 50 * 1024 * 1024 }));      
 
         await this.ConfigureAsync(this.ApplicationConfiguration);
+
+        if(this.ApplicationConfiguration)
+            this.Express.use((e : any, rq : any, rs : any, n : any) => 
+            {
+                if(e && e instanceof Error && e instanceof SyntaxError)
+                {
+                    let b = new BodyParseException(e.message);
+                    b.stack = e.stack;
+                    this.CallErrorHandler(rq, rs, b);
+                }
+                else
+                    n();                    
+            });
 
         await (this.ApplicationConfiguration as ApplicationConfiguration).SaveAsync();
 

@@ -272,6 +272,11 @@ export default abstract class Application implements IApplication {
                                         fromBodyParams.push(number);
                                         params[f.Index] = number;
                                     }
+                                    else
+                                    {
+                                        fromBodyParams.push(undefined);
+                                        params[f.Index] = undefined;
+                                    }
 
                                 } else if (obj != undefined && ts[f.Index].name.toLowerCase() == "string") {
                                     fromBodyParams.push(obj.toString());
@@ -309,6 +314,11 @@ export default abstract class Application implements IApplication {
                                 if (number != Number.NaN) {
                                     fromQueryParams.push(number);
                                     params[f.Index] = number;
+                                }
+                                else
+                                {
+                                    fromBodyParams.push(undefined);
+                                    params[f.Index] = undefined;
                                 }
 
                             } else if (obj != undefined && f.Type.name.toLowerCase() == "string") {

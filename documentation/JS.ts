@@ -264,9 +264,9 @@ export default class JS
 
         try{
 
-            if(FS.existsSync(`${Application.Configurations.RootPath}\\package.json`))
+            if(FS.existsSync(`${process.cwd()}\\package.json`))
             {
-                let j = JSON.parse(FS.readFileSync(`${Application.Configurations.RootPath}\\package.json`, 'utf-8'));
+                let j = JSON.parse(FS.readFileSync(`${process.cwd()}\\package.json`, 'utf-8'));
                 app = j.name;
                 version = j.version;
                 description = j.description;        

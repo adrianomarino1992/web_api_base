@@ -42,7 +42,16 @@ export default class JS
                     container.innerHTML += '<div class="token-container"><input type="text" id="key-'+r.Id+r.FromQuery.indexOf(c)+'" placeholder="'+c.Field+'"></div>';                   
                 }
 
-                if(r.FromQuery.length > 0 && r.FromBody.length > 0)
+                if(r.FromQuery.length > 0 && (r.FromBody.length > 0 || r.FromFiles.length > 0 ))
+                    container.innerHTML +='</br>'
+
+                    
+                for(let c of r.FromFiles)
+                {
+                    container.innerHTML += '<div class="token-container"><input type="text" id="key-'+r.Id+r.FromFiles.indexOf(c)+'" placeholder="'+c.FieldName+'"></div>';                   
+                }
+
+                if(r.FromFiles.length > 0 && r.FromBody.length > 0)
                     container.innerHTML +='</br>'
     
                 if(r.FromBody.length > 0)

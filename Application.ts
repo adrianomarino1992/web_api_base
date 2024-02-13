@@ -19,6 +19,7 @@ import { ControllerBase } from "./controllers/base/ControllerBase";
 import GenericResult from "./controllers/GenericResult";
 import ActionResult from "./controllers/ActionResult";
 import BodyParseException from "./exceptions/BodyParseException";
+import FunctionAnalizer from "./metadata/FunctionAnalizer";
 
 export default abstract class Application implements IApplication {
 
@@ -231,8 +232,11 @@ export default abstract class Application implements IApplication {
 
                     let params: any[] = [];
 
-                    let ts = Reflect.getMetadata("design:paramtypes", empty, method.toString()) ??
-                        Reflect.getMetadata("design:paramtypes", empty.constructor, method.toString());
+                    let ts = ((Reflect.getMetadata("design:paramtypes", empty, method.toString()) ??
+                        Reflect.getMetadata("design:paramtypes", empty.constructor, method.toString())) ?? []) as Function[]; 
+                    
+
+                    ControllersDecorators.GetNonDecoratedArguments(empty, method, fromBody, fromQuery);
 
                     let fromBodyParams: any[] = [];
                     if (fromBody.length > 0) {

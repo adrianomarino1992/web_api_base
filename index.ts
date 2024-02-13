@@ -185,6 +185,11 @@ export function FromBody(paramName? : string, required? : boolean)
     return ControllersDecorators.FromBody(paramName, required);
 }
 
+export function FromFiles(fileName? : string, maxFileSizeMB?: number, required? : boolean)
+{
+    return ControllersDecorators.FromFiles(fileName, maxFileSizeMB, required);
+}
+
 export function RequiredFromQueryArg(paramName? : string)
 {
     return ControllersDecorators.RequiredFromQueryArg(paramName);

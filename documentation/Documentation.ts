@@ -45,7 +45,8 @@ export default class Documentation {
                 let verb = ControllersDecorators.GetVerb(empty, method.toString());
                 let fromBody = ControllersDecorators.GetFromBodyArgs(empty.constructor, method.toString());
                 let fromQuery = ControllersDecorators.GetFromQueryArgs(empty.constructor, method.toString());                
-                
+                let fromFiles = ControllersDecorators.GetFromFilesArgs(empty.constructor, method.toString());                
+                ControllersDecorators.GetNonDecoratedArguments(empty, method, fromBody, fromQuery);
 
                 let template = DocumentationDecorators.GetRequestJson(empty, method.toString());
 
@@ -65,7 +66,8 @@ export default class Documentation {
                     Template : template ?? "", 
                     Response : DocumentationDecorators.GetProducesResponse(empty.constructor, method.toString()),
                     FromBody : fromBody.map(s => { return {Field : s.Field, Type : s.Type.name }}) , 
-                    FromQuery : fromQuery.map(s => { return {Field : s.Field, Type : s.Type.name }})
+                    FromQuery : fromQuery.map(s => { return {Field : s.Field, Type : s.Type.name }}), 
+                    FromFiles : fromFiles.map(s => {return {FieldName: s.FileName}})
                 });                          
                
             }   
@@ -123,6 +125,7 @@ interface IDocument
         Response : ReturnType<typeof DocumentationDecorators.GetProducesResponse>,
         Verb : string,
         FromQuery : {Field : string, Type : string }[], 
-        FromBody : {Field? : string, Type : string }[]  
+        FromBody : {Field? : string, Type : string }[],
+        FromFiles : {FieldName? : string }[]  
     }[]
 }

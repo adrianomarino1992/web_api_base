@@ -18,6 +18,7 @@ export default class ControllersDecorators
     private static _validateBodyKeyMetadata = "meta:validateBodyKey";
     private static _fromQueryKeyMetadata = "meta:fromQueryKey";
     private static _fromBodyKeyMetadata = "meta:fromBodyKey";
+    private static _fromFilesKeyMetadata = "meta:fromFilesKey";
     private static _controllerMidlewaresAfterKeyMetadata = "meta:controllerMidlewaresAfterKey";   
     
 
@@ -220,6 +221,36 @@ export default class ControllersDecorators
         return Reflect.getMetadata(ControllersDecorators._fromBodyKeyMetadata, target, method) ?? [];
     }
 
+    public static FromFiles(fileName? : string, maxFileSizeMB? : number, required? : boolean)
+    {
+        return function( target : Object, methodName: string , parameterIndex: number)
+        {
+            let meta = ControllersDecorators.GetFromFilesArgs(target.constructor, methodName);
+
+            let params = FunctionAnalizer.ExtractParamsList(target, (target as any)[methodName]);
+
+            let item = meta.filter(x => x.Index == parameterIndex);
+
+            let thisParam = params.filter(s => s.Index == parameterIndex)[0];            
+
+            if(item.length == 0)
+                meta.push({Index : parameterIndex, FileName : fileName, MaxFileSizeMB: maxFileSizeMB , Required : required ?? true});
+            
+            else {
+                item[0].FileName = fileName;
+                item[0].MaxFileSizeMB = maxFileSizeMB;
+            }
+
+            Reflect.defineMetadata(ControllersDecorators._fromFilesKeyMetadata, meta, target.constructor, methodName);            
+        }
+    }
+    
+
+    public static GetFromFilesArgs(target : Function, method : string) : {Index : number, FileName? : string, MaxFileSizeMB?: number, Required: boolean }[]
+    {
+        return Reflect.getMetadata(ControllersDecorators._fromFilesKeyMetadata, target, method) ?? [];
+    }
+
     public static RequiredFromQueryArg(bodyPropName? : string) 
     {
         return ControllersDecorators.FromQuery(bodyPropName, true);
@@ -261,7 +292,35 @@ export default class ControllersDecorators
     }
 
     
-    
+    public static GetNonDecoratedArguments(empty: IController, method: Symbol | string,  fromBody: ReturnType<typeof ControllersDecorators.GetFromBodyArgs>, fromQuery: ReturnType<typeof ControllersDecorators.GetFromQueryArgs>) : void
+    {
+        let ts = ((Reflect.getMetadata("design:paramtypes", empty, method.toString()) ??
+        Reflect.getMetadata("design:paramtypes", empty.constructor, method.toString())) ?? []) as Function[];     
+
+        ts.forEach((e, i) => 
+        {
+            if(fromBody.filter(s => s.Index == i).length == 0)
+            {
+                if([Date, String, Number, Boolean].filter(t => t == e).length == 0)
+                    fromBody.push({Index : i, Type: e, Required : true});
+            }   
+            
+            if(fromQuery.filter(s => s.Index == i).length == 0)
+            {
+                if([Date, String, Number, Boolean].filter(t => t == e).length > 0)
+                {
+                    let funcParameters = FunctionAnalizer.ExtractParamsList(empty, (empty as any)[method.toString()]);
+                    
+                    let thisParameter = funcParameters.filter(p => p.Index == i);
+                    
+                    if(thisParameter.length > 0)
+                    {
+                        fromQuery.push({Field: thisParameter[0].Name, Index: i, Required : true, Type : e});
+                    }
+                }
+            } 
+        });
+    }
     
     private static SetMetaData<T>(key: string, target : Object, methodName : string, value : T)
     {

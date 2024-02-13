@@ -109,6 +109,12 @@ export function ProducesResponse(response : Parameters<typeof DocumentationDecor
 } ;
 
 
+export function UseHeader(header : string)       
+{
+    return DocumentationDecorators.UseHeader(header); 
+} ;
+
+
 export function Verb(verb : HTTPVerbs)      
 {
     return ControllersDecorators.Verb(verb); 

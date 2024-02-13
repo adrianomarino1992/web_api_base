@@ -16,6 +16,17 @@ export default class JS
             let root = document.getElementById(route.Controller.toLowerCase());           
                
             root.innerHTML += '<h1 >'+route.Controller+'</h1>';
+
+            if(route.Headers.length > 0)
+            {
+                root.innerHTML += '<div id="'+route.Controller.toLowerCase()+'_headers" class="container" style="display: block;"></div>';
+
+                let container = document.getElementById(route.Controller.toLowerCase()+'_headers');
+                for(let r of route.Headers)
+                {                    
+                    container.innerHTML += '<div class="token-container"><input type="text" id="header-'+r+route.Controller.toLowerCase()+route.Headers.indexOf(r)+'" placeholder="'+r+'" style="width: 100%;"></div>';                  
+                }
+            }    
            
             for(let r of route.Resources)
             {
@@ -183,6 +194,19 @@ export default class JS
     
                         req.open(r.Verb, window.location.origin+r.Route+args, true);
                         req.setRequestHeader('Content-type', 'application/json');
+                        if(route.Headers.length > 0)
+                        {
+                            if(route.Headers.length > 0)
+                            {
+                                for(let r of route.Headers)
+                                {   
+                                    let header = document.getElementById('header-'+r+route.Controller.toLowerCase()+route.Headers.indexOf(r));
+                                    req.setRequestHeader(r,header.value);           
+                                                      
+                                }
+                            }    
+                           
+                        }
                         req.onerror = ()=>
                         {
                             h3.innerText = "Current response:";

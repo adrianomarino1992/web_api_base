@@ -31,8 +31,11 @@ export default class Documentation {
                 Id : 'c_' + documentations.length, 
                 Route : route ?? "",
                 Controller : c.name,
+                Headers: [],
                 Resources : []
             };
+
+            doc.Headers = DocumentationDecorators.GetHeaders(c);
 
             for(let method of methods)
             {
@@ -116,6 +119,7 @@ interface IDocument
     Controller : string, 
     Id : string,
     Route : string,
+    Headers : string[],
     Resources : 
     {
         Id : string,

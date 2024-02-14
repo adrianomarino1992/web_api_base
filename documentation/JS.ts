@@ -3,9 +3,8 @@ import Application from '../Application';
 
 export default class JS
 {
-    private static _js = `
-    document.getElementById('root').innerHTML += '<div class="header" ><div class="DivHeader"><p>Made with <a href="https://www.npmjs.com/package/web_api_base" target="_blank">web_api_base</a></p></div></div>';
-    document.getElementsByClassName('header')[0].innerHTML += '<div class="DivHeader DivHeaderRight"><p class="pTitle" style="font-size: 14px;font-weight:600;">??APP</p><p>??DESC</p></div>';
+    private static _js = ` document.getElementById('root').innerHTML += '<div class="header" ><div class="DivHeader"><p>Made with <a href="https://www.npmjs.com/package/web_api_base" target="_blank">web_api_base</a></p></div></div>';
+    document.getElementsByClassName('header')[0].innerHTML += '<div class="DivHeader DivHeaderRight"><p class="pTitle" style="font-size: 14px;font-weight:600;">web_api_base 4.0.8</p><p>web api base</p></div>';
     
         function AddResource(route)
         {    
@@ -53,13 +52,45 @@ export default class JS
                     container.innerHTML += '<div class="token-container"><input type="text" id="key-'+r.Id+r.FromQuery.indexOf(c)+'" placeholder="'+c.Field+'"></div>';                   
                 }
 
-                if(r.FromQuery.length > 0 && (r.FromBody.length > 0 || r.FromFiles.length > 0 ))
+                if(r.FromQuery.length > 0 && r.FromBody.length > 0 && r.FromFiles.length == 0)
                     container.innerHTML +='</br>'
 
                     
                 for(let c of r.FromFiles)
                 {
-                    container.innerHTML += '<div class="token-container"><input type="text" id="key-'+r.Id+r.FromFiles.indexOf(c)+'" placeholder="'+c.FieldName+'"></div>';                   
+                    let cIndex = r.FromFiles.indexOf(c);
+                    if(!c.FieldName)
+                        c.FieldName = 'file' + cIndex > 0 ? '' : cIndex;
+                    
+                    container.innerHTML += '<div class="token-container"><input type="text" id="file-label-'+r.Id+cIndex+'" placeholder="select a file" readonly><input type="file" id="file-'+r.Id+cIndex+'" hidden></div>';                   
+                }
+
+                if(r.FromFiles.length > 0)
+                {
+                    document.addEventListener('DOMContentLoaded', function() {
+    
+                        for(let c of r.FromFiles)
+                        {
+                            let cIndex = r.FromFiles.indexOf(c);
+
+                            let label = document.getElementById('file-label-'+r.Id+cIndex);                          
+                            let file = document.getElementById('file-'+r.Id+cIndex);                          
+                            label.style.cursor = 'pointer';
+                            label.addEventListener('click', function(evt) 
+                            {
+                                file.click();    
+                            });
+
+                            file.addEventListener('change', function(evt){
+
+                                console.log(evt.target.files[0]);
+                                if(evt.target.files.length > 0)
+                                    label.value = evt.target.files[0].name;
+                                label.blur();
+                            });
+                        }    
+                       
+                    });
                 }
 
                 if(r.FromFiles.length > 0 && r.FromBody.length > 0)
@@ -192,8 +223,11 @@ export default class JS
                             args = '';
                         }
     
-                        req.open(r.Verb, window.location.origin+r.Route+args, true);
-                        req.setRequestHeader('Content-type', 'application/json');
+                        req.open(r.Verb, window.location.origin+r.Route+args, true);                        
+                        if (r.FromFiles.length == 0 && r.FromBody.length > 0)
+                        {
+                            req.setRequestHeader('Content-type', 'application/json');
+                        }
                         if(route.Headers.length > 0)
                         {
                             if(route.Headers.length > 0)
@@ -249,12 +283,38 @@ export default class JS
                             }
                         }
     
-                        if(body){
-                            req.send(body.value);
-                        }else
+                        if(r.FromFiles.length > 0)
                         {
-                            req.send();
+                            let form = new FormData();
+
+                            for(let c of r.FromFiles)
+                                    {
+                                        let cIndex = r.FromFiles.indexOf(c);  
+                                        let file = document.getElementById('file-'+r.Id+cIndex);                          
+                                        if(file.files.length > 0)
+                                        {                                            
+                                            form.append(c.FieldName, file.files[0]);
+                                        }
+                                        
+                                    }  
+                            if(body)
+                            {
+                                form.append('body', body.value);
+                            }
+
+                            req.send(form);
+                            
+                        }else{
+
+                            if(body){
+                                req.send(body.value);
+                            }else
+                            {
+                                req.send();
+                            }
                         }
+
+                        
                         
                     });
                 });            

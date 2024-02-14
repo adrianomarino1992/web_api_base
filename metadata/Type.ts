@@ -1,3 +1,4 @@
+import InvalidEntityException from "../exceptions/InvalidEntityException";
 
 
 export default class Type {
@@ -44,25 +45,80 @@ export default class Type {
         return obj;
     }
 
+    public static ValidateType(source: any, cTor: new (...args: any[]) => any) {
+        
+        let empty = Reflect.construct(cTor, []);
 
-    public static Is<T extends object, U extends object>(obj : T, ctor : new(...args: any[]) => U) : boolean
-    {
-        if(obj == undefined)
+        for (let c of Object.keys(empty)) {
+
+            let obj = source[c];
+            
+            if (empty[c] != undefined && empty[c].constructor == Number) {
+                let number = Number.parseFloat(obj?.toString());
+
+                if (number != Number.NaN && obj != undefined) {
+                    source[c] = number;
+                }
+                else {
+                    throw new InvalidEntityException(`Can not cast the property "${c}" in Number`);
+                }
+
+            } else if (obj != undefined && empty[c] != undefined && empty[c].constructor == String) {
+                source[c] =  obj == undefined ? "" : obj.toString();
+            }
+            else if (empty[c] != undefined && empty[c].constructor == Date) {
+                try {
+                    source[c] = new Date(obj);
+                } catch { throw new InvalidEntityException(`Can not cast the property "${c}" in Date`); }
+
+            }
+            else if (empty[c] != undefined && empty[c].constructor == Boolean) {
+                try {
+
+                    if(obj == undefined)
+                    {
+                        throw new InvalidEntityException(`Can not cast the property "${c}" in Boolean`);
+                    }
+
+                    if (typeof obj != "boolean") {
+
+                        if(obj.toString().toLowerCase().trim() == "true")
+                            source[c] = true;
+                        else if (obj.toString().toLowerCase().trim() == "false")
+                            source[c] = false;
+                        else
+                            throw new InvalidEntityException(`Can not cast the property "${c}" in Boolean`);
+                        
+                    }
+                    else {
+                        source[c] = obj;
+                    }
+
+                } catch { }
+
+            }else if (empty[c] != undefined) 
+            {
+                this.ValidateType(source[c], empty[c].constructor);
+            }
+        }
+    }
+
+    public static Is<T extends object, U extends object>(obj: T, ctor: new (...args: any[]) => U): boolean {
+        if (obj == undefined)
             return false;
 
-        if(obj.constructor == ctor)
+        if (obj.constructor == ctor)
             return true;
 
         let funcCtor = obj.constructor;
 
-        while(funcCtor)
-        {
-            if(funcCtor == ctor)
+        while (funcCtor) {
+            if (funcCtor == ctor)
                 return true;
         }
 
         return false;
     }
-    
-    
+
+
 }

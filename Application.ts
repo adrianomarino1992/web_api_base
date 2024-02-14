@@ -16,10 +16,12 @@ import ControllerLoadException from "./exceptions/ControllerLoadException";
 import Exception from "./exceptions/Exception";
 import Documentation from "./documentation/Documentation";
 import { ControllerBase } from "./controllers/base/ControllerBase";
-import GenericResult from "./controllers/GenericResult";
 import ActionResult from "./controllers/ActionResult";
 import BodyParseException from "./exceptions/BodyParseException";
-import FunctionAnalizer from "./metadata/FunctionAnalizer";
+import AbstractMultiPartRequestService, { IRequestPart, PartType } from "./File/AbstractMultiPartRequestService";
+import FormidableMultiPartRequestService from "./File/FormidableMultiPartRequestService";
+import FileClass from './File/File';
+import Type from "./metadata/Type";
 
 export default abstract class Application implements IApplication {
 
@@ -49,7 +51,9 @@ export default abstract class Application implements IApplication {
 
         Application.Configurations = this.ApplicationConfiguration;
 
-        this.Express.use(ExpressModule.json({ limit: 50 * 1024 * 1024 }));      
+        this.Express.use(ExpressModule.json({ limit: 50 * 1024 * 1024 }));  
+        
+        this.ApplicationConfiguration.AddScoped(AbstractMultiPartRequestService, FormidableMultiPartRequestService);
 
         await this.ConfigureAsync(this.ApplicationConfiguration);
 
@@ -73,7 +77,7 @@ export default abstract class Application implements IApplication {
         });
     }
 
-    public UseCors(): void {
+    protected UseCors(): void {
         this.Express.use(require('cors')());
     }
 
@@ -175,6 +179,10 @@ export default abstract class Application implements IApplication {
 
     }
 
+    protected UseCustomMultiPartRequestHandler<T extends AbstractMultiPartRequestService>(cTor : new (...args: any[]) => T) : void
+    {
+        this.ApplicationConfiguration.AddScoped(AbstractMultiPartRequestService, cTor);
+    }
 
     protected AppendController<T extends ControllerBase>(ctor: { new(...args: any[]): T; }): void {
         let empty = new ctor() as any;
@@ -201,7 +209,9 @@ export default abstract class Application implements IApplication {
             let verb = ControllersDecorators.GetVerb(empty, method.toString());
             let fromBody = ControllersDecorators.GetFromBodyArgs(empty.constructor, method.toString());
             let fromQuery = ControllersDecorators.GetFromQueryArgs(empty.constructor, method.toString());
-
+            let fromFiles = ControllersDecorators.GetFromFilesArgs(empty.constructor, method.toString());
+            ControllersDecorators.GetNonDecoratedArguments(empty, method, fromBody, fromQuery, fromFiles);
+            
             if (!verb)
                 verb = HTTPVerbs.GET;            
 
@@ -217,26 +227,68 @@ export default abstract class Application implements IApplication {
 
             this._URIs.push({ URI : `${route}${action}`, Controller : `${ctor.name}.${method.toString()}`});
 
-            (this.Express as any)[verb.toString().toLowerCase()](`${route}${action}`, (request: Request, response: Response) => {
+            (this.Express as any)[verb.toString().toLowerCase()](`${route}${action}`, async (request: Request, response: Response) => {
 
-                let midlewares = ControllersDecorators.GetMidlewares(empty).reverse();
+                let midlewares = ControllersDecorators.GetMidlewares(empty).map(s => s).reverse();
 
-                midlewares.push(...ControllersDecorators.GetBefores(empty, method.toString()).reverse());
+                midlewares.push(...ControllersDecorators.GetBefores(empty, method.toString()).map(s => s).reverse());
 
 
-                let afters = ControllersDecorators.GetMidlewaresAfter(empty).reverse();
+                let afters = ControllersDecorators.GetMidlewaresAfter(empty).map(s => s).reverse();
 
-                afters.push(...ControllersDecorators.GetAfters(empty, method.toString()).reverse());
+                afters.push(...ControllersDecorators.GetAfters(empty, method.toString()).map(s => s).reverse());
 
-                let handler = (context: IHTTPRequestContext) => {
+                let handler = async (context: IHTTPRequestContext) => {
 
                     let params: any[] = [];
 
                     let ts = ((Reflect.getMetadata("design:paramtypes", empty, method.toString()) ??
                         Reflect.getMetadata("design:paramtypes", empty.constructor, method.toString())) ?? []) as Function[]; 
-                    
 
-                    ControllersDecorators.GetNonDecoratedArguments(empty, method, fromBody, fromQuery);
+                    let content_type= request.headers["content-type"];
+                    let isMultiPartFormData = content_type && content_type.indexOf('multipart/form-data') > -1;
+                    let parts : IRequestPart[] = [];
+                    let fromFilesParams: any[] = [];
+                    if(isMultiPartFormData)
+                    {
+                        let multiPartService = DependecyService.Resolve<AbstractMultiPartRequestService>(AbstractMultiPartRequestService);
+                        
+                        try{
+                            parts = await multiPartService!.GetPartsFromRequestAsync(request);
+
+                        }catch (err) {
+                            return this.CallErrorHandler(request, response, this.CastToExpection(err as Error));
+                        }
+
+                        for(let f of fromFiles)
+                        {
+                            let fs = parts?.filter(s => s.Type == PartType.FILE);
+
+                            if(fs.length > 0)
+                            {
+                                if(f.FileName){
+
+                                    let files = fs.filter(s => s.Filename == f.FileName);
+    
+                                    if(files.length > 0)
+                                    {
+                                        let fileClass = new FileClass(files[0].Filename!, files[0].Content);
+                                        fromFilesParams.push(fileClass);
+                                        params[f.Index] = fileClass;
+                                    }
+                                    
+                                }else{
+    
+                                    let fileClass = new FileClass(fs[0].Filename!, fs[0].Content);
+                                    fromFilesParams.push(fileClass);
+                                    params[f.Index] = fileClass;
+                                }
+                            }
+                            
+                        }
+                    }
+
+                    
 
                     let fromBodyParams: any[] = [];
                     if (fromBody.length > 0) {
@@ -244,9 +296,39 @@ export default abstract class Application implements IApplication {
                             let obj = undefined;
 
                             if (!f.Field || f.Type.name == "Object")
-                                obj = request.body;
-                            else
-                                obj = request.body[f.Field];
+                                {
+                                    let fieldParts = parts.filter(s => s.Name == 'body');
+
+                                    if(isMultiPartFormData && fieldParts.length > 0)
+                                    {
+                                        try{
+                                            obj = JSON.parse(fieldParts[0].Content);
+                                        }catch{
+                                            obj = fieldParts[0].Content;
+                                        }
+                                    }else{
+                                        obj = request.body;
+                                    }
+                                    
+                                }
+
+                            else{
+
+                                let fieldParts = parts.filter(s => s.Name == f.Field);
+
+                                    if(isMultiPartFormData && fieldParts.length > 0)
+                                    {
+                                        try{
+                                            obj = JSON.parse(fieldParts[0].Content);
+                                        }catch{
+                                            obj = fieldParts[0].Content;
+                                        }
+                                    }else{
+                                        obj = request.body[f.Field];
+                                    }
+                                    
+                            }
+                                
 
                             if (["string", "number", "boolean", "bigint"].filter(s => s == ts[f.Index].name.toLowerCase()).length == 0) {
                                 try {
@@ -298,7 +380,7 @@ export default abstract class Application implements IApplication {
                                     fromBodyParams.push(obj);
                                     params[f.Index] = obj;
                                 }
-                            }
+                            }                            
                         });
                     }
 
@@ -372,6 +454,21 @@ export default abstract class Application implements IApplication {
                                 if (p.Required && (params.length <= p.Index || params[p.Index] == undefined)) {
                                     modelBindErros.push(p);
                                 }
+                                else
+                                {
+                                    try{
+                                        Type.ValidateType(params[p.Index], ts[p.Index] as new (...args: any[]) => any);
+                                    }catch(e)
+                                    {
+                                        response.status(400);
+                                        response.json(
+                                            {
+                                                Message: "Model binding fail",
+                                                Detailts: (e as any).message
+                                            });
+                                        return;
+                                    }
+                                }
                             }
 
                             if (modelBindErros.length > 0) {
@@ -401,6 +498,27 @@ export default abstract class Application implements IApplication {
                                     {
                                         Message: "Model binding fail",
                                         Detailts: modelBindErros.map(s => `Parameter "${s.Field}" is required`)
+                                    });
+                                return;
+                            }
+
+                        }
+
+                        if (fromFiles.length > 0) {
+                            let modelBindErros = [];
+
+                            for (let p of fromFiles) {
+                                if (p.Required && (params.length <= p.Index || params[p.Index] == undefined)) {
+                                    modelBindErros.push(p);
+                                }
+                            }
+
+                            if (modelBindErros.length > 0) {
+                                response.status(400);
+                                response.json(
+                                    {
+                                        Message: "Model binding fail",
+                                        Detailts: modelBindErros.map(s => `The file ${(s.FileName ? `"${s.FileName} "` : "")}is required`)
                                     });
                                 return;
                             }
@@ -448,43 +566,59 @@ export default abstract class Application implements IApplication {
                         let exceutionTask = (controller as any)[method](...params);
 
                         if (exceutionTask instanceof Promise) {
-                            exceutionTask.then(c => {
+
+                            try{
+
+                                let c = await exceutionTask;
+
                                 for (let afterHandler of afters) {
-                                    afterHandler(
-                                        {
-                                            Request: request,
-                                            Response: response,
-                                            Result: exceutionTask
-                                        });
+
+                                    try{
+
+                                        await afterHandler(
+                                            {
+                                                Request: request,
+                                                Response: response,
+                                                Result: c
+                                            });
+
+                                    }catch(subErr)
+                                    {
+                                        return this.CallErrorHandler(request, response, this.CastToExpection(subErr as Error));
+                                    }
+                                    
                                 }
 
                                 this.SendResponseIfNecessary(controller, response, c);
 
-                                
-
-                            }).catch(err => {
+                            }catch(err)
+                            {
                                 for (let afterHandler of afters) {
 
-                                    afterHandler(
-                                        {
-                                            Exception: this.CastToExpection(err as Error),
-                                            Request: request,
-                                            Response: response
-                                        });
+                                    try{
+                                        await afterHandler(
+                                            {
+                                                Exception: this.CastToExpection(err as Error),
+                                                Request: request,
+                                                Response: response
+                                            });
+                                    }catch(subErr)
+                                    {
+                                        return this.CallErrorHandler(request, response, this.CastToExpection(subErr as Error));
+                                    }
                                 }
 
                                 if (afters.length == 0)
                                     this.CallErrorHandler(request, response, this.CastToExpection(err as Error));
-
-
-                            });
+                            }
+                           
 
                         }
                         else {
 
                             for (let afterHandler of afters) {
                                 try {
-                                    afterHandler(
+                                    await afterHandler(
                                         {
                                             Request: request,
                                             Response: response,
@@ -506,15 +640,15 @@ export default abstract class Application implements IApplication {
                         for (let afterHandler of afters) {
                             try {
 
-                                afterHandler(
+                                await afterHandler(
                                     {
                                         Exception: this.CastToExpection(err as Error),
                                         Request: request,
                                         Response: response
                                     });
 
-                            } catch (err) {
-                                this.CallErrorHandler(request, response, this.CastToExpection(err as Error));
+                            } catch (subErr) {
+                                this.CallErrorHandler(request, response, this.CastToExpection(subErr as Error));
                             }
                         }
 
@@ -535,7 +669,7 @@ export default abstract class Application implements IApplication {
                             {
                                 Request: request,
                                 Response: response,
-                                Next: () => { }
+                                Next: async () => { }
                             });
 
                     }
@@ -549,27 +683,45 @@ export default abstract class Application implements IApplication {
 
                         pipeline.push(
                             {
-                                Execute: () => {
+                                Execute: async () => {
 
-                                    pipeline.length - 1 == box.v ? handler(httpRequestContexts[box.v]) : midlewares[box.v](httpRequestContexts[box.v])
+                                    try{
 
+                                        pipeline.length - 1 == box.v ? await handler(httpRequestContexts[box.v]) : await midlewares[box.v](httpRequestContexts[box.v])
+                                    }
+                                    catch(err)
+                                    {
+                                        this.CallErrorHandler(request, response, this.CastToExpection(err as Error));
+                                    }
                                 }
                             });
                     }
 
                     for (let i = 0; i < pipeline.length; i++) {
-                        httpRequestContexts[i].Next = i == pipeline.length - 1 ? () => { } : () => pipeline[i + 1].Execute();
+                        
+                        httpRequestContexts[i].Next = i == pipeline.length - 1 ? async () => { } : async () => 
+                        {
+                            try{
+
+                                await pipeline[i + 1].Execute();
+                                                        }
+                            catch(err)
+                            {
+                                this.CallErrorHandler(request, response, this.CastToExpection(err as Error));
+                            }
+                            
+                        }
                     }
 
 
-                    pipeline[0].Execute();
+                    await pipeline[0].Execute();
                 }
                 else {
 
-                    handler({
+                    await handler({
                         Request: request,
                         Response: response,
-                        Next: () => { }
+                        Next: async () => { }
                     });
 
                 }
@@ -620,7 +772,7 @@ export default abstract class Application implements IApplication {
     private CallErrorHandler(request: Request, response: Response, exception: Error) {
         let defaultHandler = (request: Request, response: Response, exception: Exception): void => {
             try {
-
+                if(response.headersSent)return;
                 response.status(500);
                 response.json(exception);
 

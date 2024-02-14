@@ -3,13 +3,13 @@ import Exception from "../exceptions/Exception";
 
 export default interface IMidleware
 {
-    (context : IHTTPRequestContext) : void;
+    (context : IHTTPRequestContext) : Promise<void>;
     
 }
 
 export interface IRequestResultHandler
 {
-    (result : IRequestResult) : void;
+    (result : IRequestResult) : Promise<void>;
     
 }
 
@@ -17,7 +17,7 @@ export interface IHTTPRequestContext
 {
     Request : Request;
     Response : Response;
-    Next : () => void;
+    Next : () => Promise<void>;
 }
 
 export interface IRequestResult

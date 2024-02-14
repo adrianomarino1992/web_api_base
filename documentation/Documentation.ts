@@ -48,8 +48,9 @@ export default class Documentation {
                 let verb = ControllersDecorators.GetVerb(empty, method.toString());
                 let fromBody = ControllersDecorators.GetFromBodyArgs(empty.constructor, method.toString());
                 let fromQuery = ControllersDecorators.GetFromQueryArgs(empty.constructor, method.toString());                
-                let fromFiles = ControllersDecorators.GetFromFilesArgs(empty.constructor, method.toString());                
-                ControllersDecorators.GetNonDecoratedArguments(empty, method, fromBody, fromQuery);
+                let fromFiles = ControllersDecorators.GetFromFilesArgs(empty.constructor, method.toString());
+                                
+                ControllersDecorators.GetNonDecoratedArguments(empty, method, fromBody, fromQuery, fromFiles);
 
                 let template = DocumentationDecorators.GetRequestJson(empty, method.toString());
 

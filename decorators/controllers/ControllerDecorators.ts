@@ -4,7 +4,8 @@ import { HTTPVerbs } from '../../enums/httpVerbs/HttpVerbs';
 import IController from '../../interfaces/IController';
 import IMidleware, { IRequestResultHandler } from '../../midlewares/IMidleware';
 import FunctionAnalizer from '../../metadata/FunctionAnalizer';
-
+import File from '../../File/File';
+import DecoratorException from '../../exceptions/DecoratorException';
 
 export default class ControllersDecorators
 {
@@ -221,17 +222,25 @@ export default class ControllersDecorators
         return Reflect.getMetadata(ControllersDecorators._fromBodyKeyMetadata, target, method) ?? [];
     }
 
+    public static OptionalFromFilesArg(fileName? : string, maxFileSizeMB? : number) 
+    {
+        return ControllersDecorators.FromFiles(fileName, maxFileSizeMB, false);
+    }
+
     public static FromFiles(fileName? : string, maxFileSizeMB? : number, required? : boolean)
     {
         return function( target : Object, methodName: string , parameterIndex: number)
         {
-            let meta = ControllersDecorators.GetFromFilesArgs(target.constructor, methodName);
+            let meta = ControllersDecorators.GetFromFilesArgs(target.constructor, methodName);            
 
             let params = FunctionAnalizer.ExtractParamsList(target, (target as any)[methodName]);
 
             let item = meta.filter(x => x.Index == parameterIndex);
 
-            let thisParam = params.filter(s => s.Index == parameterIndex)[0];            
+            let thisParam = params.filter(s => s.Index == parameterIndex)[0]; 
+            
+            if(thisParam.Type != File)
+                throw new DecoratorException('FromFiles decorator must be used in a web_api_base File type parameter');
 
             if(item.length == 0)
                 meta.push({Index : parameterIndex, FileName : fileName, MaxFileSizeMB: maxFileSizeMB , Required : required ?? true});
@@ -292,7 +301,11 @@ export default class ControllersDecorators
     }
 
     
-    public static GetNonDecoratedArguments(empty: IController, method: Symbol | string,  fromBody: ReturnType<typeof ControllersDecorators.GetFromBodyArgs>, fromQuery: ReturnType<typeof ControllersDecorators.GetFromQueryArgs>) : void
+    public static GetNonDecoratedArguments(
+        empty: IController, method: Symbol | string, 
+         fromBody: ReturnType<typeof ControllersDecorators.GetFromBodyArgs>, 
+         fromQuery: ReturnType<typeof ControllersDecorators.GetFromQueryArgs>, 
+         fromFiles: ReturnType<typeof ControllersDecorators.GetFromFilesArgs>) : void
     {
         let ts = ((Reflect.getMetadata("design:paramtypes", empty, method.toString()) ??
         Reflect.getMetadata("design:paramtypes", empty.constructor, method.toString())) ?? []) as Function[];     
@@ -301,10 +314,16 @@ export default class ControllersDecorators
         {
             if(fromBody.filter(s => s.Index == i).length == 0)
             {
-                if([Date, String, Number, Boolean].filter(t => t == e).length == 0)
+                if([Date, String, Number, Boolean, File].filter(t => t == e).length == 0)
                     fromBody.push({Index : i, Type: e, Required : true});
             }   
             
+            if(fromFiles.filter(s => s.Index == i).length == 0)
+            {
+                if(e == File)
+                    fromFiles.push({Index : i, Required : true});
+            }   
+
             if(fromQuery.filter(s => s.Index == i).length == 0)
             {
                 if([Date, String, Number, Boolean].filter(t => t == e).length > 0)

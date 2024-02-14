@@ -20,6 +20,7 @@ export default class ControllersDecorators
     private static _fromQueryKeyMetadata = "meta:fromQueryKey";
     private static _fromBodyKeyMetadata = "meta:fromBodyKey";
     private static _fromFilesKeyMetadata = "meta:fromFilesKey";
+    private static _maxFilesSizeKeyMetadata = "meta:maxFilesSizeKey";
     private static _controllerMidlewaresAfterKeyMetadata = "meta:controllerMidlewaresAfterKey";   
     
 
@@ -224,10 +225,15 @@ export default class ControllersDecorators
 
     public static OptionalFromFilesArg(fileName? : string, maxFileSizeMB? : number) 
     {
-        return ControllersDecorators.FromFiles(fileName, maxFileSizeMB, false);
+        return ControllersDecorators.FromFiles(fileName, false);
     }
 
-    public static FromFiles(fileName? : string, maxFileSizeMB? : number, required? : boolean)
+    public static RequiredFromFilesArg(fileName? : string) 
+    {
+        return ControllersDecorators.FromFiles(fileName, true);
+    }
+
+    public static FromFiles(fileName? : string, required? : boolean)
     {
         return function( target : Object, methodName: string , parameterIndex: number)
         {
@@ -243,11 +249,10 @@ export default class ControllersDecorators
                 throw new DecoratorException('FromFiles decorator must be used in a web_api_base File type parameter');
 
             if(item.length == 0)
-                meta.push({Index : parameterIndex, FileName : fileName, MaxFileSizeMB: maxFileSizeMB , Required : required ?? true});
+                meta.push({Index : parameterIndex, FileName : fileName,  Required : required ?? true});
             
             else {
-                item[0].FileName = fileName;
-                item[0].MaxFileSizeMB = maxFileSizeMB;
+                item[0].FileName = fileName;                
             }
 
             Reflect.defineMetadata(ControllersDecorators._fromFilesKeyMetadata, meta, target.constructor, methodName);            
@@ -255,10 +260,24 @@ export default class ControllersDecorators
     }
     
 
-    public static GetFromFilesArgs(target : Function, method : string) : {Index : number, FileName? : string, MaxFileSizeMB?: number, Required: boolean }[]
+    public static GetFromFilesArgs(target : Function, method : string) : {Index : number, FileName? : string, Required: boolean }[]
     {
         return Reflect.getMetadata(ControllersDecorators._fromFilesKeyMetadata, target, method) ?? [];
     }
+
+    public static MaxFilesSize(bytes : number)  
+    {
+        return function(target : Function)
+        {            
+            Reflect.defineMetadata(ControllersDecorators._maxFilesSizeKeyMetadata, bytes, target);            
+        }
+    }
+
+    public static GetMaxFilesSize<T extends IController>(target : new (...args: any) => T) : number 
+    {
+       return Reflect.getMetadata(ControllersDecorators._maxFilesSizeKeyMetadata, target) ?? 0;
+    }
+
 
     public static RequiredFromQueryArg(bodyPropName? : string) 
     {

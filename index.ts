@@ -41,6 +41,9 @@ export {default as BodyParseException} from "./exceptions/BodyParseException";
 export {default as ControllerLoadException} from "./exceptions/ControllerLoadException";
 export {default as ArgumentNullException} from "./exceptions/ArgumentNullException";
 export {default as FindDependencyException} from "./exceptions/FindDependencyException";
+export {default as DecoratorException} from "./exceptions/DecoratorException";
+export {default as InvalidEntityException} from "./exceptions/InvalidEntityException";
+export {default as FileNotFoundException} from "./exceptions/FileNotFoundException";
 
 export function UseBefore(midleware : IMidleware)  
 {
@@ -193,9 +196,14 @@ export function FromBody(paramName? : string, required? : boolean)
     return ControllersDecorators.FromBody(paramName, required);
 }
 
-export function FromFiles(fileName? : string, maxFileSizeMB?: number, required? : boolean)
+export function FromFiles(fileName? : string, required? : boolean)
 {
-    return ControllersDecorators.FromFiles(fileName, maxFileSizeMB, required);
+    return ControllersDecorators.FromFiles(fileName, required);
+}
+
+export function MaxFilesSize(bytes : number)
+{
+    return ControllersDecorators.MaxFilesSize(bytes);
 }
 
 export function RequiredFromQueryArg(paramName? : string)
@@ -213,6 +221,7 @@ export function FromQuery(paramName? : string, required? : boolean)
 {
     return ControllersDecorators.FromQuery(paramName, required);
 }
+
 
 
 

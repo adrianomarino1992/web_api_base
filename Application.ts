@@ -210,6 +210,7 @@ export default abstract class Application implements IApplication {
             let fromBody = ControllersDecorators.GetFromBodyArgs(empty.constructor, method.toString());
             let fromQuery = ControllersDecorators.GetFromQueryArgs(empty.constructor, method.toString());
             let fromFiles = ControllersDecorators.GetFromFilesArgs(empty.constructor, method.toString());
+            let maxFilesSize = ControllersDecorators.GetMaxFilesSize(empty.constructor);
             ControllersDecorators.GetNonDecoratedArguments(empty, method, fromBody, fromQuery, fromFiles);
             
             if (!verb)
@@ -254,7 +255,7 @@ export default abstract class Application implements IApplication {
                         let multiPartService = DependecyService.Resolve<AbstractMultiPartRequestService>(AbstractMultiPartRequestService);
                         
                         try{
-                            parts = await multiPartService!.GetPartsFromRequestAsync(request);
+                            parts = await multiPartService!.GetPartsFromRequestAsync(request, { MaxFileSize: maxFilesSize});
 
                         }catch (err) {
                             return this.CallErrorHandler(request, response, this.CastToExpection(err as Error));

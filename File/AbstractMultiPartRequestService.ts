@@ -1,6 +1,11 @@
 
+export interface IGetPartsOptions
+{
+    MaxFileSize : number;
+}
+
 export default abstract class AbstractMultiPartRequestService {
-    public abstract GetPartsFromRequestAsync(request: any): Promise<IRequestPart[]>;
+    public abstract GetPartsFromRequestAsync(request: any, options? : IGetPartsOptions): Promise<IRequestPart[]>;
 }
 
 export interface IRequestPart {

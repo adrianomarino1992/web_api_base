@@ -35,7 +35,7 @@ export default class Documentation {
                 Resources : []
             };
 
-            doc.Headers = DocumentationDecorators.GetHeaders(c);
+            doc.Headers = ControllersDecorators.GetHeaders(c);
 
             for(let method of methods)
             {

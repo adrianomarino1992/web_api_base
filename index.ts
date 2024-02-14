@@ -116,7 +116,7 @@ export function ProducesResponse(response : Parameters<typeof DocumentationDecor
 
 export function UseHeader(header : string)       
 {
-    return DocumentationDecorators.UseHeader(header); 
+    return ControllersDecorators.UseHeader(header); 
 } ;
 
 

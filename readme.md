@@ -257,6 +257,16 @@ export default class StatusController extends ControllerBase
 ```
 
 
+### @UseHeader()
+Define that the request must have some header
+```typescript
+@Route("/status")
+@UseHeader('api_token')
+export default class StatusController extends ControllerBase
+{
+```
+
+
 # Model Bind decorators
 
 ### @FromBody()
@@ -304,7 +314,17 @@ public async GetByIdAsync(@FromQuery()id : number) : Promise<OKResult<User>>
 In the example above, the __model binding system__ will get the first query argument of request. 
 We can also determine the name of parameter: __@FromQuery('id')__. 
 
+### @FromFiles()
+Extract a method File(web_api_base) type parameter from multipart/form-data request
 
+
+```typescript
+ @POST()
+ public async InsertAsync(@FromFiles()file: File) : Promise<User>
+ {  
+     return await this._service.MoveFiles(file, newPath);
+ }
+```
 
 ## Sample of a complete controller
 

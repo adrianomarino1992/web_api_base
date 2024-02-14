@@ -7,7 +7,6 @@ export class DocumentationDecorators {
     private static _descriptionKeyMetadata = "meta:descriptionKey";
     private static _requestKeyMetadata = "meta:requestJsonKey";
     private static _responseKeyMetadata = "meta:responseJsonKey";
-    private static _hearderKeyMetadata = "meta:headerJsonKey";
 
     public static Description(description: string) {
         return function (target: Object, methodName: string, propertyDescriptor: PropertyDescriptor) {
@@ -48,21 +47,5 @@ export class DocumentationDecorators {
         return Reflect.getMetadata(DocumentationDecorators._responseKeyMetadata, target, method) ?? [];
     }
 
-    public static UseHeader(header : string) {
-        return function (target: Object) {
-            
-            let meta = DocumentationDecorators.GetHeaders(target);
-
-            if(meta.indexOf(header) == -1)
-                meta.push(header);            
-            
-            Reflect.defineMetadata(DocumentationDecorators._hearderKeyMetadata, meta, target);
-
-        };
-    }
-
-    public static GetHeaders(target: Object): Parameters<typeof DocumentationDecorators.UseHeader>[0][] {
-
-        return Reflect.getMetadata(DocumentationDecorators._hearderKeyMetadata, target) ?? [];
-    }
+    
 }

@@ -18,9 +18,9 @@ import Documentation from "./documentation/Documentation";
 import { ControllerBase } from "./controllers/base/ControllerBase";
 import ActionResult from "./controllers/ActionResult";
 import BodyParseException from "./exceptions/BodyParseException";
-import AbstractMultiPartRequestService, { IRequestPart, PartType } from "./File/AbstractMultiPartRequestService";
-import FormidableMultiPartRequestService from "./File/FormidableMultiPartRequestService";
-import FileClass from './File/File';
+import AbstractMultiPartRequestService, { IRequestPart, PartType } from "./file/AbstractMultiPartRequestService";
+import FormidableMultiPartRequestService from "./file/FormidableMultiPartRequestService";
+import FileClass from './file/File';
 import Type from "./metadata/Type";
 import { DocumentationDecorators } from "./decorators/documentation/DocumentationDecorators";
 
@@ -221,6 +221,9 @@ export default abstract class Application implements IApplication {
             if(verb == HTTPVerbs.GET && fromBody.length > 0)
                 throw new ControllerLoadException(`GET method: ${ctor.name}.${method.toString()} can not have body params`);
 
+            if(verb != HTTPVerbs.POST && fromFiles.length > 0)
+                throw new ControllerLoadException(`Method: ${ctor.name}.${method.toString()} must be a POST method to allow File type parameters`);
+
             let collision = this._URIs.filter(s => s.URI == `${route}${action}`);
             
             if(collision.length > 0)
@@ -367,6 +370,9 @@ export default abstract class Application implements IApplication {
                                 if (obj != undefined && typeof obj == "string" && obj.indexOf('"') == 0 && obj.lastIndexOf('"') == obj.length - 1)
                                     obj = obj.substring(1, obj.length - 1);
 
+                                if (obj != undefined && typeof obj == "string" && obj.indexOf("'") == 0 && obj.lastIndexOf("'") == obj.length - 1)
+                                    obj = obj.substring(1, obj.length - 1);
+
                                 if (obj != undefined && ts[f.Index].name.toLowerCase() == "number") {
                                     let number = Number.parseFloat(obj.toString());
 
@@ -387,8 +393,8 @@ export default abstract class Application implements IApplication {
                                 else if (obj != undefined && ts[f.Index].name.toLowerCase() == "date") {
                                     try {
 
-                                        fromBodyParams.push(new Date(obj));
-                                        params[f.Index] = new Date(obj);
+                                        fromBodyParams.push(Type.CastStringToDateUTC(obj));
+                                        params[f.Index] = Type.CastStringToDateUTC(obj);
 
                                     } catch { }
                                 }
@@ -405,9 +411,28 @@ export default abstract class Application implements IApplication {
                         fromQuery.sort((a, b) => a.Index - b.Index).forEach((f, j) => {
                             let obj: string | undefined;
 
+                            if(f.Field == '')
+                            {
+                                let j = 0;
+                                for(let k in request.query)
+                                {
+                                    if(j == f.Index)
+                                        f.Field = k;
+                                }
+                            }
+
+                            if(f.Field == '')
+                            {
+                                params[f.Index] = undefined;
+                                return;
+                            }
+
                             obj = request.query[f.Field]?.toString();
 
                             if (obj != undefined && typeof obj == "string" && obj.indexOf('"') == 0 && obj.lastIndexOf('"') == obj.length - 1)
+                                obj = obj.substring(1, obj.length - 1);
+
+                            if (obj != undefined && typeof obj == "string" && obj.indexOf("'") == 0 && obj.lastIndexOf("'") == obj.length - 1)
                                 obj = obj.substring(1, obj.length - 1);
 
                             if (obj != undefined && f.Type.name.toLowerCase() == "number") {
@@ -430,8 +455,8 @@ export default abstract class Application implements IApplication {
                             else if (obj != undefined && f.Type.name.toLowerCase() == "date") {
                                 try {
 
-                                    fromQueryParams.push(new Date(obj));
-                                    params[f.Index] = new Date(obj);
+                                    fromQueryParams.push(Type.CastStringToDateUTC(obj));
+                                    params[f.Index] = Type.CastStringToDateUTC(obj);
 
                                 } catch { }
 

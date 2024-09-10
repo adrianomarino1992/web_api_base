@@ -10,6 +10,8 @@ export { HTTPVerbs } from './enums/httpVerbs/HttpVerbs';
 
 export { default as Exception } from './exceptions/Exception';
 
+export { default as File } from './file/File';
+
 export { default as DependecyService } from "./dependencyInjection/DependecyService";
 
 export { default as IMidleware } from './midlewares/IMidleware';

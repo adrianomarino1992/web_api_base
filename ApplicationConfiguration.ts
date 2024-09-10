@@ -28,7 +28,7 @@ export default class ApplicationConfiguration implements IApplicationConfigurati
             this.DEBUG = false;
     }
    
-    AddScoped(type: Function, ctor?: (new (...args: any[]) => any) | undefined, builder?: (() => any) | undefined): void
+    public AddScoped(type: Function, ctor?: (new (...args: any[]) => any) | undefined, builder?: (() => any) | undefined): void
     {
         if(ctor)
         {
@@ -39,7 +39,7 @@ export default class ApplicationConfiguration implements IApplicationConfigurati
         }
     }
     
-    AddTransient(type: Function, ctor?: (new (...args: any[]) => any) | undefined, builder?: (() => any) | undefined): void
+    public AddTransient(type: Function, ctor?: (new (...args: any[]) => any) | undefined, builder?: (() => any) | undefined): void
     {
         if(ctor)
         {
@@ -50,7 +50,7 @@ export default class ApplicationConfiguration implements IApplicationConfigurati
         }
     }
     
-    AddSingleton(type: Function, ctor?: (new (...args: any[]) => any) | undefined, builder?: (() => any) | undefined): void
+    public AddSingleton(type: Function, ctor?: (new (...args: any[]) => any) | undefined, builder?: (() => any) | undefined): void
     {
         if(ctor)
         {

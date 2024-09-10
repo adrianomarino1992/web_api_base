@@ -4,7 +4,7 @@ import { HTTPVerbs } from '../../enums/httpVerbs/HttpVerbs';
 import IController from '../../interfaces/IController';
 import IMidleware, { IRequestResultHandler } from '../../midlewares/IMidleware';
 import FunctionAnalizer from '../../metadata/FunctionAnalizer';
-import File from '../../File/File';
+import File from '../../file/File';
 import DecoratorException from '../../exceptions/DecoratorException';
 
 export default class ControllersDecorators
@@ -366,13 +366,35 @@ export default class ControllersDecorators
             {
                 if([Date, String, Number, Boolean].filter(t => t == e).length > 0)
                 {
-                    let funcParameters = FunctionAnalizer.ExtractParamsList(empty, (empty as any)[method.toString()]);
-                    
-                    let thisParameter = funcParameters.filter(p => p.Index == i);
-                    
-                    if(thisParameter.length > 0)
-                    {
-                        fromQuery.push({Field: thisParameter[0].Name, Index: i, Required : true, Type : e});
+                    try{
+
+                        let paramName = '';
+                        if((empty as any)[method.toString()].name != '')
+                        {
+                            let funcParameters = FunctionAnalizer.ExtractParamsList(empty, (empty as any)[method.toString()]);
+                            
+                            let thisParameter = funcParameters.filter(p => p.Index == i);
+
+                            if(thisParameter.length > 0)
+                                paramName = thisParameter[0].Name;
+                        }
+                        else
+                        {
+                            let funcParameters = FunctionAnalizer.GetParametersNames(empty.constructor.toString(), method.toString());
+
+                            if(funcParameters.length == 0 && (empty as any).__proto__.__proto__ != undefined)
+                                funcParameters = FunctionAnalizer.GetParametersNames((empty as any).__proto__.__proto__.constructor.toString(), method.toString());
+
+                            if(funcParameters.length > i)
+                                paramName =  funcParameters[i];
+ 
+                        }
+                        
+                        fromQuery.push({Field: paramName, Index: i, Required : true, Type : e});
+
+                    }catch{
+
+                        fromQuery.push({Field: "", Index: i, Required : true, Type : e});
                     }
                 }
             } 

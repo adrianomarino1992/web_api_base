@@ -120,5 +120,55 @@ export default class Type {
         return false;
     }
 
+    public static CastStringToDateUTC(date : string) : Date
+    {
+        if(!date)
+            return new Date(Date.UTC(0,0,0)); 
+
+        let parts = date.split('-');
+
+        if(parts.length < 3)
+            return new Date(Date.UTC(0,0,0)); 
+
+        let time = parts[2].split(' ');  
+        
+        parts[2] = time.shift()!;
+
+        if(time.length == 0 || time[0].indexOf(':') == -1)
+            time = ["0","0","0"];
+        else
+            time = time[0].split(':');    
+
+        let dateParts : number[] = [];
+
+        for(let p of parts)
+        {
+            let r = Number.parseInt(p);
+
+            if(r == Number.NaN)
+                return new Date(Date.UTC(0,0,0)); 
+            
+            dateParts.push(r);
+        }
+
+        let hours : number[] = [];
+        for(let p of time)
+        {
+            let r = Number.parseInt(p);
+
+            if(r == Number.NaN)           
+                hours.push(0);
+            else
+                hours.push(r);
+
+        }
+
+        while(hours.length < 3)
+            hours.push(0);
+    
+        return new Date(Date.UTC(dateParts[0], dateParts[1] - 1, dateParts[2], hours[0], hours[1], hours[2]));       
+
+    }
+
 
 }

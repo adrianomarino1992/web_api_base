@@ -19,3 +19,6 @@ export interface ApplicationExceptionHandler
 {
     (request : Request, response : Response, exception : Exception) : void;
 }
+
+
+export { Express as ExpressApp} from 'express'; 

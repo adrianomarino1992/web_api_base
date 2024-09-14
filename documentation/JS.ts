@@ -1,10 +1,11 @@
 import FS from 'fs';
+import Path from 'path';
 import Application from '../Application';
 
 export default class JS
 {
     private static _js = ` document.getElementById('root').innerHTML += '<div class="header" ><div class="DivHeader"><p>Made with <a href="https://www.npmjs.com/package/web_api_base" target="_blank">web_api_base</a></p></div></div>';
-    document.getElementsByClassName('header')[0].innerHTML += '<div class="DivHeader DivHeaderRight"><p class="pTitle" style="font-size: 14px;font-weight:600;">web_api_base 4.0.8</p><p>web api base</p></div>';
+    document.getElementsByClassName('header')[0].innerHTML += '<div class="DivHeader DivHeaderRight"><p class="pTitle" style="font-size: 14px;font-weight:600;">??APP ??VERSION</p><p>??DESC</p></div>';
     
         function AddResource(route)
         {    
@@ -357,21 +358,32 @@ export default class JS
 
         try{
 
-            if(FS.existsSync(`${process.cwd()}\\package.json`))
+            let applicationPackageJson = Path.join(Application.Configurations.RootPath, "package.json");
+
+            if(!FS.existsSync(applicationPackageJson))
+                applicationPackageJson = Path.join(Application.Configurations.RootPath, "..", "package.json");
+
+            if(!FS.existsSync(applicationPackageJson))
+                applicationPackageJson = Path.join(Application.Configurations.RootPath, "..", "..", "package.json");
+
+            if(FS.existsSync(applicationPackageJson))
             {
-                let j = JSON.parse(FS.readFileSync(`${process.cwd()}\\package.json`, 'utf-8'));
+                let j = JSON.parse(FS.readFileSync(applicationPackageJson, 'utf-8'));
                 app = j.name;
                 version = j.version;
                 description = j.description;        
                 
-                this._js = this._js.replace('??APP', `${app} ${version}`);
-                this._js = this._js.replace('??DESC', `${description}`);
+                this._js = this._js.replace('??APP', app);
+                this._js = this._js.replace('??DESC', description);
+                this._js = this._js.replace('??VERSION', version);
+
             }
 
         }catch(err)
         {
             console.error(err);
-        }
+        }       
+        
 
         FS.writeFileSync(`${__dirname}\\script.js`, JS._js, 'utf-8');
     }

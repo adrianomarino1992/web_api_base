@@ -521,7 +521,7 @@ Explain all the possibles rsponses of a controller´s action. We can use this de
 [![Alt text](https://raw.githubusercontent.com/adrianomarino1992/web_api_base/master/light.png)](https://raw.githubusercontent.com/adrianomarino1992/web_api_base/master/light.png)
 
 ### To use the dark theme, run the API with **--debug --dark** arguments
-[![Alt text](https://raw.githubusercontent.com/adrianomarino1992/web_api_base/5057c23221750ea4315142e88c7af80c2370682c/dark.png)](https://raw.githubusercontent.com/adrianomarino1992/web_api_base/5057c23221750ea4315142e88c7af80c2370682c/dark.png)
+[![Alt text](https://raw.githubusercontent.com/adrianomarino1992/web_api_base/master/dark.png)](https://raw.githubusercontent.com/adrianomarino1992/web_api_base/master/dark.png)
 
 
 ## Contributing

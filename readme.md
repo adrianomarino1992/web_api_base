@@ -495,7 +495,28 @@ We can create a API playground(host/playground) using the Aplication.CreateDocum
     }    
 ```
 
-### To use the default theme, run the API with **--debug** argument
+# Documentation decorators
+We have some decorators to add a more information to our auto-generated documentation
+
+### @ControllerHeader(header : string)
+Add a header field to a controller. All requests will have this header on it
+
+### @ActionHeader(header : string)
+Add a header field to a controller´s action
+
+
+### @Description(description : string) 
+Add a description text on a action 
+
+
+### @RequestJson(json : string) 
+Add a json template as a placeholder of body field. We can use if we want manually define the json, because, the framework can create the json template base on the argument type of action method 
+
+
+### @ProducesResponse(response : { Status : number, Description? : string, JSON? : string }) 
+Explain all the possibles rsponses of a controller´s action. We can use this decorator many times we need to explain all possible resposes 
+
+### To use the default theme, run the API with **--debug** argument only
 
 [![Alt text](https://raw.githubusercontent.com/adrianomarino1992/web_api_base/master/light.png)](https://raw.githubusercontent.com/adrianomarino1992/web_api_base/master/light.png)
 

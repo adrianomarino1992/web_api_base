@@ -22,7 +22,6 @@ import AbstractMultiPartRequestService, { IRequestPart, PartType } from "./file/
 import FormidableMultiPartRequestService from "./file/FormidableMultiPartRequestService";
 import FileClass from './file/File';
 import Type from "./metadata/Type";
-import { DocumentationDecorators } from "./decorators/documentation/DocumentationDecorators";
 
 export default abstract class Application implements IApplication {
 
@@ -212,7 +211,6 @@ export default abstract class Application implements IApplication {
             let fromQuery = ControllersDecorators.GetFromQueryArgs(empty.constructor, method.toString());
             let fromFiles = ControllersDecorators.GetFromFilesArgs(empty.constructor, method.toString());
             let maxFilesSize = ControllersDecorators.GetMaxFilesSize(empty.constructor);
-            let headers = ControllersDecorators.GetHeaders(empty.constructor);
             ControllersDecorators.GetNonDecoratedArguments(empty, method, fromBody, fromQuery, fromFiles);
             
             if (!verb)
@@ -244,20 +242,8 @@ export default abstract class Application implements IApplication {
 
                 afters.push(...ControllersDecorators.GetAfters(empty, method.toString()).map(s => s).reverse());
 
-                let handler = async (context: IHTTPRequestContext) => {
-                    
-                    for(let h of headers)
-                    {
-                        if(!request.headers[h])
-                        {
-                            response.status(400);
-                            response.json(
-                                {
-                                    Message: "Header missing",
-                                    Detailts: `Header ${h} is required to this endpoint`
-                                });
-                        }
-                    }                
+                let handler = async (context: IHTTPRequestContext) => {                   
+                               
 
                     let params: any[] = [];
 

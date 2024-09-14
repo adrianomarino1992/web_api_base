@@ -7,6 +7,7 @@ export default class JS
     private static _js = ` document.getElementById('root').innerHTML += '<div class="header" ><div class="DivHeader"><p>Made with <a href="https://www.npmjs.com/package/web_api_base" target="_blank">web_api_base</a></p></div></div>';
     document.getElementsByClassName('header')[0].innerHTML += '<div class="DivHeader DivHeaderRight"><p class="pTitle" style="font-size: 14px;font-weight:600;">??APP ??VERSION</p><p>??DESC</p></div>';
     
+       
         function AddResource(route)
         {    
             console.log(route);
@@ -17,17 +18,21 @@ export default class JS
                
             root.innerHTML += '<h1 >'+route.Controller+'</h1>';
 
+            
             if(route.Headers.length > 0)
             {
                 root.innerHTML += '<div id="'+route.Controller.toLowerCase()+'_headers" class="container" style="display: block;"></div>';
 
                 let container = document.getElementById(route.Controller.toLowerCase()+'_headers');
+                
+                container.innerHTML += "<h3>Controller headers:</h3>";
+                
                 for(let r of route.Headers)
                 {                    
                     container.innerHTML += '<div class="token-container"><input type="text" id="header-'+r+route.Controller.toLowerCase()+route.Headers.indexOf(r)+'" placeholder="'+r+'" style="width: 100%;"></div>';                  
                 }
-            }    
-           
+            }               
+
             for(let r of route.Resources)
             {
         
@@ -48,15 +53,32 @@ export default class JS
                 root.innerHTML += '<div id="'+r.Id+'_container" class="container"></div>';
                 let container = document.getElementById(r.Id + '_container');
     
+                if(r.Headers.length > 0)
+                    container.innerHTML += "<h3>Headers:</h3>";
+
+                for(let c of r.Headers)
+                {
+                    container.innerHTML += '<div class="token-container"><input type="text" id="action-header-'+r.Id+r.Headers.indexOf(c)+'" placeholder="'+c+'" style="width: 100%;"></div>';                   
+                }
+
+                if(r.Headers.length > 0 && (r.FromQuery.length > 0 || r.FromBody.length > 0 || r.FromFiles.length == 0))
+                    container.innerHTML +='</br>'
+
+                if(r.FromQuery.length > 0)
+                    container.innerHTML += "<h3>Query parameters:</h3>";
+
                 for(let c of r.FromQuery)
                 {
                     container.innerHTML += '<div class="token-container"><input type="text" id="key-'+r.Id+r.FromQuery.indexOf(c)+'" placeholder="'+c.Field+'"></div>';                   
                 }
 
-                if(r.FromQuery.length > 0 && r.FromBody.length > 0 && r.FromFiles.length == 0)
+                if(r.FromQuery.length > 0 && (r.FromBody.length > 0 || r.FromFiles.length == 0))
                     container.innerHTML +='</br>'
 
-                    
+                
+                if(r.FromFiles.length > 0)
+                    container.innerHTML += "<h3>Files:</h3>";
+
                 for(let c of r.FromFiles)
                 {
                     let cIndex = r.FromFiles.indexOf(c);
@@ -97,6 +119,9 @@ export default class JS
                 if(r.FromFiles.length > 0 && r.FromBody.length > 0)
                     container.innerHTML +='</br>'
     
+                if(r.FromBody.length > 0)
+                    container.innerHTML += "<h3>Body:</h3>";
+
                 if(r.FromBody.length > 0)
                 {
                     container.innerHTML += '<textarea id="body-'+r.Id+'" placeholder="{}" spellcheck="false">'+r.Template+'</textarea>';                  
@@ -242,6 +267,17 @@ export default class JS
                             }    
                            
                         }
+
+                        if(r.Headers.length > 0)
+                        {
+                            for(let v of r.Headers)
+                                {   
+                                    let header = document.getElementById('action-header-'+r.Id+r.Headers.indexOf(v));
+                                    req.setRequestHeader(v,header.value);           
+                                                      
+                                }
+                        }
+
                         req.onerror = ()=>
                         {
                             h3.innerText = "Current response:";

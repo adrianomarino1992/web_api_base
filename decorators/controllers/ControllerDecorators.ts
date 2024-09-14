@@ -22,10 +22,6 @@ export default class ControllersDecorators
     private static _fromFilesKeyMetadata = "meta:fromFilesKey";
     private static _maxFilesSizeKeyMetadata = "meta:maxFilesSizeKey";
     private static _controllerMidlewaresAfterKeyMetadata = "meta:controllerMidlewaresAfterKey";  
-    private static _hearderKeyMetadata = "meta:headerJsonKey";
-
-    
-
     
 
     public static Route(route? : string)  
@@ -96,23 +92,7 @@ export default class ControllersDecorators
         }
     }
     
-    public static UseHeader(header : string) {
-        return function (target: Object) {
-            
-            let meta = ControllersDecorators.GetHeaders(target as Function);
-
-            if(meta.indexOf(header) == -1)
-                meta.push(header);            
-            
-            Reflect.defineMetadata(ControllersDecorators._hearderKeyMetadata, meta, target);
-
-        };
-    }
-
-    public static GetHeaders(target : Function): Parameters<typeof ControllersDecorators.UseHeader>[0][] {
-
-        return Reflect.getMetadata(ControllersDecorators._hearderKeyMetadata, target) ?? [];
-    }
+   
 
     public static GetMidlewares(controller : IController) : IMidleware[]
     {

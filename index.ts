@@ -99,6 +99,17 @@ export function DELETE(action? : string)
 } ;
 
 
+export function ControllerHeader(header : string)       
+{
+    return DocumentationDecorators.ControllerHeader(header); 
+} ;
+
+
+export function ActionHeader(header : string)       
+{
+    return DocumentationDecorators.ActionHeader(header); 
+} ;
+
 export function Description(description : string)       
 {
     return DocumentationDecorators.Description(description); 
@@ -116,10 +127,6 @@ export function ProducesResponse(response : Parameters<typeof DocumentationDecor
 } ;
 
 
-export function UseHeader(header : string)       
-{
-    return ControllersDecorators.UseHeader(header); 
-} ;
 
 
 export function Verb(verb : HTTPVerbs)      

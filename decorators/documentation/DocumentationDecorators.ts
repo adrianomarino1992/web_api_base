@@ -7,6 +7,8 @@ export class DocumentationDecorators {
     private static _descriptionKeyMetadata = "meta:descriptionKey";
     private static _requestKeyMetadata = "meta:requestJsonKey";
     private static _responseKeyMetadata = "meta:responseJsonKey";
+    private static _controllerUseHeaderKeyMetadata = "meta:controllerUseHeaderKeyMetadata";
+    private static _controllerActionUseHeaderKeyMetadata = "meta:controllerActionUseHeaderKeyMetadata";
 
     public static Description(description: string) {
         return function (target: Object, methodName: string, propertyDescriptor: PropertyDescriptor) {
@@ -47,5 +49,47 @@ export class DocumentationDecorators {
         return Reflect.getMetadata(DocumentationDecorators._responseKeyMetadata, target, method) ?? [];
     }
 
+    public static ControllerHeader(header: string) {
+        return function (target: Object) {
+
+            let headers = DocumentationDecorators.GetControllerHeaders(target);
+
+            let index = headers.findIndex(s => s == header.trim());
+
+            if(index >= 0)
+                return;
+
+            headers.push(header.trim())
+
+            Reflect.defineMetadata(DocumentationDecorators._controllerUseHeaderKeyMetadata, headers, target);
+
+        };
+    }
+
+    public static GetControllerHeaders(target: Object): string[] {
+        return Reflect.getMetadata(DocumentationDecorators._controllerUseHeaderKeyMetadata, target) ?? [];
+    }
+
+
+    public static ActionHeader(header: string) {
+        return function (target: Object, method : string, propertyDescriptor: PropertyDescriptor) {
+
+            let headers = DocumentationDecorators.GetActionHeaders(target, method);
+
+            let index = headers.findIndex(s => s == header.trim());
+
+            if(index >= 0)
+                return;
+
+            headers.push(header.trim())
+
+            Reflect.defineMetadata(DocumentationDecorators._controllerActionUseHeaderKeyMetadata, headers, target, method);
+
+        };
+    }
+
+    public static GetActionHeaders(target: Object, method: string): string[] {
+        return Reflect.getMetadata(DocumentationDecorators._controllerActionUseHeaderKeyMetadata, target, method) ?? [];
+    }
     
 }

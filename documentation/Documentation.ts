@@ -25,6 +25,7 @@ export default class Documentation {
                 })     
     
             let route = ControllersDecorators.GetRoute(empty);
+
             
             let doc : IDocument = 
             {
@@ -32,10 +33,10 @@ export default class Documentation {
                 Route : route ?? "",
                 Controller : c.name,
                 Headers: [],
-                Resources : []
+                Resources : [],                
             };
-
-            doc.Headers = ControllersDecorators.GetHeaders(c);
+           
+            doc.Headers = DocumentationDecorators.GetControllerHeaders(empty.constructor);             
 
             for(let method of methods)
             {
@@ -44,12 +45,13 @@ export default class Documentation {
                 if(!action){
                     continue;                
                 }
+
+                
                 
                 let verb = ControllersDecorators.GetVerb(empty, method.toString());
                 let fromBody = ControllersDecorators.GetFromBodyArgs(empty.constructor, method.toString());
                 let fromQuery = ControllersDecorators.GetFromQueryArgs(empty.constructor, method.toString());                
                 let fromFiles = ControllersDecorators.GetFromFilesArgs(empty.constructor, method.toString());
-                                
                 ControllersDecorators.GetNonDecoratedArguments(empty, method, fromBody, fromQuery, fromFiles);
 
                 let template = DocumentationDecorators.GetRequestJson(empty, method.toString());
@@ -60,6 +62,7 @@ export default class Documentation {
                 }
                 
                 let description = DocumentationDecorators.GetDescription(empty, method.toString());
+                let actionHeaders = DocumentationDecorators.GetActionHeaders(empty.__proto__, method.toString());
 
                 doc.Resources.push({
 
@@ -71,7 +74,8 @@ export default class Documentation {
                     Response : DocumentationDecorators.GetProducesResponse(empty.constructor, method.toString()),
                     FromBody : fromBody.map(s => { return {Field : s.Field, Type : s.Type.name }}) , 
                     FromQuery : fromQuery.map(s => { return {Field : s.Field, Type : s.Type.name }}), 
-                    FromFiles : fromFiles.map(s => {return {FieldName: s.FileName}})
+                    FromFiles : fromFiles.map(s => {return {FieldName: s.FileName}}), 
+                    Headers : actionHeaders 
                 });                          
                
             }   
@@ -131,6 +135,7 @@ interface IDocument
         Verb : string,
         FromQuery : {Field : string, Type : string }[], 
         FromBody : {Field? : string, Type : string }[],
-        FromFiles : {FieldName? : string }[]  
+        FromFiles : {FieldName? : string }[],
+        Headers : string[] 
     }[]
 }

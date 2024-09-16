@@ -8,7 +8,13 @@ export default class Type {
 
         for (let map in base) {
 
+            if(map.indexOf('_') > -1)
+                continue;
+
             let designType = Reflect.getMetadata("design:type", ctor, map);
+
+            if(!designType && base[map] != undefined)
+                designType = base[map].constructor;
 
             if (designType) {
                 if (designType != Array)
@@ -16,6 +22,9 @@ export default class Type {
 
                 else
                     (base as any)[map] = [Type.FillObject(Reflect.construct(designType, []) as object)];
+            }else
+            {
+                (base as any)[map] = "";
             }
         }
 

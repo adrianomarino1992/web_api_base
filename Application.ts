@@ -22,6 +22,8 @@ import AbstractMultiPartRequestService, { IRequestPart, PartType } from "./file/
 import FormidableMultiPartRequestService from "./file/FormidableMultiPartRequestService";
 import FileClass from './file/File';
 import Type from "./metadata/Type";
+import SendFileResult from "./controllers/SendFileResult";
+import DownloadFileResult from "./controllers/DownloadFileResult";
 
 export default abstract class Application implements IApplication {
 
@@ -775,8 +777,20 @@ export default abstract class Application implements IApplication {
 
         if(result instanceof ActionResult)
         {
-           controller.SendResponse(result.StatusCode, result.Result);
-           return;
+            if(result.constructor.name == SendFileResult.name)
+            {                
+                controller.Response.sendFile(result.Result)
+                return;
+            }
+
+            if(result.constructor.name == DownloadFileResult.name)
+            {                
+                controller.Response.download(result.Result)
+                return;
+            }
+
+            controller.SendResponse(result.StatusCode, result.Result);
+            return;
         }
 
         controller.SendResponse(200, result);       

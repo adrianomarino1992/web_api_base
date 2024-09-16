@@ -10,8 +10,11 @@ import NoContentResult from "../NoContentResult";
 import NotFoundResult from "../NotFoundResult";
 import OKResult from "../OKResult";
 import UnauthorizedResult from "../UnauthorizedResult";
-
-
+import SendFileResult from "../SendFileResult";
+import DownloadFileResult from "../DownloadFileResult";
+import File from 'fs';
+import FileNotFoundException from "../../exceptions/FileNotFoundException";
+import ArgumentNullException from "../../exceptions/ArgumentNullException";
 
 
 export class ControllerBase implements IController, IDIContext
@@ -44,6 +47,28 @@ export class ControllerBase implements IController, IDIContext
     {
         return new NoContentResult(result);
     }    
+
+    public SendFile(path : string) : SendFileResult<string>
+    {
+        if(!path)
+            throw new ArgumentNullException(`The path of the file is required on a SendFile response`);
+
+        if(!File.existsSync(path))
+            throw new FileNotFoundException(`can not access the file: ${path}`);
+
+        return new SendFileResult(path);
+    }
+
+    public DownloadFile(path : string) : DownloadFileResult<string>
+    {
+        if(!path)
+            throw new ArgumentNullException(`The path of the file is required on a DownloadFile response`);
+
+        if(!File.existsSync(path))
+            throw new FileNotFoundException(`can not access the file: ${path}`);
+
+        return new DownloadFileResult(path);
+    }
     
     public BadRequest<T>(result? : T) : BadRequestResult<T>
     {

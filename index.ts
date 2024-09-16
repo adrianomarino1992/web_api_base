@@ -10,6 +10,11 @@ export { HTTPVerbs } from './enums/httpVerbs/HttpVerbs';
 
 export { default as Exception } from './exceptions/Exception';
 
+import FileService from './file/FileService';
+import AbstractFileService from './file/AbstractFileService';
+
+export {FileService, AbstractFileService};
+
 export { default as File } from './file/File';
 
 export { default as DependecyService } from "./dependencyInjection/DependecyService";
@@ -32,12 +37,15 @@ export { default as NotFoundResult } from './controllers/NotFoundResult';
 export { default as OKResult } from './controllers/OKResult';
 export { default as UnauthorizedResult } from './controllers/UnauthorizedResult';
 
+
+
 import ControllersDecorators from "./decorators/controllers/ControllerDecorators";
 import { DocumentationDecorators } from "./decorators/documentation/DocumentationDecorators";
 import ValidationDecorators from "./decorators/validations/ValidationDecorators";
 import DependecyService from "./dependencyInjection/DependecyService";
 import { HTTPVerbs } from "./enums/httpVerbs/HttpVerbs";
 import IMidleware, { IRequestResultHandler } from "./midlewares/IMidleware";
+
 
 export {default as BodyParseException} from "./exceptions/BodyParseException";
 export {default as ControllerLoadException} from "./exceptions/ControllerLoadException";

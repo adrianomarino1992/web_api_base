@@ -1,3 +1,5 @@
+import MetadataDecorators from "../decorators/metadata/MetadataDecorators";
+import ArgumentNullException from "../exceptions/ArgumentNullException";
 import InvalidEntityException from "../exceptions/InvalidEntityException";
 
 
@@ -12,16 +14,52 @@ export default class Type {
                 continue;
 
             let designType = Reflect.getMetadata("design:type", ctor, map);
-
+            let elementType : ReturnType<typeof MetadataDecorators.GetArrayElementType>;
             if(!designType && base[map] != undefined)
                 designType = base[map].constructor;
 
-            if (designType) {
+            if(!designType)
+            {
+               let propType = MetadataDecorators.GetPropertyType(ctor, map);
+
+               if(propType)
+                    designType = propType
+            }
+
+            if(!designType || designType == Array)
+            {
+                let elType = MetadataDecorators.GetArrayElementType(ctor, map);
+    
+                if(elType)
+                {
+                    designType = Array;
+                    elementType = elType;
+                }
+            }
+
+            if (designType) 
+            {
                 if (designType != Array)
                     (base as any)[map] = Type.FillObject(Reflect.construct(designType, []) as object);
 
                 else
-                    (base as any)[map] = [Type.FillObject(Reflect.construct(designType, []) as object)];
+                {
+                    if(elementType)
+                    {
+                        (base as any)[map] = [Type.FillObject(Reflect.construct(elementType, []) as object)];
+
+                    }
+                    else if((base as any)[map] && ((base as any)[map] as Array<unknown>).length > 0)
+                    {
+                        let element = ((base as any)[map] as Array<unknown>)[0] as any;
+                        (base as any)[map] = [Type.FillObject(Reflect.construct(element.constructor, []) as object)];
+
+                    }
+                    else
+                    {
+                        (base as any)[map] = [];
+                    }
+                }
             }else
             {
                 (base as any)[map] = "";
@@ -36,13 +74,20 @@ export default class Type {
         for (let c in obj) {
             let d = Reflect.getMetadata("design:type", obj, c);
 
-            if (!d)
+            if(!d && obj[c] != undefined && obj[c] != null)
+                d = obj[c].constructor;
+
+            if(!d)
+            {
+                if(c.indexOf('_') != 0)
+                    (obj as any)[c] = "";
                 continue;
+            }
 
             if (d.name === "Number")
                 (obj as any)[c] = -1;
             else if (d.name === "String")
-                (obj as any)[c] = c;
+                (obj as any)[c] = "";
             else if (d.name === "Boolean")
                 (obj as any)[c] = false;
             else if (d.name === "Date")
@@ -52,6 +97,123 @@ export default class Type {
         }
 
         return obj;
+    }
+
+    public static SetPrototype<T>(obj : any, cTor: new (...args: any[]) => T) : void
+    {
+        obj.__proto__ = cTor.prototype;
+
+        let base = Reflect.construct(cTor, []) as T;
+
+        
+        for(let k in base)
+        {
+            if(base[k] == undefined)
+                continue;
+
+            let designType = Reflect.getMetadata("design:type", cTor, k);
+            let elementType : ReturnType<typeof MetadataDecorators.GetArrayElementType>;
+            if(!designType && base[k] != undefined)
+                designType = base[k].constructor;
+
+            if(!designType)
+            {
+               let propType = MetadataDecorators.GetPropertyType(cTor, k);
+
+               if(propType)
+                    designType = propType
+            }
+
+            if(!designType || designType == Array)
+            {
+                let elType = MetadataDecorators.GetArrayElementType(cTor, k);
+    
+                if(elType)
+                {
+                    designType = Array;
+                    elementType = elType;
+                }
+            } 
+
+
+            if (designType) 
+            {
+                if (designType != Array)
+                    (base as any)[k] = Type.Cast(obj[k], designType);    
+                else
+                {
+                    if(elementType)
+                    {
+                        for(let i in ((obj[k] as any)))
+                        {
+                            ((base as any)[k] as any)[i] = Type.Cast(obj[k][i], elementType);
+                        }
+
+                    }                    
+                    else
+                    {
+                        (base as any)[k] = obj[k];
+                    }
+                }
+            }else
+            {
+                (base as any)[k] = obj[k];
+            }
+                       
+
+        }
+
+    }
+
+    
+
+    public static Cast<T>(obj : any, type: new (...args: any[]) => T ) : T | undefined
+    {
+        if(obj == undefined || obj== null)
+            return undefined;
+
+        if (typeof obj == "string" && obj.indexOf('"') == 0 && obj.lastIndexOf('"') == obj.length - 1)
+            obj = obj.substring(1, obj.length - 1);
+
+        if (typeof obj == "string" && obj.indexOf("'") == 0 && obj.lastIndexOf("'") == obj.length - 1)
+            obj = obj.substring(1, obj.length - 1);
+
+        if (type.name == Number.name) {
+            let number = Number.parseFloat(obj.toString());
+
+            if (number != Number.NaN) {
+                return number as T;
+            }
+            else
+                return undefined;
+
+        } else if (type.name == String.name) {
+            return obj.toString() as T;            
+        }
+        else if (type.name == Date.name) 
+        {
+            try {
+
+                return Type.CastStringToDateUTC(obj) as T;                
+
+            } catch { return undefined}
+
+        }
+        else if (type.name == Boolean.name) 
+        
+            {
+            if (typeof obj != typeof Boolean) {
+
+                let v = obj.toString().toLowerCase() == "true";
+                return v as T;
+            }
+            else 
+                return obj as T;   
+        }
+        else {
+           
+            Type.SetPrototype(obj, type);
+        }
     }
 
     public static ValidateType(source: any, cTor: new (...args: any[]) => any) {

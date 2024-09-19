@@ -45,6 +45,7 @@ import ValidationDecorators from "./decorators/validations/ValidationDecorators"
 import DependecyService from "./dependencyInjection/DependecyService";
 import { HTTPVerbs } from "./enums/httpVerbs/HttpVerbs";
 import IMidleware, { IRequestResultHandler } from "./midlewares/IMidleware";
+import MetadataDecorators from './decorators/metadata/MetadataDecorators';
 
 
 export {default as BodyParseException} from "./exceptions/BodyParseException";
@@ -54,6 +55,34 @@ export {default as FindDependencyException} from "./exceptions/FindDependencyExc
 export {default as DecoratorException} from "./exceptions/DecoratorException";
 export {default as InvalidEntityException} from "./exceptions/InvalidEntityException";
 export {default as FileNotFoundException} from "./exceptions/FileNotFoundException";
+
+
+export function Ignore()
+{
+    return MetadataDecorators.Ignore();
+}
+
+export function ShowInDocumentation()
+{
+    return MetadataDecorators.ShowInDocumentation();
+}
+
+export function ArrayElementType(typeBuilder : () => new (...args: any[])=> any)
+{
+    return MetadataDecorators.ArrayElementType(typeBuilder);
+}
+
+export function PropertyType(typeBuilder : () => new (...args: any[])=> any)
+{
+    return MetadataDecorators.PropertyType(typeBuilder);
+}
+
+export function DefaultValueOnDocumentarion(value: any) 
+{
+    return MetadataDecorators.DefaultValueOnDocumentarion(value);
+}
+
+    
 
 export function UseBefore(midleware : IMidleware)  
 {

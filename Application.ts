@@ -339,7 +339,7 @@ export default abstract class Application implements IApplication {
 
                             if (["string", "number", "boolean", "bigint"].filter(s => s == ts[f.Index].name.toLowerCase()).length == 0) {
                                 try {
-                                    obj.__proto__ = ts[f.Index];
+                                    obj.__proto__ = ts[f.Index].prototype;
                                 } catch { }
 
                                 if (f.Type.name == "Object") {

@@ -37,9 +37,26 @@ export default class OwnMetaDataContainer
         let sameType = cTor == target || cTor == target.constructor;
         let sameProto = (target.prototype && target.prototype.constructor == cTor);
         let sameAssign = (target.prototype && target.prototype.constructor.toString() == cTor.toString());
+        let found = sameType || sameProto || sameAssign;
 
-        return sameType || sameProto || sameAssign;
+        if(found)
+            return true;
+
+        let current = typeof target == typeof Function ? target.prototype : target;
+
+        while(current)
+        {
+            if(cTor == current)
+            {
+                return true;
+            }
+            current = current.__proto__;
+        }        
+
+        return false
     }
+
+    
 }
 
 export interface IMetaData

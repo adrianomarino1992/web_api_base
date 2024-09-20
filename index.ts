@@ -57,9 +57,16 @@ export {default as InvalidEntityException} from "./exceptions/InvalidEntityExcep
 export {default as FileNotFoundException} from "./exceptions/FileNotFoundException";
 
 
-export function Ignore()
+
+export function CreateMetada()
 {
-    return MetadataDecorators.Ignore();
+    return MetadataDecorators.CreateMetada();
+}
+
+
+export function IgnoreInDocumentation()
+{
+    return MetadataDecorators.IgnoreInDocumentation();
 }
 
 export function ShowInDocumentation()
@@ -72,14 +79,10 @@ export function ArrayElementType(typeBuilder : () => new (...args: any[])=> any)
     return MetadataDecorators.ArrayElementType(typeBuilder);
 }
 
-export function PropertyType(typeBuilder : () => new (...args: any[])=> any)
-{
-    return MetadataDecorators.PropertyType(typeBuilder);
-}
 
-export function DefaultValueOnDocumentarion(value: any) 
+export function DefaultValue(value: any) 
 {
-    return MetadataDecorators.DefaultValueOnDocumentarion(value);
+    return MetadataDecorators.DefaultValue(value);
 }
 
     

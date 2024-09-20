@@ -33,6 +33,7 @@ export default class JS
                 }
             }               
 
+            let date = new Date();
             for(let r of route.Resources)
             {
         
@@ -67,9 +68,11 @@ export default class JS
                 if(r.FromQuery.length > 0)
                     container.innerHTML += "<h3>Query parameters:</h3>";
 
-                for(let c of r.FromQuery)
+                  for(let c of r.FromQuery)
                 {
-                    container.innerHTML += '<div class="token-container"><input type="text" id="key-'+r.Id+r.FromQuery.indexOf(c)+'" placeholder="'+c.Field+'"></div>';                   
+                    let isDate = c.Type && c.Type == "Date";                    
+                    let placeholder = isDate ? date.getUTCFullYear()+"-"+(date.getUTCMonth() + 1) +"-"+ date.getUTCDate() : c.Field;
+                    container.innerHTML += '<div class="token-container"><input type="text" id="key-'+r.Id+r.FromQuery.indexOf(c)+'" placeholder="'+placeholder+'"></div>';                   
                 }
 
                 if(r.FromQuery.length > 0 && (r.FromBody.length > 0 || r.FromFiles.length == 0))

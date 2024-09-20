@@ -17,14 +17,7 @@ export default class Type {
             let elementType : ReturnType<typeof MetadataDecorators.GetArrayElementType>;
             if(!designType && base[map] != undefined)
                 designType = base[map].constructor;
-
-            if(!designType)
-            {
-               let propType = MetadataDecorators.GetPropertyType(ctor, map);
-
-               if(propType)
-                    designType = propType
-            }
+            
 
             if(!designType || designType == Array)
             {
@@ -71,7 +64,10 @@ export default class Type {
 
     public static FillObject<T extends object>(obj: T): T {
 
-        for (let c in obj) {
+        let cs : string[] = [];
+
+        for (let c in obj) 
+        {
             let d = Reflect.getMetadata("design:type", obj, c);
 
             if(!d && obj[c] != undefined && obj[c] != null)
@@ -81,6 +77,18 @@ export default class Type {
             {
                 if(c.indexOf('_') != 0)
                     (obj as any)[c] = "";
+                continue;
+            }
+
+            let vdefault = MetadataDecorators.GetDefaultValue(obj.constructor, c);
+            let toIgnore = MetadataDecorators.IsToIgnoreInDocumentation(obj.constructor, c);
+
+            if(toIgnore)
+                cs.push(c);
+
+            if(vdefault != undefined)
+            {
+                (obj as any)[c] = vdefault;
                 continue;
             }
 
@@ -96,33 +104,39 @@ export default class Type {
                 (obj as any)[c] = {};
         }
 
+        for(let c of cs)
+            delete (obj as any)[c];
+
         return obj;
     }
 
-    public static SetPrototype<T>(obj : any, cTor: new (...args: any[]) => T) : void
+    public static SetPrototype<T>(obj : any, cTor: new (...args: any[]) => T) : T
     {
+        if([String, Date, Number, Boolean].filter(s => s.name == cTor.name).length > 0)
+            return Type.Cast(obj, cTor) as T;
+        
+        if(cTor.name == Object.name)
+            return obj;
+
         obj.__proto__ = cTor.prototype;
 
         let base = Reflect.construct(cTor, []) as T;
-
         
         for(let k in base)
         {
-            if(base[k] == undefined)
+            if(obj[k] == undefined)
+            {
+                let vdefault = MetadataDecorators.GetDefaultValue(cTor, k);
+                
+                if(vdefault != undefined)
+                    base[k] = vdefault;
+
                 continue;
+            }
 
             let designType = Reflect.getMetadata("design:type", cTor, k);
-            let elementType : ReturnType<typeof MetadataDecorators.GetArrayElementType>;
-            if(!designType && base[k] != undefined)
-                designType = base[k].constructor;
 
-            if(!designType)
-            {
-               let propType = MetadataDecorators.GetPropertyType(cTor, k);
-
-               if(propType)
-                    designType = propType
-            }
+            let elementType : ReturnType<typeof MetadataDecorators.GetArrayElementType>;              
 
             if(!designType || designType == Array)
             {
@@ -135,7 +149,6 @@ export default class Type {
                 }
             } 
 
-
             if (designType) 
             {
                 if (designType != Array)
@@ -144,25 +157,20 @@ export default class Type {
                 {
                     if(elementType)
                     {
-                        for(let i in ((obj[k] as any)))
-                        {
-                            ((base as any)[k] as any)[i] = Type.Cast(obj[k][i], elementType);
-                        }
-
+                        for(let i in ((obj[k] as any)))                        
+                           (base as any)[k][i] = Type.Cast(obj[k][i], elementType); 
                     }                    
                     else
-                    {
                         (base as any)[k] = obj[k];
-                    }
                 }
-            }else
-            {
-                (base as any)[k] = obj[k];
             }
+            else
+                (base as any)[k] = obj[k];
                        
 
         }
 
+        return base;
     }
 
     
@@ -212,7 +220,7 @@ export default class Type {
         }
         else {
            
-            Type.SetPrototype(obj, type);
+            return Type.SetPrototype(obj, type);
         }
     }
 

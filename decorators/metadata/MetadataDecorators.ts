@@ -3,14 +3,23 @@ import OwnMetadaContainer from '../../metadata/OwnMetaDataContainer';
 
 export default class MetadataDecorators 
 {
+    private static _addMetadataKeyMetadata : string = "meta:add-metadata-property-key";
     private static _ignoreKeyMetadata : string = "meta:ignore-property-key";
     private static _showInDocumentationKeyMetadata : string = "meta:show-documentation-property-key";
     private static _arrayOfTypeKeyMetadata : string = "meta:array-oftype-property-key";
-    private static _propertyOfTypeKeyMetadata : string = "meta:property-oftype-property-key";
     private static _defaultValueKeyMetadata : string = "meta:default-value-property-key";
 
 
-    public static Ignore()
+    public static CreateMetada()
+    {
+        return function(target : any, property : string)
+        {
+            OwnMetadaContainer.Set(target, MetadataDecorators._addMetadataKeyMetadata, property, true);
+        }
+    }
+    
+
+    public static IgnoreInDocumentation()
     {
         return function(target : any, property : string)
         {
@@ -18,7 +27,7 @@ export default class MetadataDecorators
         }
     }
 
-    public static IsToIgnore(cTor : Function, property : string) : boolean
+    public static IsToIgnoreInDocumentation(cTor : Function, property : string) : boolean
     {
         let meta =  OwnMetadaContainer.Get(cTor, MetadataDecorators._ignoreKeyMetadata, property);
 
@@ -45,7 +54,7 @@ export default class MetadataDecorators
 
         let value = meta.Value ?? false;
 
-        return value && !this.IsToIgnore(cTor, property);
+        return value && !this.IsToIgnoreInDocumentation(cTor, property);
     }
 
     public static ArrayElementType(typeBuilder : () => new (...args: any[])=> any)
@@ -65,27 +74,10 @@ export default class MetadataDecorators
         
         return meta.Value();
     }
-
-    public static PropertyType(typeBuilder : () => new (...args: any[])=> any)
-    {
-        return function(target : any, property : string)
-        {
-            OwnMetadaContainer.Set(target, MetadataDecorators._propertyOfTypeKeyMetadata, property, typeBuilder);
-        }
-    }
-
-    public static GetPropertyType(cTor : Function, property : string) : (new (...args: any[])=> any) | undefined
-    {
-        let meta = OwnMetadaContainer.Get(cTor, MetadataDecorators._propertyOfTypeKeyMetadata, property);
-
-        if(!meta || !meta.Value)
-            return undefined;
-        
-        return meta.Value();
-    }
+    
 
 
-    public static DefaultValueOnDocumentarion(value: any) 
+    public static DefaultValue(value: any) 
     {
         return function(target : any, property : string)
         {
@@ -94,14 +86,14 @@ export default class MetadataDecorators
     }
     
 
-    public static GetDefaultValueOnDocumentarion(cTor : Function, property : string)
+    public static GetDefaultValue(cTor : Function, property : string)
     {
         let meta = OwnMetadaContainer.Get(cTor, MetadataDecorators._defaultValueKeyMetadata, property);
 
-            if(!meta || !meta.Value)
+            if(!meta || meta.Value == undefined)
                 return undefined;
             
-            return meta.Value();
+            return meta.Value;
     }
 
 }

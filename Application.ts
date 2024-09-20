@@ -303,94 +303,55 @@ export default abstract class Application implements IApplication {
                             let obj = undefined;
 
                             if (!f.Field || f.Type.name == "Object")
+                            {
+                                let fieldParts = parts.filter(s => s.Name == 'body');
+
+                                if(isMultiPartFormData && fieldParts.length > 0)
                                 {
-                                    let fieldParts = parts.filter(s => s.Name == 'body');
-
-                                    if(isMultiPartFormData && fieldParts.length > 0)
+                                    try
                                     {
-                                        try{
-                                            obj = JSON.parse(fieldParts[0].Content);
-                                        }catch{
-                                            obj = fieldParts[0].Content;
-                                        }
-                                    }else{
-                                        obj = request.body;
+                                        obj = JSON.parse(fieldParts[0].Content);
                                     }
-                                    
-                                }
+                                    catch
+                                    {
+                                        obj = fieldParts[0].Content;
+                                    }
 
-                            else{
+                                }else
+                                {
+                                    obj = request.body;
+                                }
+                                
+                            }
+                            else
+                            {
 
                                 let fieldParts = parts.filter(s => s.Name == f.Field);
-
-                                    if(isMultiPartFormData && fieldParts.length > 0)
+                                
+                                if(isMultiPartFormData && fieldParts.length > 0)
+                                {
+                                    try
                                     {
-                                        try{
-                                            obj = JSON.parse(fieldParts[0].Content);
-                                        }catch{
-                                            obj = fieldParts[0].Content;
-                                        }
-                                    }else{
-                                        obj = request.body[f.Field];
+                                        obj = JSON.parse(fieldParts[0].Content);
                                     }
+                                    catch
+                                    {
+                                        obj = fieldParts[0].Content;
+                                    }
+
+
+                                }else{
+                                    obj = request.body[f.Field];
+                                }
                                     
                             }
                                 
 
-                            if (["string", "number", "boolean", "bigint"].filter(s => s == ts[f.Index].name.toLowerCase()).length == 0) {
-                                try {
-                                    obj.__proto__ = ts[f.Index].prototype;
-                                } catch { }
+                            let param = Type.SetPrototype(obj, ts[f.Index] as new (...args: any[]) => any);
+                            fromBodyParams.push(param);
+                            params[f.Index] = param;
+                            return;       
 
-                                if (f.Type.name == "Object") {
-                                    fromBodyParams.push(obj);
-                                    params[f.Index] = obj;
-
-                                } else {
-
-                                    let t = Reflect.construct(ts[f.Index], []) as any;
-                                    Object.assign(t, obj);
-
-                                    fromBodyParams.push(t);
-                                    params[f.Index] = t;
-                                }
-                            } else {
-                                if (obj != undefined && typeof obj == "string" && obj.indexOf('"') == 0 && obj.lastIndexOf('"') == obj.length - 1)
-                                    obj = obj.substring(1, obj.length - 1);
-
-                                if (obj != undefined && typeof obj == "string" && obj.indexOf("'") == 0 && obj.lastIndexOf("'") == obj.length - 1)
-                                    obj = obj.substring(1, obj.length - 1);
-
-                                if (obj != undefined && ts[f.Index].name.toLowerCase() == "number") {
-                                    let number = Number.parseFloat(obj.toString());
-
-                                    if (number != Number.NaN) {
-                                        fromBodyParams.push(number);
-                                        params[f.Index] = number;
-                                    }
-                                    else
-                                    {
-                                        fromBodyParams.push(undefined);
-                                        params[f.Index] = undefined;
-                                    }
-
-                                } else if (obj != undefined && ts[f.Index].name.toLowerCase() == "string") {
-                                    fromBodyParams.push(obj.toString());
-                                    params[f.Index] = obj.toString();
-                                }
-                                else if (obj != undefined && ts[f.Index].name.toLowerCase() == "date") {
-                                    try {
-
-                                        fromBodyParams.push(Type.CastStringToDateUTC(obj));
-                                        params[f.Index] = Type.CastStringToDateUTC(obj);
-
-                                    } catch { }
-                                }
-                                else {
-                                    fromBodyParams.push(obj);
-                                    params[f.Index] = obj;
-                                }
-                            }                            
                         });
                     }
 
@@ -417,59 +378,10 @@ export default abstract class Application implements IApplication {
 
                             obj = request.query[f.Field]?.toString();
 
-                            if (obj != undefined && typeof obj == "string" && obj.indexOf('"') == 0 && obj.lastIndexOf('"') == obj.length - 1)
-                                obj = obj.substring(1, obj.length - 1);
-
-                            if (obj != undefined && typeof obj == "string" && obj.indexOf("'") == 0 && obj.lastIndexOf("'") == obj.length - 1)
-                                obj = obj.substring(1, obj.length - 1);
-
-                            if (obj != undefined && f.Type.name.toLowerCase() == "number") {
-                                let number = Number.parseFloat(obj.toString());
-
-                                if (number != Number.NaN) {
-                                    fromQueryParams.push(number);
-                                    params[f.Index] = number;
-                                }
-                                else
-                                {
-                                    fromBodyParams.push(undefined);
-                                    params[f.Index] = undefined;
-                                }
-
-                            } else if (obj != undefined && f.Type.name.toLowerCase() == "string") {
-                                fromQueryParams.push(obj.toString());
-                                params[f.Index] = obj.toString();
-                            }
-                            else if (obj != undefined && f.Type.name.toLowerCase() == "date") {
-                                try {
-
-                                    fromQueryParams.push(Type.CastStringToDateUTC(obj));
-                                    params[f.Index] = Type.CastStringToDateUTC(obj);
-
-                                } catch { }
-
-                            }
-                            else if (obj != undefined && f.Type.name.toLowerCase() == "boolean") {
-                                try {
-
-                                    if (typeof obj != "boolean") {
-
-                                        let v = obj.toString().toLowerCase() == "true";
-                                        fromQueryParams.push(v);
-                                        params[f.Index] = v;
-                                    }
-                                    else {
-                                        fromQueryParams.push(obj);
-                                        params[f.Index] = obj;
-                                    }
-
-                                } catch { }
-
-                            }
-                            else {
-                                fromQueryParams.push(obj);
-                                params[f.Index] = obj;
-                            }
+                            let param = Type.SetPrototype(obj, ts[f.Index] as new (...args: any[]) => any);
+                            fromQueryParams.push(param);
+                            params[f.Index] = param;
+                            return;
                         });
                     }
 

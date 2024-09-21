@@ -1,7 +1,9 @@
 import { ControllerTest } from "./classes/ControllerTest";
-import { SampleService, SampleServiceAbstract, AnotherService } from "./classes/SampleServiceTest";
+import { SampleService} from "./classes/SampleServiceTest";
 import DependecyService from "../dependencyInjection/DependecyService";
 import { DIEscope } from "../dependencyInjection/DependecyService";
+import { SampleServiceAbstract } from "./classes/SampleServiceAbstract";
+import { AnotherService } from "./classes/AnotherService";
 
 
 

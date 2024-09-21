@@ -96,10 +96,10 @@ export class SampleService extends SampleServiceAbstract
     }
 }
 
-export class AnotherService extends SampleServiceAbstract
+export class GenericService<T>
 {
-    public DoSomething(): void {
-        console.log("Doing another job in AnotherService");
+    public SomeGenericResult<T>(obj : T) {
+        console.log("typeof obj: " + typeof obj);
     }
 }
 ```
@@ -111,7 +111,7 @@ We can use the DI service like this
 ```typescript
 
 import { ControllerBase, Route, GET, Inject } from "web_api_base";
-import {SampleServiceAbstract } from '../services/SampleService.ts';
+import {SampleServiceAbstract, GenericService } from '../services/SampleService.ts';
 
 @Route()
 export default class SampleController extends ControllerBase
@@ -119,10 +119,18 @@ export default class SampleController extends ControllerBase
     @Inject() // say to DI that this property will be inject on the instance
     public SomeDepency : SampleServiceAbstract;
 
-    constructor(someDependecy : SampleServiceAbstract)
+    @Inject() // say to DI that this property will be inject on the instance
+    //the type argument do not exists on runtime, on .js result files. The DI system will work fine and we 
+    //will still have the type check on development time 
+    public SomeGenericDepency : GenericService<string> ;
+
+    constructor(someDependecy : SampleServiceAbstract, someGenericDepency: GenericService<string>)
     {
         super();
-        this.SomeDepency = someDependecy ;        
+        this.SomeDepency = someDependecy ;  
+        this.SomeGenericDepency = someGenericDepency;
+        this.SomeGenericDepency.SomeGenericresult("Test") // typeof obj: string
+        //this.SomeGenericDepency.SomeGenericresult(10) // compiler error
     }
      
     @GET()
@@ -142,7 +150,7 @@ And we can register our dependecies in Application ConfigureAsync method
 
 import { Application, IApplicationConfiguration} from "web_api_base";
 
-import { SampleService, SampleServiceAbstract } from './service/SampleService';
+import { SampleService, SampleServiceAbstract, GenericService  } from './service/SampleService';
 
 
 export default class App extends Application
@@ -157,8 +165,21 @@ export default class App extends Application
         this.UseCors();
 
         //DI AddScoped, AddTransient and AddSingleton
-        App.AddScoped(SampleServiceAbstract, SampleService);     
+        appConfig.AddScoped(SampleServiceAbstract, SampleService);    
+        appConfig.AddScoped(GenericService) // will register for all generic type arguments
+       
+       //will register only for GenericService<User>. We need use  @InjectTypeArgument(User) on dependecy
+       //to work fine
+       //appConfig.AddGenericScoped(GenericService, User) 
 
+       //will register only for GenericService<User>. We need use  @InjectTypeArgument(User) on dependecy
+       //to work fine
+       //appConfig.AddGenericScoped(GenericService, undefined, undefined, typeArgument =>
+       //{ 
+       //   here we can determine how to create the instance. We have access of type argument on typeArgument 
+       //   argument. After this function execution, the instance will pass for DI pipeline to get all 
+       //   dependecies
+       //}) 
         this.UseControllers();
 
     }  
@@ -222,13 +243,16 @@ Send a status code and a optional body
 Append a delegate to execute **before** the controller´s action
 ```typescript
 @Route("/status")
-@UseBefore(context => 
+@UseBefore(async context => 
 {
 
     if(context.Request.headers["token"] != "we have access to request object")
+    {
          context.Response.json({Message : "we have access to response object"});
+         return;
+    }
     else
-         context.Next(); // call next function in the pipeline
+         return await context.Next(); // call next function in the pipeline
 })
 export default class StatusController extends ControllerBase
 {
@@ -238,7 +262,7 @@ export default class StatusController extends ControllerBase
 Append a delegate to execute **after** the controller´s action
 ```typescript
 @Route("/status")
-@UseAfter(actionResult => 
+@UseAfter(async actionResult => 
 {
 
       if(actionResult.Exception) // if a exception was launched

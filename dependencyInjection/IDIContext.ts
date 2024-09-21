@@ -5,5 +5,6 @@ export default interface IDIContext
 
 export interface IDIItem{
     Object : any, 
-    Type : Function
+    Type : Function,
+    GenericType? : Function
 }

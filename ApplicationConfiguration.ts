@@ -27,8 +27,9 @@ export default class ApplicationConfiguration implements IApplicationConfigurati
         else 
             this.DEBUG = false;
     }
+    
    
-    public AddScoped(type: Function, ctor?: (new (...args: any[]) => any) | undefined, builder?: (() => any) | undefined): void
+    public AddScoped(type: Function, ctor?: (new (...args: any[]) => any), builder?: () => any): void
     {
         if(ctor)
         {
@@ -39,7 +40,15 @@ export default class ApplicationConfiguration implements IApplicationConfigurati
         }
     }
     
-    public AddTransient(type: Function, ctor?: (new (...args: any[]) => any) | undefined, builder?: (() => any) | undefined): void
+
+    public AddGenericScoped(type: Function, genericType?: Function, ctor?: new (...args: any[]) => any, builder?: (e?: Function) => any): void
+    {
+        DependecyService.RegisterGeneric(type, genericType, ctor, DIEscope.SCOPED, builder);
+    }   
+    
+
+    
+    public AddTransient(type: Function, ctor?: new (...args: any[]) => any, builder?: (() => any)): void
     {
         if(ctor)
         {
@@ -49,8 +58,16 @@ export default class ApplicationConfiguration implements IApplicationConfigurati
             DependecyService.Register(type, DIEscope.TRANSIENT, builder);
         }
     }
+
+
+
+    public AddGenericTransient(type: Function, genericType?: Function, ctor?: new (...args: any[]) => any, builder?: (e?: Function) => any): void
+    {
+        DependecyService.RegisterGeneric(type, genericType, ctor, DIEscope.TRANSIENT, builder);
+    }
+
     
-    public AddSingleton(type: Function, ctor?: (new (...args: any[]) => any) | undefined, builder?: (() => any) | undefined): void
+    public AddSingleton(type: Function, ctor?: new (...args: any[]) => any, builder?: () => any): void
     {
         if(ctor)
         {
@@ -60,6 +77,12 @@ export default class ApplicationConfiguration implements IApplicationConfigurati
             DependecyService.Register(type, DIEscope.SINGLETON, builder);
         }
     }    
+
+
+    public AddGenericSingleton(type: Function, genericType?: Function, ctor?: new (...args: any[]) => any, builder?: (e?: Function) => any): void
+    {
+        DependecyService.RegisterGeneric(type, genericType, ctor, DIEscope.SINGLETON, builder);
+    }
 
     
     private async CheckFileAsync() : Promise<boolean>

@@ -1,6 +1,7 @@
 /* istanbul ignore next */
 
-import { AnotherService, SampleServiceAbstract } from "./SampleServiceTest";
+import { AnotherService } from "./AnotherService";
+import { SampleServiceAbstract } from "./SampleServiceAbstract";
 
 import {Inject, ControllerBase, Action, Route, GET, POST , FromBody, FromQuery, InjectAbstract, PUT, DELETE} from '../../index';
 
@@ -16,7 +17,6 @@ export class ControllerTest extends ControllerBase
 
     @Inject()
     private _somePrivateDepency : SampleServiceAbstract;
-
     
     @Inject()
     public TypeInferedInjection? : AnotherService;

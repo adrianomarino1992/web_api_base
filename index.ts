@@ -46,6 +46,7 @@ import DependecyService from "./dependencyInjection/DependecyService";
 import { HTTPVerbs } from "./enums/httpVerbs/HttpVerbs";
 import IMidleware, { IRequestResultHandler } from "./midlewares/IMidleware";
 import MetadataDecorators from './decorators/metadata/MetadataDecorators';
+import OwnMetaDataContainer from './metadata/OwnMetaDataContainer';
 
 
 export {default as BodyParseException} from "./exceptions/BodyParseException";
@@ -178,6 +179,27 @@ export function Inject()
 {
     return DependecyService.Injectable();
 }
+
+
+export function InjectOne(constructorFunction: Function, genericArgumentType? : Function)
+{
+    return DependecyService.InjectOne(constructorFunction, genericArgumentType);
+}
+
+export function InjectGenericTypeArgument(constructorFunction: Function, genericArgumentType : Function)
+{
+    return DependecyService.InjectGenericType(constructorFunction, genericArgumentType);
+       
+}
+
+export function InjectTypeArgument(genericArgumentType : Function)
+{
+    return function(target : Object, property : string | symbol) : void 
+    {
+        OwnMetaDataContainer.Set(target.constructor, DependecyService["_injectableTypeKey"], property.toString(), {Type: Reflect.getMetadata("design:type", target, property), GenericType: genericArgumentType});
+    }           
+}
+
 
 export function InjectAbstract(cTor : Function)
 {

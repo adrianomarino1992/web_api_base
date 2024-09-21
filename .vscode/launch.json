@@ -17,29 +17,29 @@
                 "${workspaceFolder}/**/*.js"
             ]
         }, 
+        
         {
+            "name": "DEBUG test file",
             "type": "node",
             "request": "launch",
-            "name": "degub some test file",
-            "skipFiles": [
-                "<node_internals>/**"
+            "env": {
+              "NODE_ENV": "test"
+            },
+            "args": [              
+              "--colors",
+              "--config=${workspaceFolder}/jest.config.js",
+              "--runInBand",
+              "./__tests__/${fileBasename}"
             ],
-            "runtimeExecutable": "npx",
-            "runtimeArgs": ["jest", "./__tests__/${fileBasename}"],
-            "console": "integratedTerminal", 
-            "internalConsoleOptions": "neverOpen"
-        }, 
-        {
-            "type": "node",
-            "request": "launch",
-            "name": "degub temp aplication index file",
-            "skipFiles": [
-                "<node_internals>/**"
+            "runtimeArgs": [
+              "--nolazy"
             ],
-            "runtimeExecutable": "node",
-            "runtimeArgs": ["./dist/temp/index.js", "--debug", "--light"],
-            "console": "integratedTerminal", 
-            "internalConsoleOptions": "neverOpen"
-        }
+            "windows": {
+              "program": "${workspaceFolder}/node_modules/jest/bin/jest",
+            },
+            "outputCapture": "std",
+            "internalConsoleOptions": "openOnSessionStart"
+          }    
+        
     ]
 }

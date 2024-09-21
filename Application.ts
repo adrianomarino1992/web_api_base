@@ -486,18 +486,23 @@ export default abstract class Application implements IApplication {
                     }
 
 
-                    let controller = DependecyService.ResolveCtor(empty.constructor) as ControllerBase;
-
-                    if (controller == undefined)
-                        controller = new ctor() as ControllerBase;
+                    let controller : ControllerBase;
 
                     try {
 
+                        controller = DependecyService.ResolveCtor(empty.constructor) as ControllerBase;
+
+                        if (controller == undefined)
+                            controller = new ctor() as ControllerBase;
+
                         DependecyService.CheckForDependenciesAndResolve(controller);
 
-                    } catch (err) {
-                        this.CallErrorHandler(request, response, this.CastToExpection(err as Error));
+                    } 
+                    catch (err) 
+                    {
+                        return this.CallErrorHandler(request, response, this.CastToExpection(err as Error));
                     }
+
 
                     controller.Request = context.Request;
                     controller.Response = context.Response;

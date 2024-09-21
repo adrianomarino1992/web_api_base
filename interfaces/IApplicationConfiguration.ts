@@ -7,8 +7,11 @@ export default interface IApplicationConfiguration
     ExecutablePath : string;
     DEBUG : boolean;
     EnviromentVariables : {[key : string] : any};
-    AddScoped(type: Function, ctor?: (new (...args: any[]) => any) | undefined, builder?: (() => any) | undefined, ): void;
-    AddTransient(type: Function, ctor?: (new (...args: any[]) => any) | undefined, builder?: (() => any) | undefined, ): void;
-    AddSingleton(type: Function, ctor?: (new (...args: any[]) => any) | undefined, builder?: (() => any) | undefined, ): void;  
+    AddScoped(type: Function, ctor?: new (...args: any[]) => any, builder?: (() => any), ): void;
+    AddGenericScoped(type: Function, genericType?: Function, ctor?: new (...args: any[]) => any, builder?: (e?: Function) => any): void
+    AddTransient(type: Function, ctor?: new (...args: any[]) => any, builder?: () => any): void;
+    AddGenericTransient(type: Function, genericType?: Function, ctor?: new (...args: any[]) => any, builder?: (e?: Function) => any): void
+    AddSingleton(type: Function, ctor?: new (...args: any[]) => any, builder?: () => any): void;  
+    AddGenericSingleton(type: Function, genericType?: Function, ctor?: new (...args: any[]) => any, builder?: (e?: Function) => any): void
         
 }

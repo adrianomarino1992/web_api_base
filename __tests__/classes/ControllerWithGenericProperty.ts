@@ -10,15 +10,13 @@ export default class ControllerTest extends ControllerBase
     public GenericDependecy : GenericService<TestClass>;  
 
     @InjectTypeArgument(DerivedClass)
-    public GenericDerivedDependecy : GenericService<DerivedClass>;
+    public GenericDerivedDependecy? : GenericService<DerivedClass>;
 
 
-    constructor(some : GenericService<TestClass>, derived : GenericService<DerivedClass>)
+    constructor(some : GenericService<TestClass>)
     {
         super();
-        this.GenericDependecy = some;
-        this.GenericDerivedDependecy = derived;
-       
+        this.GenericDependecy = some;   
     }
 
     public Get(list: TestClass[]) : TestClass[]

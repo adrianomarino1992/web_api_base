@@ -196,6 +196,7 @@ export function InjectTypeArgument(genericArgumentType : Function)
 {
     return function(target : Object, property : string | symbol) : void 
     {
+        DependecyService.DefinePropertyAsInjectable(target.constructor, property.toString());
         OwnMetaDataContainer.Set(target.constructor, DependecyService["_injectableTypeKey"], property.toString(), {Type: Reflect.getMetadata("design:type", target, property), GenericType: genericArgumentType});
     }           
 }

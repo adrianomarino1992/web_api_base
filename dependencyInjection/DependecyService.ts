@@ -2,7 +2,7 @@ import 'reflect-metadata';
 import IDIContext from './IDIContext';
 import Exception from '../exceptions/Exception';
 import FindDependencyException from '../exceptions/FindDependencyException';
-import OwnMetaDataContainer from '../metadata/OwnMetaDataContainer';
+import OwnMetaDataContainer, { IMetaData } from '../metadata/OwnMetaDataContainer';
 import RegisterDependencyException from '../exceptions/RegisterDependencyException';
 
 export default class DependecyService
@@ -10,8 +10,30 @@ export default class DependecyService
     private static _services : IService[] = [];
 
     private static _injectableTypeKey : string = "di:injectable-type"; 
+    private static _injectablePropertiesTypeKey : string = "di:injectable-properties"; 
 
+    public static DefinePropertyAsInjectable(ctor: Function, property : string)
+    {
+        let meta = DependecyService.GetInjectablesProperties(ctor);
 
+        let index = meta.findIndex(d => d == property);
+
+        if(index == -1)
+            meta.push(property);     
+
+        OwnMetaDataContainer.Set(ctor, DependecyService._injectablePropertiesTypeKey, undefined, meta);
+
+    }
+
+    public static GetInjectablesProperties(ctor: Function) : string[]
+    {
+        let meta = OwnMetaDataContainer.Get(ctor, DependecyService._injectablePropertiesTypeKey);
+
+        if(!meta)
+            return [];
+
+        return meta.Value;
+    }
     
     public static Inject()
     {
@@ -22,6 +44,7 @@ export default class DependecyService
     {
         return function(target : Object, property : string | symbol) : void 
         {
+            DependecyService.DefinePropertyAsInjectable(target.constructor, property.toString());
             OwnMetaDataContainer.Set(target.constructor, DependecyService._injectableTypeKey, property.toString(), 
             {
                 Type: Reflect.getMetadata("design:type", target, property)
@@ -41,6 +64,7 @@ export default class DependecyService
     {
         return function(target : Object, property : string | symbol) : void 
         {
+            DependecyService.DefinePropertyAsInjectable(target.constructor, property.toString());
             OwnMetaDataContainer.Set(target.constructor, DependecyService._injectableTypeKey, property.toString(), {Type: cTor, GenericType: genericType} as IRegister)
             
         }
@@ -224,7 +248,9 @@ export default class DependecyService
    
     public static CheckForDependenciesAndResolve(object : any, context? : IDIContext)
     {
-        for(let k of Object.keys(object))
+        let keys = Object.keys(object);
+        keys.push(...DependecyService.GetInjectablesProperties(object.constructor));
+        for(let k of keys)
         {
             if(object[k] != 'function')
             {

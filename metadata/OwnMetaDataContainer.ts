@@ -46,7 +46,7 @@ export default class OwnMetaDataContainer
 
         while(current)
         {
-            if(cTor == current)
+            if(cTor == current || (current.constructor && current.constructor == cTor))
             {
                 return true;
             }

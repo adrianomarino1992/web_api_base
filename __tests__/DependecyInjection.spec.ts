@@ -15,7 +15,7 @@ describe("Testing the dependecy injection service", ()=>{
     
     test("Testing the creation of a controller", ()=>
     {
-        let controller = DependecyService.Build(ControllerTest) as unknown as ControllerTest;
+        let controller = DependecyService.Build(ControllerTest);
 
         expect(controller).not.toBeNull();
     
@@ -24,7 +24,7 @@ describe("Testing the dependecy injection service", ()=>{
 
     test("Testing Inject decorator", ()=>
     {
-        let controller = DependecyService.Build(ControllerTest) as unknown as ControllerTest;
+        let controller = DependecyService.Build(ControllerTest);
 
         expect(controller).not.toBeNull();
 
@@ -35,7 +35,7 @@ describe("Testing the dependecy injection service", ()=>{
 
     test("Testing InjectAbstract decorator", ()=>
     {
-        let controller = DependecyService.Build(ControllerTest) as unknown as ControllerTest;
+        let controller = DependecyService.Build(ControllerTest);
 
         expect(controller).not.toBeNull();
 
@@ -47,7 +47,7 @@ describe("Testing the dependecy injection service", ()=>{
 
     test("Testing injection on a private property", ()=>
     {
-        let controller = DependecyService.Build(ControllerTest) as unknown as ControllerTest;
+        let controller = DependecyService.Build(ControllerTest);
 
         let prop = Reflect.get(controller, "_somePrivateDepency");
 
@@ -59,11 +59,11 @@ describe("Testing the dependecy injection service", ()=>{
 
     test("test change implementation of a abstract class on DI service", ()=>
     {
-        let controller1 = DependecyService.Build(ControllerTest) as unknown as ControllerTest;
+        let controller1 = DependecyService.Build(ControllerTest);
 
         DependecyService.RegisterFor(SampleServiceAbstract, AnotherService);
 
-        let controller2 = DependecyService.Build(ControllerTest) as unknown as ControllerTest;
+        let controller2 = DependecyService.Build(ControllerTest);
 
         expect(controller1).not.toBeNull();
 
@@ -89,11 +89,11 @@ describe("Testing the dependecy injection service", ()=>{
             DependecyService.Register(ControllerTest);
             DependecyService.Register(AnotherService, DIEscope.SCOPED);
             
-            let controller1 = DependecyService.Resolve<ControllerTest>(ControllerTest)!; 
+            let controller1 = DependecyService.Resolve(ControllerTest)!; 
 
             let dependency = controller1.SomeDepency;
-            let scoped = DependecyService.Resolve<SampleServiceAbstract>(SampleServiceAbstract, controller1);
-            let infered = DependecyService.Resolve<AnotherService>(AnotherService, controller1);
+            let scoped = DependecyService.Resolve(SampleServiceAbstract, controller1);
+            let infered = DependecyService.Resolve(AnotherService, controller1);
 
             expect(dependency).not.toBeUndefined();
             expect(dependency.Id).toBe(controller1.AnotherDepency.Id);
@@ -113,11 +113,11 @@ describe("Testing the dependecy injection service", ()=>{
                 DependecyService.Register(AnotherService, DIEscope.TRANSIENT);
 
                 
-                let controller1 = DependecyService.Resolve<ControllerTest>(ControllerTest)!; 
+                let controller1 = DependecyService.Resolve(ControllerTest)!; 
     
                 let dependency = controller1.SomeDepency;
-                let scoped = DependecyService.Resolve<SampleServiceAbstract>(SampleServiceAbstract, controller1);
-                let infered = DependecyService.Resolve<AnotherService>(AnotherService, controller1);
+                let scoped = DependecyService.Resolve(SampleServiceAbstract, controller1);
+                let infered = DependecyService.Resolve(AnotherService, controller1);
     
                 expect(dependency).not.toBeUndefined();
                 expect(dependency.Id).not.toBe(controller1.AnotherDepency.Id);
@@ -141,9 +141,9 @@ describe("Testing the dependecy injection service", ()=>{
     
                 let dependency = controller1.SomeDepency;
 
-                let scoped = DependecyService.Resolve<SampleServiceAbstract>(SampleServiceAbstract, controller1);
-                let scoped2 = DependecyService.Resolve<SampleServiceAbstract>(SampleServiceAbstract);
-                let infered = DependecyService.Resolve<AnotherService>(AnotherService, controller1);
+                let scoped = DependecyService.Resolve(SampleServiceAbstract, controller1);
+                let scoped2 = DependecyService.Resolve(SampleServiceAbstract);
+                let infered = DependecyService.Resolve(AnotherService, controller1);
 
                 expect(dependency).not.toBeUndefined();
                 expect(dependency.Id).toBe(controller1.AnotherDepency.Id);

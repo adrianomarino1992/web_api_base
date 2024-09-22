@@ -18,7 +18,7 @@ describe("Testing the dependecy injection service", ()=>{
         });
        
             
-        let dependecy = DependecyService.ResolveGeneric<GenericService<TestClass>>(GenericService, TestClass);
+        let dependecy = DependecyService.ResolveGeneric(GenericService<TestClass>, TestClass);
 
         expect(dependecy).not.toBeNull();
 
@@ -41,8 +41,8 @@ describe("Testing the dependecy injection service", ()=>{
                 return new GenericService<typeof t>(t as new (...args:any[]) => typeof t);
         });
     
-        let dependecy1 = DependecyService.ResolveGeneric<GenericService<TestClass>>(GenericService, TestClass);
-        let dependecy2 = DependecyService.ResolveGeneric<GenericService<DerivedClass>>(GenericService, DerivedClass);
+        let dependecy1 = DependecyService.ResolveGeneric(GenericService<TestClass>, TestClass);
+        let dependecy2 = DependecyService.ResolveGeneric(GenericService<TestClass>, DerivedClass);
 
         expect(dependecy1).not.toBeNull();
         expect(dependecy2).not.toBeNull();
@@ -57,7 +57,7 @@ describe("Testing the dependecy injection service", ()=>{
         DependecyService["_services"] = [];
         DependecyService.Register(GenericService);        
 
-        let dependecy = DependecyService.Resolve<GenericService<TestClass>>(GenericService);
+        let dependecy = DependecyService.Resolve(GenericService<TestClass>);
 
         expect(dependecy).not.toBeNull();
 
@@ -76,7 +76,7 @@ describe("Testing the dependecy injection service", ()=>{
     test("Testing the creation of a controller", ()=>
     {
         DependecyService["_services"] = [];
-        let controller = DependecyService.Resolve<ControllerWithGenericProperty>(ControllerWithGenericProperty);
+        let controller = DependecyService.Resolve(ControllerWithGenericProperty);
     
         expect(controller).not.toBeNull();
         
@@ -89,7 +89,7 @@ describe("Testing the dependecy injection service", ()=>{
         DependecyService["_services"] = [];
         DependecyService.Register(GenericService);        
 
-        let controller = DependecyService.Build(ControllerWithGenericProperty) as any as ControllerWithGenericProperty;
+        let controller = DependecyService.Build(ControllerWithGenericProperty);
 
         expect(controller).not.toBeNull();
 
@@ -115,7 +115,7 @@ describe("Testing the dependecy injection service", ()=>{
         {
                 return new GenericService<typeof t>(t as new (...args:any[]) => typeof t);
         });
-        let controller = DependecyService.Build(ControllerWithGenericProperty) as any as ControllerWithGenericProperty;
+        let controller = DependecyService.Build(ControllerWithGenericProperty);
 
         expect(controller).not.toBeNull();
 

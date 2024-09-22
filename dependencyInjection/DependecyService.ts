@@ -1,9 +1,10 @@
 import 'reflect-metadata';
 import IDIContext from './IDIContext';
-import Exception from '../exceptions/Exception';
 import FindDependencyException from '../exceptions/FindDependencyException';
 import OwnMetaDataContainer, { IMetaData } from '../metadata/OwnMetaDataContainer';
 import RegisterDependencyException from '../exceptions/RegisterDependencyException';
+
+export type Ctors<T> = (new (...args: any[]) => T) | (abstract new (...args: any[]) => T);
 
 export default class DependecyService
 {
@@ -12,7 +13,7 @@ export default class DependecyService
     private static _injectableTypeKey : string = "di:injectable-type"; 
     private static _injectablePropertiesTypeKey : string = "di:injectable-properties"; 
 
-    public static DefinePropertyAsInjectable(ctor: Function, property : string)
+    public static DefinePropertyAsInjectable<T>(ctor: Ctors<T>, property : string)
     {
         let meta = DependecyService.GetInjectablesProperties(ctor);
 
@@ -23,9 +24,9 @@ export default class DependecyService
 
         OwnMetaDataContainer.Set(ctor, DependecyService._injectablePropertiesTypeKey, undefined, meta);
 
-    }
+    }   
 
-    public static GetInjectablesProperties(ctor: Function) : string[]
+    public static GetInjectablesProperties<T>(ctor: Ctors<T>) : string[]
     {
         let meta = OwnMetaDataContainer.Get(ctor, DependecyService._injectablePropertiesTypeKey);
 
@@ -44,12 +45,12 @@ export default class DependecyService
     {
         return function(target : Object, property : string | symbol) : void 
         {
-            DependecyService.DefinePropertyAsInjectable(target.constructor, property.toString());
+            DependecyService.DefinePropertyAsInjectable(target.constructor as Ctors<typeof target.constructor>, property.toString());
             OwnMetaDataContainer.Set(target.constructor, DependecyService._injectableTypeKey, property.toString(), 
             {
                 Type: Reflect.getMetadata("design:type", target, property)
 
-            } as IRegister);
+            } as IRegister<unknown, unknown>);
         }
     }
 
@@ -60,22 +61,22 @@ export default class DependecyService
         return type;
     }
 
-    public static InjectOne(cTor : Function, genericType? :  Function) : (target : Object, property : string | symbol) => void 
+    public static InjectOne<T, U>(cTor : Ctors<T>, genericType? :  Ctors<U>) : (target : Object, property : string | symbol) => void 
     {
         return function(target : Object, property : string | symbol) : void 
         {
-            DependecyService.DefinePropertyAsInjectable(target.constructor, property.toString());
-            OwnMetaDataContainer.Set(target.constructor, DependecyService._injectableTypeKey, property.toString(), {Type: cTor, GenericType: genericType} as IRegister)
+            DependecyService.DefinePropertyAsInjectable(target.constructor as Ctors<typeof target.constructor>, property.toString());
+            OwnMetaDataContainer.Set(target.constructor, DependecyService._injectableTypeKey, property.toString(), {Type: cTor, GenericType: genericType} as IRegister<T, U>)
             
         }
     }
 
-    public static InjectGenericType(ctor: Function, genericType :  Function) : (target : Object, property : string | symbol) => void 
+    public static InjectGenericType<T, U>(ctor: Ctors<T>, genericType :  Ctors<U>) : (target : Object, property : string | symbol) => void 
     {
         return DependecyService.InjectOne(ctor, genericType);       
     }
 
-    public static GetDIType(target : object, property : string) :  IRegister | undefined
+    public static GetDIType(target : object, property : string) :  IRegister<unknown, unknown> | undefined
     {
         let meta = OwnMetaDataContainer.Get(target.constructor, DependecyService._injectableTypeKey, property);
 
@@ -86,7 +87,7 @@ export default class DependecyService
     }
 
 
-    public static RegisterFor(type : Function, ctor : new (...args : any[]) => any, scope? :  DIEscope, builder? : () => any) : void    
+    public static RegisterFor<T, U extends T>(type : Ctors<T>, ctor : new (...args : any[]) => U, scope? :  DIEscope, builder? : () => U) : void    
     {        
         let defaultBuilder = DependecyService.DefaultObjectBuilder(type, ctor);
 
@@ -98,20 +99,20 @@ export default class DependecyService
             (
                 { 
                     Type : type, 
-                    Builder : builder ? (c?: IDIContext, e? : Function) => builder() : (c?: IDIContext, e? : Function) => defaultBuilder(c, e), 
+                    Builder : builder ? (c?: IDIContext, e? : Ctors<U>) => builder() : (c?: IDIContext, e? : Ctors<U>) => defaultBuilder(c, e), 
                     Scope : scope ?? DIEscope.TRANSIENT 
                 }
             );
                
         }else{
             exist.Scope = scope ?? exist.Scope;
-            exist.Builder =  builder ? (c?: IDIContext, e? : Function) => builder() : (c?: IDIContext, e? : Function) => defaultBuilder(c, e);
+            exist.Builder =  builder ? (c?: IDIContext, e? : Ctors<U>) => builder() : (c?: IDIContext, e? : Ctors<U>) => defaultBuilder(c, e);
         }
               
     }
 
 
-    public static Register(type : Function, scope? : DIEscope, builder? : () => any) : void
+    public static Register<T>(type : Ctors<T>, scope? : DIEscope, builder? : () => T) : void
     {       
         let defaultBuilder = DependecyService.DefaultObjectBuilder(type);
 
@@ -124,7 +125,7 @@ export default class DependecyService
             (
                 { 
                     Type : type, 
-                    Builder : builder ? (c?: IDIContext, e? : Function) => builder() : (c?: IDIContext, e? : Function) => defaultBuilder(c, e), 
+                    Builder : builder ? (c?: IDIContext, e? : Ctors<T>) => builder() : (c?: IDIContext, e? : Ctors<T>) => defaultBuilder(c, e), 
                     Scope : scope ?? DIEscope.TRANSIENT 
                 }
             );
@@ -132,11 +133,11 @@ export default class DependecyService
         }
         else{            
             exist.Scope = scope ?? exist.Scope;
-            exist.Builder =  builder ? (c?: IDIContext, e? : Function) => builder() : (c?: IDIContext, e? : Function) => defaultBuilder(c, e);
+            exist.Builder =  builder ? (c?: IDIContext, e? : Ctors<T>) => builder() : (c?: IDIContext, e? : Ctors<T>) => defaultBuilder(c, e);
         }
     }
 
-    public static RegisterGeneric(type : Function,  genericType?: Function, ctor? : new (...args : any[]) => any, scope? : DIEscope, builder? : (genericTypeFunction? : Function) => any) : void
+    public static RegisterGeneric<T, U>(type : Ctors<T>,  genericType?: Ctors<U>, ctor? : new (...args : any[]) => T, scope? : DIEscope, builder? : (genericTypeFunction? : Ctors<U>) => any) : void
     {
         if(!ctor && !builder)
             throw new RegisterDependencyException(`Can not register a generic depency with not provide a concrete constructor or builder function`);
@@ -151,7 +152,7 @@ export default class DependecyService
             (
                 { 
                     Type : type, 
-                    Builder : builder ? (c?: IDIContext, e? : Function) => builder(e) : (c?: IDIContext, e? : Function) => defaultBuilder(c, e), 
+                    Builder : builder ? (c?: IDIContext, e? : Ctors<U>) => builder(e) : (c?: IDIContext, e? : Ctors<U>) => defaultBuilder(c, e), 
                     Scope : scope ?? DIEscope.TRANSIENT 
                 }
             );
@@ -159,12 +160,12 @@ export default class DependecyService
         }
         else{
             exist.Scope = scope ?? exist.Scope;
-            exist.Builder =  builder ? (c?: IDIContext, e? : Function) => builder() : (c?: IDIContext, e? : Function) => defaultBuilder(c, e);
+            exist.Builder =  builder ? (c?: IDIContext, e? : Ctors<U>) => builder() : (c?: IDIContext, e? : Ctors<U>) => defaultBuilder(c, e);
         }
     }
     
 
-    private static DefaultObjectBuilder(type : Function, ctor? :  new (...args : any[]) => any) : (context? : IDIContext, genericType?: Function)=>any
+    private static DefaultObjectBuilder<T, U>(type : Ctors<T>, ctor? :  new (...args : any[]) => T) : (context? : IDIContext, genericType?: Ctors<U>)=>any
     {
         return function(context? : IDIContext, genericType?: Function){
 
@@ -198,7 +199,7 @@ export default class DependecyService
         }
     }
 
-    public static ResolveGeneric<T>(type :  Function, genericType? :  Function, context? : IDIContext) : T | undefined
+    public static ResolveGeneric<T, U>(type :  Ctors<T>, genericType? :  Ctors<U>, context? : IDIContext) : T | undefined
     {
         let service = this._services.find(u => u.Type == type && (!u.GenericType || u.GenericType == genericType));
 
@@ -234,15 +235,15 @@ export default class DependecyService
         return instance;
     }
     
-    public static Resolve<T>(type :  Function, context? : IDIContext) : T | undefined
+    public static Resolve<T>(type :  Ctors<T>, context? : IDIContext) : T | undefined
     {
-        return DependecyService.ResolveGeneric<T>(type, undefined, context);
+        return DependecyService.ResolveGeneric<T, unknown>(type, undefined, context);
     }
 
     
-    public static ResolveCtor(ctor :  Function, context? : IDIContext) : any | undefined
+    public static ResolveCtor<T>(ctor :  Ctors<T>, context? : IDIContext) : any | undefined
     {
-        return DependecyService.ResolveGeneric(ctor, undefined, context);
+        return DependecyService.ResolveGeneric<T, unknown>(ctor, undefined, context);
     }
 
    
@@ -299,7 +300,7 @@ export default class DependecyService
     }
     
 
-    public static Build<T extends Function>(Ctor : T)
+    public static Build<T>(Ctor : Ctors<T>) : T
     {
         let object = Reflect.construct(Ctor, []);
 
@@ -323,17 +324,17 @@ export enum DIEscope
     SINGLETON
 }
 
-interface IRegister
+interface IRegister<T, U>
 {
-    Type: Function, 
-    GenericType?: Function
+    Type: Ctors<T>, 
+    GenericType?: Ctors<U>
 }
 
 interface IService
 {
-    Type : Function;
-    GenericType? : Function;
-    Builder : (context? : IDIContext, GenericType?: Function) => any;
+    Type : Ctors<unknown>;
+    GenericType? : Ctors<unknown>;
+    Builder : (context? : IDIContext, GenericType?: Ctors<any>) => any;
     Scope : DIEscope
 }
 

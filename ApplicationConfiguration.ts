@@ -1,7 +1,7 @@
 import File from 'fs';
 import Path from 'path';
 import IApplicationConfiguration from './interfaces/IApplicationConfiguration';
-import DependecyService, { DIEscope } from './dependencyInjection/DependecyService';
+import DependecyService, { DIEscope, Ctors } from './dependencyInjection/DependecyService';
 
 export default class ApplicationConfiguration implements IApplicationConfiguration
 {
@@ -29,7 +29,7 @@ export default class ApplicationConfiguration implements IApplicationConfigurati
     }
     
    
-    public AddScoped(type: Function, ctor?: (new (...args: any[]) => any), builder?: () => any): void
+    public AddScoped<T>(type:  Ctors<T>, ctor?: (new (...args: any[]) => T), builder?: () => T): void
     {
         if(ctor)
         {
@@ -41,14 +41,14 @@ export default class ApplicationConfiguration implements IApplicationConfigurati
     }
     
 
-    public AddGenericScoped(type: Function, genericType?: Function, ctor?: new (...args: any[]) => any, builder?: (e?: Function) => any): void
+    public AddGenericScoped<T, U>(type: Ctors<T>, genericType?: Ctors<U>, ctor?: new (...args: any[]) => T, builder?: (e?: Ctors<U>) => T): void
     {
         DependecyService.RegisterGeneric(type, genericType, ctor, DIEscope.SCOPED, builder);
     }   
     
 
     
-    public AddTransient(type: Function, ctor?: new (...args: any[]) => any, builder?: (() => any)): void
+    public AddTransient<T>(type: Ctors<T>, ctor?: new (...args: any[]) => T, builder?: (() => T)): void
     {
         if(ctor)
         {
@@ -61,13 +61,13 @@ export default class ApplicationConfiguration implements IApplicationConfigurati
 
 
 
-    public AddGenericTransient(type: Function, genericType?: Function, ctor?: new (...args: any[]) => any, builder?: (e?: Function) => any): void
+    public AddGenericTransient<T, U>(type: Ctors<T>, genericType?: Ctors<U>, ctor?: new (...args: any[]) => T, builder?: (e?: Ctors<U>) => T): void
     {
         DependecyService.RegisterGeneric(type, genericType, ctor, DIEscope.TRANSIENT, builder);
     }
 
     
-    public AddSingleton(type: Function, ctor?: new (...args: any[]) => any, builder?: () => any): void
+    public AddSingleton<T>(type: Ctors<T>, ctor?: new (...args: any[]) => T, builder?: () => T): void
     {
         if(ctor)
         {
@@ -79,7 +79,7 @@ export default class ApplicationConfiguration implements IApplicationConfigurati
     }    
 
 
-    public AddGenericSingleton(type: Function, genericType?: Function, ctor?: new (...args: any[]) => any, builder?: (e?: Function) => any): void
+    public AddGenericSingleton<T, U>(type: Ctors<T>, genericType?: Ctors<U>, ctor?: new (...args: any[]) => T, builder?: (e?: Ctors<U>) => T): void
     {
         DependecyService.RegisterGeneric(type, genericType, ctor, DIEscope.SINGLETON, builder);
     }

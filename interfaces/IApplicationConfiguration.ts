@@ -1,3 +1,5 @@
+import { Ctors } from "../dependencyInjection/DependecyService";
+
 export default interface IApplicationConfiguration
 {
     Host : string;    
@@ -7,11 +9,11 @@ export default interface IApplicationConfiguration
     ExecutablePath : string;
     DEBUG : boolean;
     EnviromentVariables : {[key : string] : any};
-    AddScoped(type: Function, ctor?: new (...args: any[]) => any, builder?: (() => any), ): void;
-    AddGenericScoped(type: Function, genericType?: Function, ctor?: new (...args: any[]) => any, builder?: (e?: Function) => any): void
-    AddTransient(type: Function, ctor?: new (...args: any[]) => any, builder?: () => any): void;
-    AddGenericTransient(type: Function, genericType?: Function, ctor?: new (...args: any[]) => any, builder?: (e?: Function) => any): void
-    AddSingleton(type: Function, ctor?: new (...args: any[]) => any, builder?: () => any): void;  
-    AddGenericSingleton(type: Function, genericType?: Function, ctor?: new (...args: any[]) => any, builder?: (e?: Function) => any): void
+    AddScoped<T>(type:  Ctors<T>, ctor?: (new (...args: any[]) => T), builder?: () => any): void;
+    AddGenericScoped<T, U>(type: Ctors<T>, genericType?: Ctors<U>, ctor?: new (...args: any[]) => T, builder?: (e?: Ctors<U>) => T): void;
+    AddTransient<T>(type: Ctors<T>, ctor?: new (...args: any[]) => T, builder?: (() => T)): void;
+    AddGenericTransient<T, U>(type: Ctors<T>, genericType?: Ctors<U>, ctor?: new (...args: any[]) => T, builder?: (e?: Ctors<U>) => T): void;    
+    AddSingleton<T>(type: Ctors<T>, ctor?: new (...args: any[]) => T, builder?: () => any): void;
+    AddGenericSingleton<T, U>(type: Ctors<T>, genericType?: Ctors<U>, ctor?: new (...args: any[]) => T, builder?: (e?: Ctors<U>) => T): void;
         
 }

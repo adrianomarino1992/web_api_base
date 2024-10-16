@@ -14,6 +14,10 @@ export default class Type {
                 continue;
 
             let designType = Reflect.getMetadata("design:type", ctor, map);
+            
+            if(!designType)
+                designType = Reflect.getMetadata("design:type", ctor.prototype, map);
+
             let elementType : ReturnType<typeof MetadataDecorators.GetArrayElementType>;
             if(!designType && base[map] != undefined)
                 designType = base[map].constructor;

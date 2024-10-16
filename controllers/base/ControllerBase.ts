@@ -15,6 +15,7 @@ import DownloadFileResult from "../DownloadFileResult";
 import File from 'fs';
 import FileNotFoundException from "../../exceptions/FileNotFoundException";
 import ArgumentNullException from "../../exceptions/ArgumentNullException";
+import Type from "../../metadata/Type";
 
 
 export class ControllerBase implements IController, IDIContext
@@ -101,7 +102,13 @@ export class ControllerBase implements IController, IDIContext
 
         if(result){
             if(typeof result == "object")
-                this.Response.json(result);
+            {
+                try{
+                    this.Response.json(Type.RemoveCircularReferences(result));
+                }catch{
+                    this.Response.json(result);
+                }
+            }
             else if(typeof result == "number")
                 this.Response.send(result.toString());
             else

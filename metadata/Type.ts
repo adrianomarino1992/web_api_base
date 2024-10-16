@@ -353,5 +353,51 @@ export default class Type {
 
     }
 
+    public static RemoveCircularReferences<T extends object>(obj : T) : T
+    {
+        let clone = Reflect.construct(obj.constructor, []);
+        Object.assign(clone, obj);
+        let seenRefereces : any[] = [];
+
+        let removeReferences = (target : any) => 
+        {
+            seenRefereces.push(target);
+            
+            if('_orm_metadata_' in target)
+                delete target._orm_metadata_;
+            
+            for(let c in target)                
+            {
+                if(!target[c])
+                    continue;
+
+                if(typeof target[c] == 'object')
+                {                   
+                    if(target[c] instanceof Array)
+                    {
+                        for(let i of target[c])
+                        {                            
+                            removeReferences(i);
+                        }
+
+                        continue;
+                    }
+                    if(seenRefereces.includes(target[c]))
+                    {
+                        target[c] = undefined;
+                        continue;
+                    }                        
+                   
+                    removeReferences(target[c])
+                }
+            }                
+          
+        }
+
+        removeReferences(clone);
+        return clone;
+
+    }
+
 
 }

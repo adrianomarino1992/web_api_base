@@ -206,7 +206,7 @@ export default class Type {
         {
             try {
 
-                return Type.CastStringToDateUTC(obj) as T;                
+                return Type.CastStringToDate(obj) as T;                
 
             } catch { return undefined}
 
@@ -303,7 +303,7 @@ export default class Type {
         return false;
     }
 
-    public static CastStringToDateUTC(date : string) : Date
+    public static CastStringToDate(date : string) : Date
     {
         if(!date)
             return new Date(Date.UTC(0,0,0)); 
@@ -314,6 +314,9 @@ export default class Type {
             return new Date(Date.UTC(0,0,0)); 
 
         let time = parts[2].split(' ');  
+
+        if(time.length == 1 && time[0].length > 4)
+            time = parts[2].split('T');  
         
         parts[2] = time.shift()!;
 
@@ -349,7 +352,7 @@ export default class Type {
         while(hours.length < 3)
             hours.push(0);
     
-        return new Date(Date.UTC(dateParts[0], dateParts[1] - 1, dateParts[2], hours[0], hours[1], hours[2]));       
+        return new Date(dateParts[0], dateParts[1] - 1, dateParts[2], hours[0], hours[1], hours[2]);       
 
     }
 

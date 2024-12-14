@@ -1,6 +1,6 @@
 {
   "name": "web_api_base",
-  "version": "6.2.4",
+  "version": "6.3.0",
   "description": "web api base",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",

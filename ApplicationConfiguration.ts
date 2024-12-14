@@ -2,6 +2,7 @@ import File from 'fs';
 import Path from 'path';
 import IApplicationConfiguration from './interfaces/IApplicationConfiguration';
 import DependecyService, { DIEscope, Ctors } from './dependencyInjection/DependecyService';
+import IMidleware, { IRequestResultHandler } from './midlewares/IMidleware';
 
 export default class ApplicationConfiguration implements IApplicationConfiguration
 {
@@ -13,6 +14,8 @@ export default class ApplicationConfiguration implements IApplicationConfigurati
     public ExecutablePath : string;
     public DEBUG : boolean;
     public EnviromentVariables : {[key : string] : any} = {};
+    private _midlewares : IMidleware[] = [];
+    private _afters : IRequestResultHandler[] = []; 
 
     constructor(){
         
@@ -110,7 +113,7 @@ export default class ApplicationConfiguration implements IApplicationConfigurati
 
                     for(let key in this)
                     { 
-                        if(json[key] != undefined)
+                        if(json[key] != undefined && key.indexOf('_') ==-1)
                         {      
                             this[key] = json[key];                            
                         }
@@ -137,6 +140,8 @@ export default class ApplicationConfiguration implements IApplicationConfigurati
             delete copy.DEBUG; 
             delete copy.CurrentWorkingDirectory;
             delete copy.ExecutablePath;
+            delete copy._midlewares;
+            delete copy._afters;
 
             File.writeFile(`${this.RootPath}\\config.json`, JSON.stringify(copy), 'utf-8', error => 
             {                
@@ -152,6 +157,26 @@ export default class ApplicationConfiguration implements IApplicationConfigurati
             });   
         })
              
+    }
+
+    public Use(midleware: IMidleware): void 
+    {
+        this._midlewares.push(midleware);    
+    }
+
+    public GetMidlewares()
+    {
+        return this._midlewares;
+    }
+    
+    public Run(resultHandler: IRequestResultHandler): void 
+    {
+        this._afters.push(resultHandler);
+    }
+
+    public GetResultHandlers()
+    {
+        return this._afters;
     }
 
     private UpdateEnviroment() : void

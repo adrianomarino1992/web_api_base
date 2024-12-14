@@ -1,4 +1,5 @@
 import { Ctors } from "../dependencyInjection/DependecyService";
+import IMidleware, { IRequestResultHandler } from "../midlewares/IMidleware";
 
 export default interface IApplicationConfiguration
 {
@@ -15,5 +16,6 @@ export default interface IApplicationConfiguration
     AddGenericTransient<T, U>(type: Ctors<T>, genericType?: Ctors<U>, ctor?: new (...args: any[]) => T, builder?: (e?: Ctors<U>) => T): void;    
     AddSingleton<T>(type: Ctors<T>, ctor?: new (...args: any[]) => T, builder?: () => any): void;
     AddGenericSingleton<T, U>(type: Ctors<T>, genericType?: Ctors<U>, ctor?: new (...args: any[]) => T, builder?: (e?: Ctors<U>) => T): void;
-        
+    Use(midleware : IMidleware) : void;    
+    Run(resultHandler : IRequestResultHandler) : void
 }

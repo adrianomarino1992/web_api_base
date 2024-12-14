@@ -235,14 +235,17 @@ export default abstract class Application implements IApplication {
 
             (this.Express as any)[verb.toString().toLowerCase()](`${route}${action}`, async (request: Request, response: Response) => {
 
-                let midlewares = ControllersDecorators.GetMidlewares(empty).map(s => s).reverse();
+                let midlewares = [...(this.ApplicationConfiguration as ApplicationConfiguration).GetMidlewares()];
+                
+                midlewares.push(...ControllersDecorators.GetMidlewares(empty).map(s => s).reverse());
 
                 midlewares.push(...ControllersDecorators.GetBefores(empty, method.toString()).map(s => s).reverse());
 
-
-                let afters = ControllersDecorators.GetMidlewaresAfter(empty).map(s => s).reverse();
+                let afters = [...ControllersDecorators.GetMidlewaresAfter(empty).map(s => s).reverse()];
 
                 afters.push(...ControllersDecorators.GetAfters(empty, method.toString()).map(s => s).reverse());
+
+                afters.push(...(this.ApplicationConfiguration as ApplicationConfiguration).GetResultHandlers());
 
                 let handler = async (context: IHTTPRequestContext) => {                   
                                

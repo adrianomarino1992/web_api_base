@@ -47,8 +47,7 @@ export default class CSS
     }
     `;
 
-    private static _css = `    
-    
+    private static _css = `   
     body
     {
         background-image: linear-gradient(to right, var(--g-from) , var(--g-to));
@@ -112,11 +111,6 @@ export default class CSS
         
     }
     
-    verb
-    {
-        font-size: 12px;
-        font-weight: 600;
-    }
     
     h2{
         font-size: 12px;
@@ -222,29 +216,68 @@ export default class CSS
     }
     
     
+    span
+    {
+        font-size: 10px;
+        font-weight: 600;
+        width: 35px;
+        height: 15px;
+        text-align: center;
+    
+    }
+    
+
     .GET
     {
-        color: rgb(129, 190, 38);
+        background-color: rgb(138, 167, 96);
+        color: rgb(255, 255, 255);
+        padding: 1px 3px 1px 3px;
+        border-radius: 5px;       
     }
 
     .POST
     {
-        color: rgb(235, 187, 83);
+        background-color: rgb(79, 132, 153);
+        color: rgb(255, 255, 255);
+        padding: 1px 3px 1px 3px;
+        border-radius: 5px;
+       
     }
 
     .PUT
     {
-        color: rgb(204, 196, 82);
+        background-color: rgb(161, 157, 89);
+        color: rgb(255, 255, 255);
+        padding: 1px 3px 1px 3px;
+        border-radius: 5px;
+        
     }
     
     .DELETE
     {
-        color: rgb(201, 111, 89);
+        background-color: rgb(158, 98, 82);
+        color: rgb(255, 255, 255);
+        padding: 1px 3px 1px 3px;
+        border-radius: 5px;
+        
     }
 
     .OTHER
     {
-        color: rgb(115, 206, 223);
+        background-color: rgb(73, 108, 114);
+        color: rgb(255, 255, 255);
+        padding: 1px 3px 1px 3px;
+        border-radius: 5px;        
+    }
+
+    .row-div
+    {
+        display: flex;
+        flex-direction: row;
+        gap: 3px;
+        justify-content: start;
+        align-items: center;
+        margin: 0px;
     }
     
     status
@@ -286,6 +319,11 @@ export default class CSS
     {
         color: rgb(115, 206, 223);
     }
+    
+    
+    
+    
+    
     
     
     

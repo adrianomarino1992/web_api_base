@@ -256,7 +256,20 @@ export default abstract class Application implements IApplication {
                         Reflect.getMetadata("design:paramtypes", empty.constructor, method.toString())) ?? []) as Function[]; 
 
                     let content_type= request.headers["content-type"];
+
                     let isMultiPartFormData = content_type && content_type.indexOf('multipart/form-data') > -1;
+                    let isJSONData = content_type && content_type.indexOf('application/json') > -1;
+
+                    if((verb == HTTPVerbs.POST || verb == HTTPVerbs.PUT) && !isJSONData && !isJSONData)
+                    {
+                        response.status(400);
+                        response.json(
+                            {
+                                Message: "Model binding fail",
+                                Detailts: "To send data using a PUT or POST method the content-type header is required"
+                            });
+                    }
+
                     let parts : IRequestPart[] = [];
                     let fromFilesParams: any[] = [];
                     if(isMultiPartFormData)

@@ -50,7 +50,7 @@ export default class JS
                     verbClass = r.Verb
                 }
     
-                root.innerHTML += '<h2 id="'+ expandId.ID +'"><verb class="'+ verbClass+'">'+r.Verb+'</verb> '+window.location.origin+r.Route+'</h2>';
+                root.innerHTML += '<div class="row-div"><span class="'+ verbClass+'">'+r.Verb+'</span><h2 id="'+ expandId.ID +'"> '+window.location.origin+r.Route+'</h2></div>';
                 root.innerHTML += '<div id="'+r.Id+'_container" class="container"></div>';
                 let container = document.getElementById(r.Id + '_container');
     

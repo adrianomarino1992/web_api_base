@@ -14,6 +14,9 @@
             ],
             "args": ["--dark"],
             "program": "${workspaceFolder}\\dist\\temp\\index.js",
+            "env": {
+              "DEBUG": true
+            },
             "outFiles": [
                 "${workspaceFolder}/**/*.js"
             ]

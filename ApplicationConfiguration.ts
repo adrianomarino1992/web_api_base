@@ -25,7 +25,10 @@ export default class ApplicationConfiguration implements IApplicationConfigurati
 
         this.RootPath = Path.parse(this.ExecutablePath).dir;        
         
-        if(process.argv.indexOf("--debug") > -1 || process.argv.indexOf("--DEBUG")  > 1)
+        if(process.argv.indexOf("--debug") > -1 || 
+        process.argv.indexOf("--DEBUG")  > 1 || 
+        process.env.DEBUG ||
+        process.env.debug)
             this.DEBUG = true; 
         else 
             this.DEBUG = false;
@@ -95,7 +98,7 @@ export default class ApplicationConfiguration implements IApplicationConfigurati
 
     public async LoadAsync() : Promise<boolean>
     {
-        return new Promise<boolean>(async (resolve, _) => 
+        return new Promise<boolean>(async (resolve, reject) => 
         {
             if(!await this.CheckFileAsync())
                 return resolve(false);
@@ -103,16 +106,14 @@ export default class ApplicationConfiguration implements IApplicationConfigurati
             File.readFile(`${this.RootPath}\\config.json`, 'utf-8', (error, data) => 
             {
                 if(error)
-                {
-                    throw error;
-                }
+                    return reject(error);
 
                 try{
 
                     let json : any = JSON.parse(data);
 
                     for(let key in this)
-                    { 
+                    {   
                         if(json[key] != undefined && key.indexOf('_') ==-1)
                         {      
                             this[key] = json[key];                            
@@ -132,7 +133,7 @@ export default class ApplicationConfiguration implements IApplicationConfigurati
     public async SaveAsync() : Promise<boolean>
     {
 
-        return new Promise<boolean>((resolve, _)=>{
+        return new Promise<boolean>((resolve, reject)=>{
 
             let copy = JSON.parse(JSON.stringify(this));
 
@@ -141,16 +142,12 @@ export default class ApplicationConfiguration implements IApplicationConfigurati
             delete copy.CurrentWorkingDirectory;
             delete copy.ExecutablePath;
             delete copy._midlewares;
-            delete copy._afters;
+            delete copy._afters;           
 
-            File.writeFile(`${this.RootPath}\\config.json`, JSON.stringify(copy), 'utf-8', error => 
-            {                
-                this.UpdateEnviroment();
-
+            File.writeFile(`${this.RootPath}\\config.json`, JSON.stringify(copy, null, 2), 'utf-8', error => 
+            { 
                 if(error)
-                {
-                    throw error;
-                }
+                    return reject(error);
 
                 resolve(true);
     
@@ -183,8 +180,8 @@ export default class ApplicationConfiguration implements IApplicationConfigurati
     {
         for(let k in this.EnviromentVariables)
         {
-            process.env[k] = this.EnviromentVariables[k];
-        }            
+             process.env[k] = this.EnviromentVariables[k];
+        }                  
     }
 
 }

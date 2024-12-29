@@ -2,8 +2,8 @@
 module.exports = {
   preset: 'ts-jest',
   testEnvironment: 'node',  
-  collectCoverage: false
-  
+  collectCoverage: false,
+  testMatch: ['**/*.spec.ts'],
   
 };
 

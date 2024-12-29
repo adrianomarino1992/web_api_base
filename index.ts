@@ -10,12 +10,12 @@ export { HTTPVerbs } from './enums/httpVerbs/HttpVerbs';
 
 export { default as Exception } from './exceptions/Exception';
 
-import FileService from './file/FileService';
-import AbstractFileService from './file/AbstractFileService';
+import FileService from './files/FileService';
+import AbstractFileService from './files/AbstractFileService';
 
 export {FileService, AbstractFileService};
 
-export { default as File } from './file/File';
+export { default as File } from './files/File';
 
 export { default as DependecyService } from "./dependencyInjection/DependecyService";
 

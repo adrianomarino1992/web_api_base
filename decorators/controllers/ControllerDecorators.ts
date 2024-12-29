@@ -4,7 +4,7 @@ import { HTTPVerbs } from '../../enums/httpVerbs/HttpVerbs';
 import IController from '../../interfaces/IController';
 import IMidleware, { IRequestResultHandler } from '../../midlewares/IMidleware';
 import FunctionAnalizer from '../../metadata/FunctionAnalizer';
-import File from '../../file/File';
+import File from '../../files/File';
 import DecoratorException from '../../exceptions/DecoratorException';
 
 export default class ControllersDecorators

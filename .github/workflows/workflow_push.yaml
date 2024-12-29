@@ -2,17 +2,17 @@ name: Run tests on push
 
 on: push
 
-jobs: 
-  tests: 
-    runs-on: ubuntu-lastest
+jobs:
+  tests:
+    runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v3     
+      - uses: actions/checkout@v3
       - uses: actions/setup-node@v2
         with:
-          node-version: latest      
-    - name: install, build and test
-      run: |
-        npm install
-        npm run transpile
-        npm run test
+          node-version: lts
+      - name: install, build and test
+        run: |
+          npm install
+          npm run transpile
+          npm run test

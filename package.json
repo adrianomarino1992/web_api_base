@@ -33,6 +33,7 @@
     "@types/node": "^18.11.17",
     "@types/reflect-metadata": "^0.1.0",
     "jest": "^29.7.0",
-    "ts-jest": "^29.2.5"
+    "ts-jest": "^29.2.5",
+    "typescript": "^5.7.2"
   }
 }

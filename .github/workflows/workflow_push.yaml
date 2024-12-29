@@ -7,11 +7,11 @@ jobs:
     runs-on: ubuntu-lastest
 
     steps:
-      uses: actions/checkout@v3     
-      uses: actions/setup-node@v2
-      with:
-        node-version: latest      
-      name: install, build and test
+      - uses: actions/checkout@v3     
+      - uses: actions/setup-node@v2
+          with:
+            node-version: latest      
+    - name: install, build and test
       run: |
         npm install
         npm run transpile

@@ -156,6 +156,7 @@ export default class ApplicationConfiguration implements IApplicationConfigurati
              
     }
 
+
     public Use(midleware: IMidleware): void 
     {
         this._midlewares.push(midleware);    

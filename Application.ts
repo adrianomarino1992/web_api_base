@@ -1,4 +1,4 @@
-import { Express } from "express";
+import { Express, static as static_ } from "express";
 import ExpressModule from "express";
 import ApplicationConfiguration from "./ApplicationConfiguration"
 import IApplication, { ApplicationExceptionHandler } from "./interfaces/IApplication";
@@ -10,7 +10,7 @@ import { HTTPVerbs } from "./enums/httpVerbs/HttpVerbs";
 import { Request, Response } from "express";
 import File from 'fs';
 import Path from 'path';
-import { IHTTPRequestContext } from "./midlewares/IMidleware";
+import IMidleware, { IHTTPRequestContext, IRequestResultHandler } from "./midlewares/IMidleware";
 import ValidationDecorators from "./decorators/validations/ValidationDecorators";
 import ControllerLoadException from "./exceptions/ControllerLoadException";
 import Exception from "./exceptions/Exception";
@@ -24,6 +24,7 @@ import FileClass from './files/File';
 import Type from "./metadata/Type";
 import SendFileResult from "./controllers/SendFileResult";
 import DownloadFileResult from "./controllers/DownloadFileResult";
+
 
 export default abstract class Application implements IApplication {
 
@@ -81,6 +82,26 @@ export default abstract class Application implements IApplication {
 
     protected UseCors(): void {
         this.Express.use(require('cors')());
+    }
+
+    
+    public UseStatic(path: string, folder: string)
+    {
+        if(!folder)
+            throw new Exception("Folder is required to create a static folder");
+
+        let folderPath = folder.startsWith("/") ? Path.join(this.ApplicationConfiguration.RootPath, folder) : folder;
+        this.Express.use(path, static_(folderPath));
+    }
+
+    public Use(midleware: IMidleware): void 
+    {
+        this.ApplicationConfiguration.Use(midleware);    
+    }
+    
+    public Run(resultHandler: IRequestResultHandler): void 
+    {
+        this.ApplicationConfiguration.Run(resultHandler);
     }
 
     private GetIgnoredPaths(): string[] {

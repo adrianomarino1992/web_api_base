@@ -11,6 +11,7 @@ export default class ApplicationConfiguration implements IApplicationConfigurati
     public Port : number = 60000;
     public RootPath : string;
     public CurrentWorkingDirectory : string;
+    public ConfigJSONFile : string;
     public ExecutablePath : string;
     public DEBUG : boolean;
     public EnviromentVariables : {[key : string] : any} = {};
@@ -25,6 +26,8 @@ export default class ApplicationConfiguration implements IApplicationConfigurati
 
         this.RootPath = Path.parse(this.ExecutablePath).dir;        
         
+        this.ConfigJSONFile = `${this.RootPath}\\config.json`;
+
         if(process.argv.indexOf("--debug") > -1 || 
         process.argv.indexOf("--DEBUG")  > 1 || 
         process.env.DEBUG ||
@@ -101,7 +104,10 @@ export default class ApplicationConfiguration implements IApplicationConfigurati
         return new Promise<boolean>(async (resolve, reject) => 
         {
             if(!await this.CheckFileAsync())
+            {
+                this.UpdateConfigWithEnviroment();
                 return resolve(false);
+            }
 
             File.readFile(`${this.RootPath}\\config.json`, 'utf-8', (error, data) => 
             {
@@ -179,10 +185,33 @@ export default class ApplicationConfiguration implements IApplicationConfigurati
 
     private UpdateEnviroment() : void
     {
+        this.UpdateConfigWithEnviroment();
+
         for(let k in this.EnviromentVariables)
         {
              process.env[k] = this.EnviromentVariables[k];
         }                  
+    }
+
+    private UpdateConfigWithEnviroment() : void
+    {        
+        for(let k in process.env)
+        {
+            this.EnviromentVariables[k] = process.env[k];
+        }
+
+        if(!!process.env["PORT"])
+        {
+            let port = Number.parseInt(process.env["PORT"]);
+
+            if(port != Number.NaN)
+                this.Port = port;
+        }
+
+        if(!!process.env["HOST"])
+        {
+           this.Host = process.env["HOST"]
+        }
     }
 
 }

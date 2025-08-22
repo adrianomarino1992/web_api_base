@@ -14,7 +14,7 @@
   "scripts": {
     "test": "jest",
     "debug": "node ./dist/Index.js",
-    "transpile": "tsc -p tsconfig.json",
+    "transpile": "tsc -p .",
     "run:tests": "npx jest"
   },
   "author": "adriano.marino1992@gmail.com",

@@ -4,3 +4,4 @@ dist/
 coverage/
 temp/
 .env
+config.json

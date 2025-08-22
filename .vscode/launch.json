@@ -15,8 +15,8 @@
             "args": ["--dark"],
             "program": "${workspaceFolder}\\dist\\temp\\index.js",
             "env": {
-              "DEBUG": true,
-              "PORT" : 50000
+              "DEBUG": true
+             
             },
             "outFiles": [
                 "${workspaceFolder}/**/*.js"

@@ -7,7 +7,7 @@ import IMidleware, { IRequestResultHandler } from './midlewares/IMidleware';
 export default class ApplicationConfiguration implements IApplicationConfiguration
 {
 
-    public Host : string = "localhost";    
+    public Host : string = "0.0.0.0";    
     public Port : number = 60000;
     public RootPath : string;
     public CurrentWorkingDirectory : string;
@@ -20,13 +20,23 @@ export default class ApplicationConfiguration implements IApplicationConfigurati
 
     constructor(){
         
+        if(process.env.HOST)
+           this.Host = process.env.HOST; 
+
+        if(process.env.PORT)
+        {
+            let port = Number.parseInt(process.env.PORT)
+            if(!Number.isNaN(port))
+                this.Port = port;
+        }
+
         this.CurrentWorkingDirectory = process.cwd();  
         
         this.ExecutablePath = process.argv[1];       
 
         this.RootPath = Path.parse(this.ExecutablePath).dir;        
         
-        this.ConfigJSONFile = `${this.RootPath}\\config.json`;
+        this.ConfigJSONFile = `${this.RootPath}/config.json`;
 
         if(process.argv.indexOf("--debug") > -1 || 
         process.argv.indexOf("--DEBUG")  > 1 || 
@@ -96,7 +106,7 @@ export default class ApplicationConfiguration implements IApplicationConfigurati
     
     private async CheckFileAsync() : Promise<boolean>
     {
-        return new Promise<boolean>((resolve, _) => resolve(File.existsSync(`${this.RootPath}\\config.json`)));        
+        return new Promise<boolean>((resolve, _) => resolve(File.existsSync(this.ConfigJSONFile)));        
     }
 
     public async LoadAsync() : Promise<boolean>
@@ -104,12 +114,12 @@ export default class ApplicationConfiguration implements IApplicationConfigurati
         return new Promise<boolean>(async (resolve, reject) => 
         {
             if(!await this.CheckFileAsync())
-            {
+            {                
                 this.UpdateConfigWithEnviroment();
                 return resolve(false);
             }
 
-            File.readFile(`${this.RootPath}\\config.json`, 'utf-8', (error, data) => 
+            File.readFile(this.ConfigJSONFile, 'utf-8', (error, data) => 
             {
                 if(error)
                     return reject(error);

@@ -1,0 +1,11 @@
+services:
+  temp_api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - 60000:60000
+    volumes:
+      - .:/app
+      - /app/node_modules
+    

@@ -71,9 +71,7 @@ export default abstract class Application implements IApplication {
                 }
                 else
                     n();                    
-            });
-
-        await (this.ApplicationConfiguration as ApplicationConfiguration).SaveAsync();
+            });        
 
         this.Express.listen(this.ApplicationConfiguration.Port, this.ApplicationConfiguration.Host, () => {
             console.log(`Application running on ${this.ApplicationConfiguration.Host}:${this.ApplicationConfiguration.Port}`);

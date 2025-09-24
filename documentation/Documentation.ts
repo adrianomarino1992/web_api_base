@@ -111,12 +111,19 @@ export default class Documentation {
 
             console.log(Application.Configurations);
 
-            if(Application.Configurations.DEBUG)
-                cmd.exec(`start "" "http://${Application.Configurations.Host}:${Application.Configurations.Port}/playground"`, (error, stdout, stdin) => 
+            if(Application.Configurations.DEBUG && process.argv.indexOf("--no-open") == -1 && process.argv.indexOf("--NO-OPEN") == -1)
+            {
+                let hostname = Application.Configurations.Host;
+
+                if(hostname == "0.0.0.0")
+                    hostname = "localhost"; 
+
+                cmd.exec(`start "" "http://${hostname}:${Application.Configurations.Port}/playground"`, (error, stdout, stdin) => 
                 {
                     if(error)
                         console.error(error);                
                 });
+            }
         }        
     }
 }

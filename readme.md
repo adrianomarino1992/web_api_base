@@ -16,44 +16,26 @@ npm install web_api_base
 First of all we need implement the abstract class __Application__. 
 After that, we need to create some controllers and they must inherit  the abstract class __ControllerBase__.
 
-### ./controllers/SampleController.ts
 
-We can create a controller using the __create-controller__ command : 
-
-```bash
-npx create-controller
-```
-
-```typescript
-
-import { ControllerBase, Route, GET } from "web_api_base";
-
-
-@Route()
-export default class SampleController extends ControllerBase
-{   
-     
-    @GET()
-    public Hello() : ActionResult
-    {
-        return this.OK({message: "Hello Word!"})
-    }
-    
-}
-```
-
-### App.ts
+### Application
 We can create a app using the __create-application__ command : 
 
 ```bash
-npx create-application 
+npx create-application [options]
 ```
+#### Options:
+       
+ __--app/-a=AppName__               Specify the name of the application class. Default is "App".
+       
+ __--controller/-c=ControllerName__ Specify the name of the controller class. Default is "SampleController".
+        
+__--no-controller__             Do not create a controller class.
  
+
+### App.ts
 ```typescript
-import SampleController from "./controllers/SampleController ";
 
-
-import { ControllerBase, Application, IApplicationConfiguration, DependecyService } from "web_api_base";
+import { Application, IApplicationConfiguration} from "web_api_base";
 
 export default class App extends Application
 {   
@@ -66,16 +48,53 @@ export default class App extends Application
         //if the controlles follow the naming rules, the method UseControllers will automatically append them
         this.UseControllersAsync();   
 
+        if(appConfig.DEBUG)
+            this.CreateDocumentation();
+
     }  
 }
 ```
 
+### Controllers
+
+All controllers must be located in the ./controllers folder.
+
+Controller names must end with "Controller".
+
+Controllers must extend the ControllerBase class.
+
+We can create a controller using the create-controller command:
+
+```bash
+npx create-controller -c=SampleController
+```
+### ./controllers/SampleController.ts
+
+```typescript
+
+import { ControllerBase, Route, GET } from "web_api_base";
+
+
+//@Route('some/route') 
+export default class SampleController extends ControllerBase
+{   
+     
+    @GET()
+    public Hello() : ActionResult
+    {
+        return this.OK({message: "Hello Word!"})
+    }
+    
+}
+```
+
+
 ### Index.ts
 
 ```typescript
-import Application from './Application';
+import App from './App';
 
-new Application().StartAsync();
+new App().StartAsync();
 ```
 
 # Dependecy Injection

@@ -15,7 +15,7 @@
     "test": "jest",
     "debug": "node ./dist/Index.js",
     "transpile": "tsc -p .",
-    "run:tests": "npx jest"
+    "tests": "npx jest"
   },
   "author": "adriano.marino1992@gmail.com",
   "repository": "https://github.com/adrianomarino1992/web_api_base.git",

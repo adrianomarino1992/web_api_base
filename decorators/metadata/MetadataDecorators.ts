@@ -41,7 +41,7 @@ export default class MetadataDecorators
     {
         return function(target : Object, property : string)
         {
-            OwnMetadaContainer.Set(target.constructor, MetadataDecorators._ignoreKeyMetadata, property, true);
+            OwnMetadaContainer.Set(target.constructor, MetadataDecorators._showInDocumentationKeyMetadata, property, true);
         }
     }
 

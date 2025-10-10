@@ -125,9 +125,13 @@ export default class Type {
         obj.__proto__ = cTor.prototype;
 
         let base = Reflect.construct(cTor, []) as T;
+
+        let keysVisiteds : string[] = [];
         
         for(let k in base)
         {
+            keysVisiteds.push(k);
+
             if(obj[k] == undefined)
             {
                 let vdefault = MetadataDecorators.GetDefaultValue(cTor, k);
@@ -138,7 +142,11 @@ export default class Type {
                 continue;
             }
 
-            let designType = Reflect.getMetadata("design:type", cTor, k);
+            let designType = Reflect.getMetadata("design:type", cTor, k.toString());
+
+            if(!designType)
+                designType = Reflect.getMetadata("design:type", cTor.prototype, k.toString());
+           
 
             let elementType : ReturnType<typeof MetadataDecorators.GetArrayElementType>;              
 
@@ -172,6 +180,12 @@ export default class Type {
                 (base as any)[k] = obj[k];
                        
 
+        }
+
+        for(let k in obj)
+        {
+            if(keysVisiteds.indexOf(k) == -1)
+                (base as any)[k] = obj[k]; 
         }
 
         return base;

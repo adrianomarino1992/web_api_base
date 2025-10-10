@@ -285,7 +285,7 @@ export default abstract class Application implements IApplication {
                         response.json(
                             {
                                 Message: "Model binding fail",
-                                Detailts: "To send data using a PUT or POST method the content-type header is required"
+                                Detailts: "To send data using a PUT or POST method the correct content-type header is required"
                             });
                     }
 

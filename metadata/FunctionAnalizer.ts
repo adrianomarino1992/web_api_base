@@ -76,6 +76,8 @@ export default class FunctionAnalizer
                 parameters.push(p.substring(0, p.indexOf(')')));
                 continue;
             }
+
+            parameters.push(p.trim());
         }    
 
 

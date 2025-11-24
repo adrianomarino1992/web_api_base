@@ -12,11 +12,10 @@
             "skipFiles": [
                 "<node_internals>/**"
             ],
-            "args": ["--dark"],
+            "args": ["--light"],
             "program": "${workspaceFolder}\\dist\\temp\\index.js",
             "env": {
-              "DEBUG": true
-             
+              "DEBUG": true             
             },
             "outFiles": [
                 "${workspaceFolder}/**/*.js"

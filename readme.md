@@ -182,23 +182,11 @@ export default class App extends Application
     public override async ConfigureAsync(appConfig: IApplicationConfiguration): Promise<void>
     {
         this.UseCors();
-
-        //DI AddScoped, AddTransient and AddSingleton
+        
         appConfig.AddScoped(SampleServiceAbstract, SampleService);    
         appConfig.AddScoped(GenericService) // will register for all generic type arguments
        
-       //will register only for GenericService<User>. We need use  @InjectTypeArgument(User) on dependecy
-       //to work fine
-       //appConfig.AddGenericScoped(GenericService, User) 
-
-       //will register only for GenericService<User>. We need use  @InjectTypeArgument(User) on dependecy
-       //to work fine
-       //appConfig.AddGenericScoped(GenericService, undefined, undefined, typeArgument =>
-       //{ 
-       //   here we can determine how to create the instance. We have access of type argument on typeArgument 
-       //   argument. After this function execution, the instance will pass for DI pipeline to get all 
-       //   dependecies
-       //}) 
+      
         this.UseControllers();
 
     }  

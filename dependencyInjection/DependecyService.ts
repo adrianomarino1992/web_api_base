@@ -1,5 +1,5 @@
 import 'reflect-metadata';
-import IDIContext from './IDIContext';
+import IDIContext, { IDIItem } from './IDIContext';
 import FindDependencyException from '../exceptions/FindDependencyException';
 import OwnMetaDataContainer, { IMetaData } from '../metadata/OwnMetaDataContainer';
 import RegisterDependencyException from '../exceptions/RegisterDependencyException';
@@ -91,11 +91,11 @@ export default class DependecyService
     {        
         let defaultBuilder = DependecyService.DefaultObjectBuilder(type, ctor);
 
-        let exist = this._services.find(s => s.Type == type && !s.GenericType);
+        let exist = DependecyService._services.find(s => s.Type == type && !s.GenericType);
 
        if(exist === undefined)
         {
-            this._services.push
+            DependecyService._services.push
             (
                 { 
                     Type : type, 
@@ -112,16 +112,17 @@ export default class DependecyService
     }
 
 
+
     public static Register<T>(type : Ctors<T>, scope? : DIEscope, builder? : () => T) : void
     {       
         let defaultBuilder = DependecyService.DefaultObjectBuilder(type);
 
-        let exist = this._services.find(s => s.Type == type && !s.GenericType);
+        let exist = DependecyService._services.find(s => s.Type == type && !s.GenericType);
 
 
         if(exist === undefined)
         {
-            this._services.push
+            DependecyService._services.push
             (
                 { 
                     Type : type, 
@@ -144,15 +145,21 @@ export default class DependecyService
 
         let defaultBuilder = DependecyService.DefaultObjectBuilder(type, ctor);
 
-        let exist = this._services.find(s => s.Type == type && (!s.GenericType || s.GenericType == genericType));
+        let exist: IService | undefined;
+
+        if(genericType)
+            exist = DependecyService._services.find(u => u.Type == type && u.GenericType == genericType);
+        else
+            exist = DependecyService._services.find(u => u.Type == type && (!u.GenericType || u.GenericType == genericType));
 
         if(exist === undefined)
         {
-            this._services.push
+            DependecyService._services.push
             (
                 { 
                     Type : type, 
                     Builder : builder ? (c?: IDIContext, e? : Ctors<U>) => builder(e) : (c?: IDIContext, e? : Ctors<U>) => defaultBuilder(c, e), 
+                    GenericType: genericType,
                     Scope : scope ?? DIEscope.TRANSIENT 
                 }
             );
@@ -168,12 +175,27 @@ export default class DependecyService
     private static DefaultObjectBuilder<T, U>(type : Ctors<T>, ctor? :  new (...args : any[]) => T) : (context? : IDIContext, genericType?: Ctors<U>)=>any
     {
         return function(context? : IDIContext, genericType?: Function){
+            
 
-            let service = DependecyService._services.find(u => u.Type == type && (!u.GenericType || u.GenericType == genericType));
+            let service: IService | undefined;
+
+            if(genericType)
+                service = DependecyService._services.find(u => u.Type == type && u.GenericType == genericType);
+        
+            if(!service)
+                service = DependecyService._services.find(u => u.Type == type && (!u.GenericType || u.GenericType == genericType));
+           
 
             if(context && context.Intances && service?.Scope == DIEscope.SCOPED)
             {
-                let scopped = context.Intances.filter(s => s.Type == type && (!s.GenericType || s.GenericType == genericType));
+                let scopped : IDIItem[] = [];
+
+                if(genericType)
+                    scopped = context.Intances.filter(s => s.Type == type && s.GenericType == genericType);
+            
+                if(scopped.length == 0)            
+                    scopped = context.Intances.filter(s => s.Type == type && (!s.GenericType || s.GenericType == genericType));
+                
 
                 if(scopped.length > 0 && scopped[0].Object)
                 {
@@ -201,7 +223,14 @@ export default class DependecyService
 
     public static ResolveGeneric<T, U>(type :  Ctors<T>, genericType? :  Ctors<U>, context? : IDIContext) : T | undefined
     {
-        let service = this._services.find(u => u.Type == type && (!u.GenericType || u.GenericType == genericType));
+
+        let service: IService | undefined;
+
+        if(genericType)
+            service = DependecyService._services.find(u => u.Type == type && u.GenericType == genericType);
+        
+        if(!service)
+            service = DependecyService._services.find(u => u.Type == type && (!u.GenericType || u.GenericType == genericType));       
 
         if(!service)
             return undefined;
@@ -215,7 +244,15 @@ export default class DependecyService
 
         if(context && context.Intances && service?.Scope == DIEscope.SCOPED)
         {
-            let scopped = context.Intances.filter(s => s.Type == type && (!s.GenericType || s.GenericType == genericType));
+           
+            let scopped : IDIItem[] = [];
+
+            if(genericType)
+                scopped = context.Intances.filter(s => s.Type == type && s.GenericType == genericType);
+            
+            if(scopped.length == 0)            
+                scopped = context.Intances.filter(s => s.Type == type && (!s.GenericType || s.GenericType == genericType));
+                
 
             if(scopped.length > 0 && scopped[0].Object)
             {
@@ -262,7 +299,14 @@ export default class DependecyService
                     if(!tp)
                         throw new FindDependencyException(`Can not resolve the dependecy of ${object.constructor.name}.${k}`);
 
-                    let service = this._services.find(u => u.Type == tp!.Type && (!u.GenericType || u.GenericType == tp!.GenericType));
+                    let service: IService | undefined;
+
+                    if(tp!.GenericType)
+                        service = DependecyService._services.find(u => u.Type == tp!.Type && u.GenericType == tp!.GenericType);
+                
+                    if(!service)
+                        service = DependecyService._services.find(u => u.Type == tp!.Type && (!u.GenericType || u.GenericType == tp!.GenericType));
+
 
                     if(context && context.Intances && service?.Scope == DIEscope.SCOPED)
                     {
@@ -304,7 +348,7 @@ export default class DependecyService
     {
         let object = Reflect.construct(Ctor, []);
 
-        this.CheckForDependenciesAndResolve(object);
+        DependecyService.CheckForDependenciesAndResolve(object);
 
         return object as T;
     }

@@ -66,6 +66,25 @@ export default class ApplicationConfiguration implements IApplicationConfigurati
     }   
     
 
+    public AddScopedForGenericType<T, U>(type: Ctors<T>, genericType: Ctors<U>, ctor: new (...args: any[]) => T): void {
+
+        DependecyService.RegisterGeneric(type, genericType, ctor, DIEscope.SCOPED);
+    }
+
+    public AddScopedForGenericArgumentType<T, U>(type: Ctors<T>, builder: (e?: Ctors<U>) => T): void {
+
+        DependecyService.RegisterGeneric(type, undefined, undefined, DIEscope.SCOPED, builder);
+    }
+
+
+
+
+
+
+
+
+
+
     
     public AddTransient<T>(type: Ctors<T>, ctor?: new (...args: any[]) => T, builder?: (() => T)): void
     {
@@ -85,6 +104,20 @@ export default class ApplicationConfiguration implements IApplicationConfigurati
         DependecyService.RegisterGeneric(type, genericType, ctor, DIEscope.TRANSIENT, builder);
     }
 
+    public AddTransientForGenericType<T, U>(type: Ctors<T>, genericType: Ctors<U>, ctor: new (...args: any[]) => T): void {
+
+        DependecyService.RegisterGeneric(type, genericType, ctor, DIEscope.TRANSIENT);
+    }
+
+    public AddTransientForGenericArgumentType<T, U>(type: Ctors<T>, builder: (e?: Ctors<U>) => T): void {
+
+        DependecyService.RegisterGeneric(type, undefined, undefined, DIEscope.TRANSIENT, builder);
+    }
+
+
+
+
+
     
     public AddSingleton<T>(type: Ctors<T>, ctor?: new (...args: any[]) => T, builder?: () => T): void
     {
@@ -103,7 +136,21 @@ export default class ApplicationConfiguration implements IApplicationConfigurati
         DependecyService.RegisterGeneric(type, genericType, ctor, DIEscope.SINGLETON, builder);
     }
 
+    public AddSingletonForGenericType<T, U>(type: Ctors<T>, genericType: Ctors<U>, ctor: new (...args: any[]) => T): void {
+
+        DependecyService.RegisterGeneric(type, genericType, ctor, DIEscope.SINGLETON);
+    }
+
+    public AddSingletonForGenericArgumentType<T, U>(type: Ctors<T>, builder: (e?: Ctors<U>) => T): void {
+
+        DependecyService.RegisterGeneric(type, undefined, undefined, DIEscope.SINGLETON, builder);
+    }
+
     
+
+
+
+
     private async CheckFileAsync() : Promise<boolean>
     {
         return new Promise<boolean>((resolve, _) => resolve(File.existsSync(this.ConfigJSONFile)));        

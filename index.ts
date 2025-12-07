@@ -194,7 +194,9 @@ export function InjectGenericTypeArgument<T, U>(constructorFunction: Ctors<T>, g
        
 }
 
-export function InjectTypeArgument<T>(genericArgumentType : Ctors<T>)
+
+
+export function InjectForTypeArgument<T>(genericArgumentType : Ctors<T>)
 {
     return function(target : Object, property : string | symbol) : void 
     {

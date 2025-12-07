@@ -1,4 +1,4 @@
-import {Inject, ControllerBase, Route, InjectTypeArgument} from '../../index';
+import {Inject, ControllerBase, Route, InjectForTypeArgument} from '../../index';
 import GenericService  from './GenericService';
 import TestClass, { DerivedClass } from './TestClass';
 
@@ -9,7 +9,7 @@ export default class ControllerTest extends ControllerBase
     @Inject()
     public GenericDependecy : GenericService<TestClass>;  
 
-    @InjectTypeArgument(DerivedClass)
+    @InjectForTypeArgument(DerivedClass)
     public GenericDerivedDependecy? : GenericService<DerivedClass>;
 
 

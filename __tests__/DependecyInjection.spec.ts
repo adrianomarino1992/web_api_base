@@ -4,6 +4,8 @@ import DependecyService from "../dependencyInjection/DependecyService";
 import { DIEscope } from "../dependencyInjection/DependecyService";
 import { SampleServiceAbstract } from "./classes/SampleServiceAbstract";
 import { AnotherService } from "./classes/AnotherService";
+import { ConcreteService, DerivedClassService, TestClassService, WithGenericType } from "./classes/GenericService";
+import TestClass, { DerivedClass, ItemTest } from "./classes/TestClass";
 
 
 
@@ -12,6 +14,11 @@ describe("Testing the dependecy injection service", ()=>{
 
     DependecyService.RegisterFor(SampleServiceAbstract, SampleService, DIEscope.TRANSIENT);
     DependecyService.Register(AnotherService, DIEscope.SCOPED);
+    DependecyService.Register(ConcreteService, DIEscope.SCOPED);
+    DependecyService.RegisterGeneric(WithGenericType, TestClass, TestClassService, DIEscope.SCOPED);
+    DependecyService.RegisterGeneric(WithGenericType, DerivedClass, DerivedClassService, DIEscope.SCOPED);
+    DependecyService.RegisterGeneric(WithGenericType, undefined, undefined,  DIEscope.SCOPED, e => new WithGenericType(e as new(...args: any[]) => typeof e));
+    
     
     test("Testing the creation of a controller", ()=>
     {
@@ -157,5 +164,37 @@ describe("Testing the dependecy injection service", ()=>{
 
     });
 
+
+    describe("Test generic DI", ()=>{
+
+
+        let testService = DependecyService.ResolveGeneric(WithGenericType, TestClass);
+
+        expect(testService instanceof TestClassService).toBeTruthy();
+        expect(testService?._type).toBe(TestClass);
+
+        let derivedService = DependecyService.ResolveGeneric(WithGenericType, DerivedClass);
+
+        expect(derivedService instanceof DerivedClassService).toBeTruthy();
+        expect(derivedService?._type).toBe(DerivedClass);
+
+
+        let randomTypeService = DependecyService.ResolveGeneric(WithGenericType, ItemTest);
+
+        expect(randomTypeService instanceof WithGenericType).toBeTruthy();
+        expect(randomTypeService?._type).toBe(ItemTest);
+        
+
+    });
+
+     describe("Test concrete type DI", ()=>{
+
+
+        let concreteService = DependecyService.ResolveGeneric(ConcreteService);
+
+        expect(concreteService instanceof ConcreteService).toBeTruthy();
+    
+
+    });
 
 });

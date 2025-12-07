@@ -13,79 +13,81 @@ npm install web_api_base
 
 # Usage
 
-First of all we need implement the abstract class __Application__. 
-After that, we need to create some controllers and they must inherit  the abstract class __ControllerBase__.
+To get started, you must implement the abstract **Application** class.
+After that, you can create your controllers, which must inherit from **ControllerBase**.
 
 
-### Application
-We can create a app using the __create-application__ command : 
+### Creating an Application
+You can generate an application skeleton using the **create-application** command: : 
 
 ```bash
 npx create-application [options]
 ```
 #### Options:
        
- __--app/-a=AppName__               Specify the name of the application class. Default is "App".
+ __--app/-a=AppName__                
+
+Sets the name of the application class. Default: **App**.
+
        
- __--controller/-c=ControllerName__ Specify the name of the controller class. Default is "SampleController".
+ __--controller/-c=ControllerName__ 
+
+Sets the name of the controller class. Default: **SampleController**.
+
+
         
-__--no-controller__             Do not create a controller class.
+__--no-controller__            
+
+ Generates the application without a controller file.
  
 
-### App.ts
+### Example: App.ts
 ```typescript
+import { Application, IApplicationConfiguration } from "web_api_base";
 
-import { Application, IApplicationConfiguration} from "web_api_base";
-
-export default class App extends Application
-{   
+export default class App extends Application {   
     
-    public override Configure(appConfig: IApplicationConfiguration): void
-    {        
-        //allow CORS
+    public override Configure(appConfig: IApplicationConfiguration): void {        
+        // Enable CORS
         this.UseCors();
 
-        //if the controlles follow the naming rules, the method UseControllers will automatically append them
-        this.UseControllersAsync();   
+        // If your controllers follow the naming conventions,
+        // UseControllersAsync will automatically register them.
+        this.UseControllersAsync();
 
-        if(appConfig.DEBUG)
+        // Optional: generate documentation during development
+        if (appConfig.DEBUG)
             this.CreateDocumentation();
-
     }  
 }
+
 ```
 
 ### Controllers
+All controllers must be placed inside the **./controllers** folder.
 
-All controllers must be located in the ./controllers folder.
+Controller class names must end with **Controller**, and each controller must **extend the ControllerBase** class.
 
-Controller names must end with "Controller".
-
-Controllers must extend the ControllerBase class.
-
-We can create a controller using the create-controller command:
+You can create a new controller using the create-controller command:
 
 ```bash
 npx create-controller -c=SampleController
 ```
-### ./controllers/SampleController.ts
+
+### Example: ./controllers/SampleController.ts
 
 ```typescript
-
 import { ControllerBase, Route, GET } from "web_api_base";
 
-
-//@Route('some/route') 
-export default class SampleController extends ControllerBase
-{   
-     
-    @GET()
-    public Hello() : ActionResult
-    {
-        return this.OK({message: "Hello Word!"})
-    }
+// @Route("some/route") // Optional custom route prefix
+export default class SampleController extends ControllerBase {   
     
+    @GET()
+    public Hello(): ActionResult {
+        return this.OK({ message: "Hello World!" });
+    }
 }
+
 ```
 
 
@@ -98,8 +100,14 @@ new App().StartAsync();
 ```
 
 # Dependecy Injection
-Consider this abstraction of a service and some imnplementations
 
+### ATTENTION
+#### **Do not** use interfaces for dependency injection. Interfaces do not exist at runtime, so the DI container cannot resolve them.
+
+
+Below is an example of how to define services and register them using the DI system included in this packag
+
+## Service Definitions
 ### ./services/SampleService.ts
 
 ```typescript
@@ -123,76 +131,145 @@ export class GenericService<T>
 }
 ```
 
-We can use the DI service like this
-
+## Using DI in Controllers
 ### ./controllers/SampleController.ts
 
 ```typescript
-
 import { ControllerBase, Route, GET, Inject } from "web_api_base";
-import {SampleServiceAbstract, GenericService } from '../services/SampleService.ts';
+import { SampleServiceAbstract, GenericService } from "../services/SampleService";
 
 @Route()
-export default class SampleController extends ControllerBase
-{   
-    @Inject() // say to DI that this property will be inject on the instance
-    public SomeDepency : SampleServiceAbstract;
+export default class SampleController extends ControllerBase {   
 
-    @Inject() // say to DI that this property will be inject on the instance
-    //the type argument do not exists on runtime, on .js result files. The DI system will work fine and we 
-    //will still have the type check on development time 
-    public SomeGenericDepency : GenericService<string> ;
+    @Inject() 
+    public SomeDependency!: SampleServiceAbstract;
 
-    constructor(someDependecy : SampleServiceAbstract, someGenericDepency: GenericService<string>)
-    {
+    @Inject()
+    // Generic type arguments do not exist at runtime in the compiled JS output.
+    // Even so, the DI container can resolve the correct service instance,
+    // and TypeScript still provides full type checking during development.
+    public SomeGenericDependency!: GenericService<string>;
+
+    constructor(
+        someDependency: SampleServiceAbstract,
+        someGenericDependency: GenericService<string>
+    ) {
         super();
-        this.SomeDepency = someDependecy ;  
-        this.SomeGenericDepency = someGenericDepency;
-        this.SomeGenericDepency.SomeGenericresult("Test") // typeof obj: string
-        //this.SomeGenericDepency.SomeGenericresult(10) // compiler error
+
+        this.SomeDependency = someDependency;
+        this.SomeGenericDependency = someGenericDependency;
+
+        this.SomeGenericDependency.SomeGenericResult("Test"); // typeof obj: string
+        // this.SomeGenericDependency.SomeGenericResult(10);   // TypeScript compiler error
     }
      
     @GET()
-    public Hello() : ActionResult
-    {
-        return this.OK({message: "Hello Word!"})
+    public Hello(): ActionResult {
+        return this.OK({ message: "Hello World!" });
     }
-    
 }
+
 ```
 
-And we can register our dependecies in Application ConfigureAsync method
+
+## Registering Dependencies
+
+You can register your services inside the application's **ConfigureAsync** method.
 
 ### App.ts
 
 ```typescript 
 
-import { Application, IApplicationConfiguration} from "web_api_base";
+import { Application, IApplicationConfiguration } from "web_api_base";
+import { SampleService, SampleServiceAbstract, GenericService } from "./services/SampleService";
 
-import { SampleService, SampleServiceAbstract, GenericService  } from './service/SampleService';
-
-
-export default class App extends Application
-{
-    constructor()
-    {
+export default class App extends Application {
+    constructor() {
         super();
     }
     
-    public override async ConfigureAsync(appConfig: IApplicationConfiguration): Promise<void>
-    {
+    public override async ConfigureAsync(appConfig: IApplicationConfiguration): Promise<void> {
         this.UseCors();
         
-        appConfig.AddScoped(SampleServiceAbstract, SampleService);    
-        appConfig.AddScoped(GenericService) // will register for all generic type arguments
-       
-      
-        this.UseControllers();
+        // Register a specific implementation for SampleServiceAbstract
+        appConfig.AddScoped(SampleServiceAbstract, SampleService);
 
-    }  
+        // Registers GenericService<T> for any generic type argument
+        appConfig.AddScoped(GenericService);
+
+        this.UseControllers();
+    }
 }
 
+
 ```
+
+
+
+### DI for Generic Types
+
+The DI system allows you to register and resolve services based on generic type arguments. This is useful when you want the container to create different implementations depending on the type used in the generic.
+
+
+```typescript
+
+// Register a service for each specific generic type
+
+// For TestClass → WithGenericType<TestClass> will resolve to TestClassService
+appConfig.AddScopedForGenericType(WithGenericType, TestClass, TestClassService);
+
+// For DerivedClass → WithGenericType<DerivedClass> will resolve to DerivedClassService
+appConfig.AddScopedForGenericType(WithGenericType, DerivedClass, DerivedClassService);
+
+// Fallback registration for any type not listed above.
+// The factory receives the constructor of the generic type argument (T)
+// and returns an instance of WithGenericType<T>.
+appConfig.AddScopedForGenericArgumentType(
+  WithGenericType,
+  ctor => new WithGenericType(ctor as new (...args: any[]) => any)
+);
+
+```
+
+#### Notes:
+
+Use **AddScopedForGenericType** when you want a specific implementation for a given generic type argument (e.g., TestClass, DerivedClass).
+
+Use **AddScopedForGenericArgumentType** to define a fallback provider for any type argument that does not have a specific mapping.
+
+### Consumption
+
+```typescript
+
+// Register a service for each specific generic type
+
+// For TestClass → WithGenericType<TestClass> will resolve to TestClassService
+appConfig.AddScopedForGenericType(WithGenericType, TestClass, TestClassService);
+
+// For DerivedClass → WithGenericType<DerivedClass> will resolve to DerivedClassService
+appConfig.AddScopedForGenericType(WithGenericType, DerivedClass, DerivedClassService);
+
+// Fallback registration for any type not listed above.
+// The factory receives the constructor of the generic type argument (T)
+// and returns an instance of WithGenericType<T>.
+appConfig.AddScopedForGenericArgumentType(
+  WithGenericType,
+  ctor => new WithGenericType(ctor as new (...args: any[]) => any)
+);
+
+```
+
+The **@InjectForTypeArgument(SomeClass)** decorator tells the container to resolve the corresponding WithGenericType<SomeClass> instance — following the rules defined during registration.
+
+#### When to Use Each Registration Method
+
+Specific mapping (AddScopedForGenericType)
+Use this when you want a customized service for a specific generic type argument.
+Example: WithGenericType<TestClass> should behave differently from WithGenericType<DerivedClass>.
+
+Fallback mapping (AddScopedForGenericArgumentType)
+Use this to define default behavior for all generic variations not explicitly registered.
+
 
 
 # HTTP Verbs decorators

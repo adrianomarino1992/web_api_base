@@ -10,6 +10,13 @@ web_api_base is a npm packaged that allows to create web-apis like MVC of .NET
 npm install web_api_base
 ```
 
+### Enable decorators on tsconfig.json
+```json
+"experimentalDecorators": true,                   
+"emitDecoratorMetadata": true,
+```
+
+
 
 # Usage
 

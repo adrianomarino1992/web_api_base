@@ -67,45 +67,41 @@ new ${appName}().StartAsync();`;
 
 }
 
-export function EnableExperimentalDecorators(tsconfigPath?: string)
-{
-    var currentDirectoryPath = Path.join(process.cwd());
-    var tsconfigFilePath = tsconfigPath ? tsconfigPath : Path.join(currentDirectoryPath, "tsconfig.json");
 
-    if(!FS.existsSync(tsconfigFilePath))
-    {
-        console.log(`The file tsconfig.json not exists in ${tsconfigFilePath}`);
-        console.log(`You need to enable the experimentalDecorators manually`);
-        return;
-    }
-    var tsconfig = FS.readFileSync(tsconfigFilePath, 'utf-8');
+export function EnableExperimentalDecorators(tsconfigPath?: string) {
 
-    if(tsconfig.indexOf("// \"experimentalDecorators\": true") != -1)
-    {
-        tsconfig = tsconfig.replace("// \"experimentalDecorators\": true", "\"experimentalDecorators\": true");
-        FS.writeFileSync(tsconfigFilePath, tsconfig, 'utf-8');
-        console.log(`The experimentalDecorators is enabled in ${tsconfigFilePath}`);
+    const currentDirectoryPath = process.cwd();
+    const tsconfigFilePath = tsconfigPath
+        ? tsconfigPath
+        : Path.join(currentDirectoryPath, "tsconfig.json");
+
+    if (!FS.existsSync(tsconfigFilePath)) {
+        console.log(`tsconfig.json not found at: ${tsconfigFilePath}`);
+        console.log(`You must enable "experimentalDecorators" manually.`);
         return;
     }
 
-    try{
-        var json = JSON.parse(tsconfig);
+    let content = FS.readFileSync(tsconfigFilePath, "utf-8");
+    let originalContent = content;
 
-        if(!json.compilerOptions)
-            json.compilerOptions = {};
-        if(!json.compilerOptions.experimentalDecorators || json.compilerOptions.experimentalDecorators == false)
-        {
-            json.compilerOptions.experimentalDecorators = true;
-            FS.writeFileSync(tsconfigFilePath, JSON.stringify(json, null, 2), 'utf-8');
-            console.log(`The experimentalDecorators is enabled in ${tsconfigFilePath}`);
-        }
-        else
-            console.log(`The experimentalDecorators is already enabled in ${tsconfigFilePath}`);
-    }catch{
-        console.log(`The file tsconfig.json is not valid json in ${tsconfigFilePath}`);
+    content = content.replace(
+        /\/\/\s*"experimentalDecorators"\s*:\s*true/g,
+        `"experimentalDecorators": true`
+    );
+
+    content = content.replace(
+        /\/\/\s*"emitDecoratorMetadata"\s*:\s*true/g,
+        `"emitDecoratorMetadata": true`
+    );
+
+    if (content !== originalContent) {
+        FS.writeFileSync(tsconfigFilePath, content, "utf-8");
+        console.log(`experimentalDecorators / emitDecoratorMetadata enableds ${tsconfigFilePath}`);
+    } else {
+        console.log(`experimentalDecorators / emitDecoratorMetadata are already enableds.`);
     }
-
 }
+
 
 
 export function CreateController(name?: string)

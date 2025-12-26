@@ -13,7 +13,7 @@
                 "<node_internals>/**"
             ],
             "args": ["--light"],
-            "program": "${workspaceFolder}\\dist\\temp\\index.js",
+            "program": "${workspaceFolder}\\dist\\__test__app__\\index.js",
             "env": {
               "DEBUG": true             
             },

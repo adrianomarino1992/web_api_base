@@ -14,7 +14,7 @@ export default class MetadataDecorators
     {
         return function(target : any, property : string)
         {
-            OwnMetadaContainer.Set(target, MetadataDecorators._addMetadataKeyMetadata, property, true);
+            Reflect.defineMetadata(MetadataDecorators._addMetadataKeyMetadata, true, typeof target == 'function' ? target.prototype : target, property);           
         }
     }
     
@@ -23,36 +23,37 @@ export default class MetadataDecorators
     {
         return function(target : any, property : string)
         {
-            OwnMetadaContainer.Set(target, MetadataDecorators._ignoreKeyMetadata, property, true);
+            Reflect.defineMetadata(MetadataDecorators._ignoreKeyMetadata, true, typeof target == 'function' ? target.prototype : target, property);
         }
     }
 
     public static IsToIgnoreInDocumentation(cTor : Function, property : string) : boolean
     {
-        let meta =  OwnMetadaContainer.Get(cTor, MetadataDecorators._ignoreKeyMetadata, property);
+        let meta =  Reflect.getMetadata(MetadataDecorators._ignoreKeyMetadata, cTor.prototype, property);
 
         if(!meta)
             return false;
 
-        return meta.Value ?? false;
+        return meta ?? false;
     }
 
     public static ShowInDocumentation()
     {
         return function(target : Object, property : string)
         {
-            OwnMetadaContainer.Set(target.constructor, MetadataDecorators._showInDocumentationKeyMetadata, property, true);
+                        Reflect.defineMetadata(MetadataDecorators._showInDocumentationKeyMetadata, true, typeof target == 'function' ? target.prototype : target, property);
+
         }
     }
 
     public static IsToShowInDocumentation(cTor : Function, property : string) : boolean
     {
-        let meta =  OwnMetadaContainer.Get(cTor, MetadataDecorators._showInDocumentationKeyMetadata, property);
+        let meta =  Reflect.getMetadata(MetadataDecorators._showInDocumentationKeyMetadata, cTor.prototype, property);
 
         if(!meta)
             return false;
 
-        let value = meta.Value ?? false;
+        let value = meta ?? false;
 
         return value && !this.IsToIgnoreInDocumentation(cTor, property);
     }
@@ -61,7 +62,7 @@ export default class MetadataDecorators
     {
         return function(target : any, property : string)
         {
-            OwnMetadaContainer.Set(target, MetadataDecorators._arrayOfTypeKeyMetadata, property, typeBuilder);
+            OwnMetadaContainer.Set(typeof target == 'function' ? target : target.constructor, MetadataDecorators._arrayOfTypeKeyMetadata, property, typeBuilder);
         }
     }
 
@@ -81,19 +82,17 @@ export default class MetadataDecorators
     {
         return function(target : any, property : string)
         {
-            OwnMetadaContainer.Set(target, MetadataDecorators._defaultValueKeyMetadata, property, value);
+                        Reflect.defineMetadata(MetadataDecorators._defaultValueKeyMetadata, value, typeof target == 'function' ? target.prototype : target, property);
+
         }
     }
     
 
     public static GetDefaultValue(cTor : Function, property : string)
     {
-        let meta = OwnMetadaContainer.Get(cTor, MetadataDecorators._defaultValueKeyMetadata, property);
+        let meta =  Reflect.getMetadata(MetadataDecorators._defaultValueKeyMetadata, cTor.prototype, property);
 
-            if(!meta || meta.Value == undefined)
-                return undefined;
-            
-            return meta.Value;
+        return meta;
     }
 
 }

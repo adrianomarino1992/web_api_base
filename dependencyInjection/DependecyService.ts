@@ -45,10 +45,11 @@ export default class DependecyService
     {
         return function(target : Object, property : string | symbol) : void 
         {
-            DependecyService.DefinePropertyAsInjectable(target.constructor as Ctors<typeof target.constructor>, property.toString());
-            OwnMetaDataContainer.Set(target.constructor, DependecyService._injectableTypeKey, property.toString(), 
+            const constructor = typeof target == 'function' ? target : target.constructor;
+            DependecyService.DefinePropertyAsInjectable(constructor as Ctors<typeof constructor>, property.toString());
+            OwnMetaDataContainer.Set(constructor, DependecyService._injectableTypeKey, property.toString(), 
             {
-                Type: Reflect.getMetadata("design:type", target, property)
+                Type: Reflect.getMetadata("design:type", typeof target == 'function' ? target.prototype : target, property)
 
             } as IRegister<unknown, unknown>);
         }
@@ -65,8 +66,10 @@ export default class DependecyService
     {
         return function(target : Object, property : string | symbol) : void 
         {
-            DependecyService.DefinePropertyAsInjectable(target.constructor as Ctors<typeof target.constructor>, property.toString());
-            OwnMetaDataContainer.Set(target.constructor, DependecyService._injectableTypeKey, property.toString(), {Type: cTor, GenericType: genericType} as IRegister<T, U>)
+            const constructor = typeof target == 'function' ? target : target.constructor;
+
+            DependecyService.DefinePropertyAsInjectable(constructor as Ctors<typeof constructor>, property.toString());
+            OwnMetaDataContainer.Set(constructor, DependecyService._injectableTypeKey, property.toString(), {Type: cTor, GenericType: genericType} as IRegister<T, U>)
             
         }
     }
@@ -76,6 +79,7 @@ export default class DependecyService
         return DependecyService.InjectOne(ctor, genericType);       
     }
 
+    
     public static GetDIType(target : object, property : string) :  IRegister<unknown, unknown> | undefined
     {
         let meta = OwnMetaDataContainer.Get(target.constructor, DependecyService._injectableTypeKey, property);
@@ -83,7 +87,7 @@ export default class DependecyService
         if(meta)
             return meta.Value;
 
-        return { Type: Reflect.getMetadata("design:type", target, property)};
+        return { Type: Reflect.getMetadata("design:type", (target as any).prototype, property)};
     }
 
 

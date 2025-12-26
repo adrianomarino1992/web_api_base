@@ -138,10 +138,11 @@ export default class FileService extends AbstractFileService
         return new Promise<void>(async (resolve, reject)=>
         {
             try{
-                await File.copyFile(origin, dest, (err) => 
+                
+                File.copyFile(origin, dest, (err) => 
                 {
                     if(err) 
-                        throw err;
+                         return reject(err);
 
                     resolve();
                 })
@@ -159,10 +160,10 @@ export default class FileService extends AbstractFileService
         return new Promise<void>(async (resolve, reject)=>
         {
             try{
-                await File.unlink(file, (err) => 
+                 File.unlink(file, (err) => 
                 {
                     if(err) 
-                        throw err;
+                        return reject(err);
 
                     resolve();
                 })

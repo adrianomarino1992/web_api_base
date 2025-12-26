@@ -20,20 +20,27 @@ export default class ValidationDecorators
 
     public static AddField(target : Object, property : string)
     {
+        const constructor = typeof target == 'function' ? target : target.constructor;
+
+        const prototype = typeof target == 'function' ? target.prototype : target;
+
         let meta = this.GetFields(target);        
         meta.push(property);
-        Reflect.defineMetadata(ValidationDecorators._keysToValidateKeyMetada, meta, target.constructor);
-        OwnMetadaContainer.Set(target.constructor, ValidationDecorators._keysToValidateKeyMetada, undefined, meta);
+        Reflect.defineMetadata(ValidationDecorators._keysToValidateKeyMetada, meta, prototype);
+        OwnMetadaContainer.Set(constructor, ValidationDecorators._keysToValidateKeyMetada, undefined, meta);
     }
 
     public static GetFields(target : Object) : string[]
     {
-        let meta = Reflect.getMetadata(ValidationDecorators._keysToValidateKeyMetada, target) ?? 
-        Reflect.getMetadata(ValidationDecorators._keysToValidateKeyMetada, target.constructor);
+        const constructor = typeof target == 'function' ? target : target.constructor;
+
+        const prototype = typeof target == 'function' ? target.prototype : target;
+
+        let meta = Reflect.getMetadata(ValidationDecorators._keysToValidateKeyMetada, prototype);
 
         if(!meta)
         {
-            let ownMeta = OwnMetadaContainer.Get(target, ValidationDecorators._keysToValidateKeyMetada);
+            let ownMeta = OwnMetadaContainer.Get(constructor, ValidationDecorators._keysToValidateKeyMetada);
 
             if(ownMeta)
                 meta = ownMeta.Value;  
@@ -48,10 +55,14 @@ export default class ValidationDecorators
     {
         return function( target : Object, property : string)
         {            
-            ValidationDecorators.AddField(target, property);
-            let msg = message ?? `The field ${target.constructor.name}.${property} is required`;
-            OwnMetadaContainer.Set(target.constructor, ValidationDecorators._requiredKeyMetadata, property, { Message : msg});
-            Reflect.defineMetadata(ValidationDecorators._requiredKeyMetadata, { Message : msg}, target, property);            
+            const constructor = typeof target == 'function' ? target : target.constructor;
+
+            const prototype = typeof target == 'function' ? target.prototype : target;
+
+            ValidationDecorators.AddField(constructor, property);
+            let msg = message ?? `The field ${constructor.name}.${property} is required`;
+            OwnMetadaContainer.Set(constructor, ValidationDecorators._requiredKeyMetadata, property, { Message : msg});
+            Reflect.defineMetadata(ValidationDecorators._requiredKeyMetadata, { Message : msg}, prototype, property);            
         }
     }
 
@@ -64,10 +75,14 @@ export default class ValidationDecorators
     {        
         return function( target : Object, property : string)
         {            
-            ValidationDecorators.AddField(target, property);
-            let msg = message ?? `The field ${target.constructor.name}.${property} must be a maximum of ${max} caracteres`;
-            OwnMetadaContainer.Set(target.constructor, ValidationDecorators._maxlenghtKeyMetadata, property, {Message : msg, Max : max});
-            Reflect.defineMetadata(ValidationDecorators._maxlenghtKeyMetadata, {Message : msg, Max : max} , target, property);            
+            const constructor = typeof target == 'function' ? target : target.constructor;
+
+        const prototype = typeof target == 'function' ? target.prototype : target;
+
+            ValidationDecorators.AddField(constructor, property);
+            let msg = message ?? `The field ${constructor.name}.${property} must be a maximum of ${max} caracteres`;
+            OwnMetadaContainer.Set(constructor, ValidationDecorators._maxlenghtKeyMetadata, property, {Message : msg, Max : max});
+            Reflect.defineMetadata(ValidationDecorators._maxlenghtKeyMetadata, {Message : msg, Max : max} , prototype, property);            
         }
     }
 
@@ -80,10 +95,14 @@ export default class ValidationDecorators
     {
         return function( target : Object, property : string)
         {            
-            ValidationDecorators.AddField(target, property);
-            let msg = message ?? `The field ${target.constructor.name}.${property} must be a minimum of ${min} caracteres`;
-            OwnMetadaContainer.Set(target.constructor, ValidationDecorators._minlenghtKeyMetadata, property, {Message : msg, Min : min});
-            Reflect.defineMetadata(ValidationDecorators._minlenghtKeyMetadata, {Message : msg, Min : min} , target, property);           
+            const constructor = typeof target == 'function' ? target : target.constructor;
+
+            const prototype = typeof target == 'function' ? target.prototype : target;
+
+            ValidationDecorators.AddField(constructor, property);
+            let msg = message ?? `The field ${constructor.name}.${property} must be a minimum of ${min} caracteres`;
+            OwnMetadaContainer.Set(constructor, ValidationDecorators._minlenghtKeyMetadata, property, {Message : msg, Min : min});
+            Reflect.defineMetadata(ValidationDecorators._minlenghtKeyMetadata, {Message : msg, Min : min} , prototype, property);           
         }
     }
 
@@ -97,10 +116,13 @@ export default class ValidationDecorators
     {
         return function( target : Object, property : string)
         {            
-            ValidationDecorators.AddField(target, property);
-            let msg = message ?? `The field ${target.constructor.name}.${property} must be a minimum value of ${min}`;
-            OwnMetadaContainer.Set(target.constructor, ValidationDecorators._minValueKeyMetadata, property, {Message : msg, Min : min});
-            Reflect.defineMetadata(ValidationDecorators._minValueKeyMetadata, {Message : msg, Min : min} , target, property);           
+            const constructor = typeof target == 'function' ? target : target.constructor;
+
+            const prototype = typeof target == 'function' ? target.prototype : target;
+            ValidationDecorators.AddField(constructor, property);
+            let msg = message ?? `The field ${constructor.name}.${property} must be a minimum value of ${min}`;
+            OwnMetadaContainer.Set(constructor, ValidationDecorators._minValueKeyMetadata, property, {Message : msg, Min : min});
+            Reflect.defineMetadata(ValidationDecorators._minValueKeyMetadata, {Message : msg, Min : min} , prototype, property);           
         }
     }
 
@@ -113,11 +135,14 @@ export default class ValidationDecorators
     public static MaxValue(max : number, message? : string)  
     {
         return function( target : Object, property : string)
-        {            
-            ValidationDecorators.AddField(target, property);
-            let msg = message ?? `The field ${target.constructor.name}.${property} must be a maximun value of ${max}`;
-            OwnMetadaContainer.Set(target.constructor, ValidationDecorators._maxValueKeyMetadata, property, {Message : msg, Max : max});
-            Reflect.defineMetadata(ValidationDecorators._maxValueKeyMetadata, {Message : msg, Max : max} , target, property);           
+        {          
+            const constructor = typeof target == 'function' ? target : target.constructor;
+
+            const prototype = typeof target == 'function' ? target.prototype : target;  
+            ValidationDecorators.AddField(constructor, property);
+            let msg = message ?? `The field ${constructor.name}.${property} must be a maximun value of ${max}`;
+            OwnMetadaContainer.Set(constructor, ValidationDecorators._maxValueKeyMetadata, property, {Message : msg, Max : max});
+            Reflect.defineMetadata(ValidationDecorators._maxValueKeyMetadata, {Message : msg, Max : max} , prototype, property);           
         }
     }
 
@@ -130,10 +155,14 @@ export default class ValidationDecorators
     {
         return function( target : Object, property : string)
         {            
-            ValidationDecorators.AddField(target, property);
-            let msg = message ?? `The field ${target.constructor.name}.${property} fails on validation expression`;
-            OwnMetadaContainer.Set(target.constructor, ValidationDecorators._regexKeyMetadata, property, {Message : msg, RegExp : regex});
-            Reflect.defineMetadata(ValidationDecorators._regexKeyMetadata, {Message : msg, RegExp : regex}, target, property);            
+            const constructor = typeof target == 'function' ? target : target.constructor;
+
+            const prototype = typeof target == 'function' ? target.prototype : target;
+
+            ValidationDecorators.AddField(constructor, property);
+            let msg = message ?? `The field ${constructor.name}.${property} fails on validation expression`;
+            OwnMetadaContainer.Set(constructor, ValidationDecorators._regexKeyMetadata, property, {Message : msg, RegExp : regex});
+            Reflect.defineMetadata(ValidationDecorators._regexKeyMetadata, {Message : msg, RegExp : regex}, prototype, property);            
         }
     }
 
@@ -146,10 +175,14 @@ export default class ValidationDecorators
     {
         return function( target : Object, property : string)
         {            
-            ValidationDecorators.AddField(target, property);
-            let msg = message ?? `The field ${target.constructor.name}.${property} fails on validation expression`;
-            OwnMetadaContainer.Set(target.constructor, ValidationDecorators._ruleKeyMetadata, property, {Message : msg, Function : validationFunction});
-            Reflect.defineMetadata(ValidationDecorators._ruleKeyMetadata, {Message : msg, Function : validationFunction}, target, property);            
+            const constructor = typeof target == 'function' ? target : target.constructor;
+
+            const prototype = typeof target == 'function' ? target.prototype : target;
+
+            ValidationDecorators.AddField(constructor, property);
+            let msg = message ?? `The field ${constructor.name}.${property} fails on validation expression`;
+            OwnMetadaContainer.Set(constructor, ValidationDecorators._ruleKeyMetadata, property, {Message : msg, Function : validationFunction});
+            Reflect.defineMetadata(ValidationDecorators._ruleKeyMetadata, {Message : msg, Function : validationFunction}, prototype, property);            
         }
     }
 
@@ -238,11 +271,14 @@ export default class ValidationDecorators
 
     private static TryGetValue<T>(target : Object, property : string, key : string)
     {
-        let meta = Reflect.getMetadata(key, target, property) ?? 
-                   Reflect.getMetadata(key, target.constructor, property);
+        const constructor = typeof target == 'function' ? target : target.constructor;
+
+        const prototype = typeof target == 'function' ? target.prototype : target;
+
+        let meta = Reflect.getMetadata(key, prototype, property);
         if(!meta)
         {
-            let ownMeta = OwnMetadaContainer.Get(target, key, property);
+            let ownMeta = OwnMetadaContainer.Get(constructor, key, property);
 
             if(ownMeta)
                 meta = ownMeta.Value;            

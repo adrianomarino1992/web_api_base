@@ -109,11 +109,15 @@ export default class ControllersDecorators
     {
         return function( target : Object, methodName : string, propertyDescriptor : PropertyDescriptor)
         {
-            let current : IMidleware[] = Reflect.getMetadata(ControllersDecorators._actionsMidlewaresKeyMetadata, target, methodName) ?? [];
+            const constructor = typeof target == 'function' ? target : target.constructor;
+
+            const prototype = typeof target == 'function' ? target.prototype : target;
+
+            let current : IMidleware[] = Reflect.getMetadata(ControllersDecorators._actionsMidlewaresKeyMetadata, prototype, methodName) ?? [];
 
             current.push(midleware);
 
-            ControllersDecorators.SetMetaData(ControllersDecorators._actionsMidlewaresKeyMetadata, target, methodName, current);
+            ControllersDecorators.SetMetaData(ControllersDecorators._actionsMidlewaresKeyMetadata, prototype, methodName, current);
             
         }
     }
@@ -123,11 +127,13 @@ export default class ControllersDecorators
     {
         return function( target : Object, methodName : string, propertyDescriptor : PropertyDescriptor)
         {
-            let current : IRequestResultHandler[] = Reflect.getMetadata(ControllersDecorators._controllerMidlewaresAfterKeyMetadata, target, methodName) ?? [];
+            const constructor = typeof target == 'function' ? target : target.constructor;
+
+            let current : IRequestResultHandler[] = Reflect.getMetadata(ControllersDecorators._controllerMidlewaresAfterKeyMetadata, constructor, methodName) ?? [];
 
             current.push(resultHandler);
 
-            ControllersDecorators.SetMetaData(ControllersDecorators._controllerMidlewaresAfterKeyMetadata, target, methodName, current);
+            ControllersDecorators.SetMetaData(ControllersDecorators._controllerMidlewaresAfterKeyMetadata, constructor, methodName, current);
             
         }
     }
@@ -135,28 +141,32 @@ export default class ControllersDecorators
 
     public static GetBefores(controller : IController, methodName : string) : IMidleware[]
     {
-       return this.GetMetaData<IMidleware[]>(ControllersDecorators._actionsMidlewaresKeyMetadata, controller, methodName) ?? [];
+       return ControllersDecorators.GetMetaData<IMidleware[]>(ControllersDecorators._actionsMidlewaresKeyMetadata, controller, methodName) ?? [];
     }
 
 
     public static GetAfters(controller : IController, methodName : string) : IRequestResultHandler[]
     {
-       return this.GetMetaData<IRequestResultHandler[]>(ControllersDecorators._controllerMidlewaresAfterKeyMetadata, controller, methodName) ?? [];
+       return ControllersDecorators.GetMetaData<IRequestResultHandler[]>(ControllersDecorators._controllerMidlewaresAfterKeyMetadata, controller, methodName) ?? [];
     } 
 
     public static Verb(verb : HTTPVerbs, actionName? : String )  
     {
         return function( target : Object, methodName : string, propertyDescriptor : PropertyDescriptor)
         {
-            ControllersDecorators.SetMetaData(ControllersDecorators._actionNameKeyMetadata, target, methodName, actionName ?? methodName.toLocaleLowerCase());
-            ControllersDecorators.SetMetaData(ControllersDecorators._actionVerbKeyMetadata, target, methodName, verb);
+            const constructor = typeof target == 'function' ? target : target.constructor;
+
+            if(!!!ControllersDecorators.GetMetaData<string>(ControllersDecorators._actionNameKeyMetadata, constructor, methodName))
+                ControllersDecorators.SetMetaData(ControllersDecorators._actionNameKeyMetadata, constructor, methodName, actionName ?? methodName.toLocaleLowerCase());
+
+            ControllersDecorators.SetMetaData(ControllersDecorators._actionVerbKeyMetadata, constructor, methodName, verb);
             
         }
     }
     
     public static GetVerb(target : IController, methodName : string ) : HTTPVerbs | undefined
     {
-        let meta = this.GetMetaData<HTTPVerbs>(ControllersDecorators._actionVerbKeyMetadata, target, methodName);
+        let meta = ControllersDecorators.GetMetaData<HTTPVerbs>(ControllersDecorators._actionVerbKeyMetadata, target.constructor, methodName);
 
         return meta;
     }
@@ -165,21 +175,23 @@ export default class ControllersDecorators
     {
         return function( target : Object, methodName : string, propertyDescriptor : PropertyDescriptor)
         {
-            ControllersDecorators.SetMetaData(ControllersDecorators._actionNameKeyMetadata, target, methodName, actionName ?? methodName.toLocaleLowerCase());
+            const constructor = typeof target == 'function' ? target : target.constructor;
+
+            ControllersDecorators.SetMetaData(ControllersDecorators._actionNameKeyMetadata, constructor, methodName, actionName ?? methodName.toLowerCase());
             
         }
     }
 
     public static GetAction(target : IController, methodName : string ) : string | undefined
     {
-        let meta = this.GetMetaData<string>(ControllersDecorators._actionNameKeyMetadata, target, methodName);
+        let meta = ControllersDecorators.GetMetaData<string>(ControllersDecorators._actionNameKeyMetadata, target.constructor, methodName);
 
         if(meta && meta[0] != '/')
         {  
-            return `/${meta}`.toLocaleLowerCase();
+            return `/${meta}`.toLowerCase();
         }
 
-        return meta?.toLocaleLowerCase();
+        return meta?.toLowerCase();
     }
 
     public static RequiredFromBodyArg(bodyPropName? : string) 
@@ -196,9 +208,13 @@ export default class ControllersDecorators
     {
         return function( target : Object, methodName: string , parameterIndex: number)
         {
-            let meta = ControllersDecorators.GetFromBodyArgs(target.constructor, methodName);
+            const constructor = typeof target == 'function' ? target : target.constructor;
 
-            let params = FunctionAnalizer.ExtractParamsList(target, (target as any)[methodName]);
+            const prototype = typeof target == 'function' ? target.prototype : target;
+
+            let meta = ControllersDecorators.GetFromBodyArgs(constructor, methodName);
+
+            let params = FunctionAnalizer.ExtractParamsList(prototype, (prototype as any)[methodName]);
 
             let item = meta.filter(x => x.Index == parameterIndex);
 
@@ -213,13 +229,15 @@ export default class ControllersDecorators
                 item[0].Type = thisParam.Type;
             }
 
-            Reflect.defineMetadata(ControllersDecorators._fromBodyKeyMetadata, meta, target.constructor, methodName);            
+            Reflect.defineMetadata(ControllersDecorators._fromBodyKeyMetadata, meta, prototype, methodName);            
         }
     }
 
     public static GetFromBodyArgs(target : Function, method : string) : {Index : number, Field? : string, Type : Function, Required : boolean }[]
     {
-        return Reflect.getMetadata(ControllersDecorators._fromBodyKeyMetadata, target, method) ?? [];
+        const prototype = typeof target == 'function' ? target.prototype : target;
+
+        return Reflect.getMetadata(ControllersDecorators._fromBodyKeyMetadata, prototype, method) ?? [];
     }
 
     public static OptionalFromFilesArg(fileName? : string, maxFileSizeMB? : number) 
@@ -236,9 +254,13 @@ export default class ControllersDecorators
     {
         return function( target : Object, methodName: string , parameterIndex: number)
         {
-            let meta = ControllersDecorators.GetFromFilesArgs(target.constructor, methodName);            
+            const constructor = typeof target == 'function' ? target : target.constructor;
 
-            let params = FunctionAnalizer.ExtractParamsList(target, (target as any)[methodName]);
+            const prototype = typeof target == 'function' ? target.prototype : target;
+
+            let meta = ControllersDecorators.GetFromFilesArgs(constructor, methodName);            
+
+            let params = FunctionAnalizer.ExtractParamsList(prototype, (prototype as any)[methodName]);
 
             let item = meta.filter(x => x.Index == parameterIndex);
 
@@ -254,27 +276,33 @@ export default class ControllersDecorators
                 item[0].FileName = fileName;                
             }
 
-            Reflect.defineMetadata(ControllersDecorators._fromFilesKeyMetadata, meta, target.constructor, methodName);            
+            Reflect.defineMetadata(ControllersDecorators._fromFilesKeyMetadata, meta, prototype, methodName);            
         }
     }
     
 
     public static GetFromFilesArgs(target : Function, method : string) : {Index : number, FileName? : string, Required: boolean }[]
     {
-        return Reflect.getMetadata(ControllersDecorators._fromFilesKeyMetadata, target, method) ?? [];
+        const prototype = typeof target == 'function' ? target.prototype : target;
+
+        return Reflect.getMetadata(ControllersDecorators._fromFilesKeyMetadata, prototype, method) ?? [];
     }
 
     public static MaxFilesSize(bytes : number)  
     {
         return function(target : Function)
         {            
-            Reflect.defineMetadata(ControllersDecorators._maxFilesSizeKeyMetadata, bytes, target);            
+            const prototype = typeof target == 'function' ? target.prototype : target;
+
+            Reflect.defineMetadata(ControllersDecorators._maxFilesSizeKeyMetadata, bytes, prototype);            
         }
     }
 
     public static GetMaxFilesSize<T extends IController>(target : new (...args: any) => T) : number 
     {
-       return Reflect.getMetadata(ControllersDecorators._maxFilesSizeKeyMetadata, target) ?? 0;
+        const prototype = typeof target == 'function' ? target.prototype : target;
+
+       return Reflect.getMetadata(ControllersDecorators._maxFilesSizeKeyMetadata, prototype) ?? 0;
     }
 
 
@@ -292,9 +320,13 @@ export default class ControllersDecorators
     {
         return function( target : Object, methodName: string , parameterIndex: number)
         {
-            let meta = ControllersDecorators.GetFromQueryArgs(target.constructor, methodName); 
+            const constructor = typeof target == 'function' ? target : target.constructor;
 
-            let params = FunctionAnalizer.ExtractParamsList(target, (target as any)[methodName]);
+            const prototype = typeof target == 'function' ? target.prototype : target;
+
+            let meta = ControllersDecorators.GetFromQueryArgs(constructor, methodName); 
+
+            let params = FunctionAnalizer.ExtractParamsList(prototype, (prototype as any)[methodName]);
 
             let thisParam = params.filter(s => s.Index == parameterIndex)[0];
 
@@ -309,13 +341,15 @@ export default class ControllersDecorators
                 item[0].Type = thisParam.Type;
             }
 
-            Reflect.defineMetadata(ControllersDecorators._fromQueryKeyMetadata, meta, target.constructor, methodName);             
+            Reflect.defineMetadata(ControllersDecorators._fromQueryKeyMetadata, meta, prototype, methodName);             
         }
     }
    
     public static GetFromQueryArgs(target : Function, method : string) :  {Index : number, Field : string, Type : Function, Required : boolean }[]
     {
-        return Reflect.getMetadata(ControllersDecorators._fromQueryKeyMetadata, target, method) ?? [];
+        const prototype = typeof target == 'function' ? target.prototype : target;
+
+        return Reflect.getMetadata(ControllersDecorators._fromQueryKeyMetadata, prototype, method) ?? [];
     }
 
     
@@ -351,7 +385,7 @@ export default class ControllersDecorators
                         let paramName = '';
                         if((empty as any)[method.toString()].name != '')
                         {
-                            let funcParameters = FunctionAnalizer.ExtractParamsList(empty, (empty as any)[method.toString()]);
+                            let funcParameters = FunctionAnalizer.ExtractParamsList(empty.constructor.prototype, (empty.constructor.prototype as any)[method.toString()]);
                             
                             let thisParameter = funcParameters.filter(p => p.Index == i);
 
@@ -383,16 +417,17 @@ export default class ControllersDecorators
     
     private static SetMetaData<T>(key: string, target : Object, methodName : string, value : T)
     {
-        var meta = Reflect.getOwnMetadata(key, target as Object, methodName);
-    
-        if(!meta)
-            Reflect.defineMetadata(key, value, target as Object, methodName);
+            const prototype = typeof target == 'function' ? target.prototype : target;             
+            
+            Reflect.defineMetadata(key, value, prototype, methodName);
     }
 
 
     private static GetMetaData<T>(key: string, target : Object, methodName : string) : T | undefined
     {
-        var meta = Reflect.getMetadata(key, target, methodName);
+        const prototype = typeof target == 'function' ? target.prototype : target; 
+
+        var meta = Reflect.getMetadata(key, prototype, methodName);
     
         if(meta != undefined)
             return meta as T;

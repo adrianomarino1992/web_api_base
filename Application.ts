@@ -279,7 +279,7 @@ export default abstract class Application implements IApplication {
                     let isMultiPartFormData = content_type && content_type.indexOf('multipart/form-data') > -1;
                     let isJSONData = content_type && content_type.indexOf('application/json') > -1;
 
-                    if((verb == HTTPVerbs.POST || verb == HTTPVerbs.PUT) && !isJSONData && !isJSONData)
+                    if((verb == HTTPVerbs.POST || verb == HTTPVerbs.PUT) && !isJSONData && !isMultiPartFormData)
                     {
                         response.status(400);
                         response.json(

@@ -1,26 +1,31 @@
-
-
-import  ValidatedObject from "./classes/ValidatedObject";
+import ValidatedObject from "./classes/ValidatedObject";
 import ValidationDecorators from "../decorators/validations/ValidationDecorators";
 
-describe('Testing validations decorators', ()=>
-{
+describe("Validation decorators", () => {
 
-    test("Testing get all and check their values", ()=>
-    {
-        let obj = new ValidatedObject();
-        
-        let required = ValidationDecorators.IsRequired(obj, "Required");
-        let maxLenght = ValidationDecorators.GetMaxlenght(obj, "MaxLenght");
-        let minLenght = ValidationDecorators.GetMinlenght(obj, "MinLenght");        
-        let minValue = ValidationDecorators.GetMinValue(obj, "MinValue");
-        let maxValue = ValidationDecorators.GetMaxValue(obj, "MaxValue");
-        let rule = ValidationDecorators.GetRule(obj, "Permissions");
+    test("should retrieve all validation metadata and verify their values", () => {
 
-        ([required, maxLenght, minLenght, minValue, maxValue, rule] as {Message : string}[]).forEach(s => {
+        const obj = new ValidatedObject();
 
-            expect(s).not.toBeNull();
-            expect(s.Message.length).toBeGreaterThan(0);
+        const required = ValidationDecorators.IsRequired(obj, "Required");
+        const maxLenght = ValidationDecorators.GetMaxlenght(obj, "MaxLenght");
+        const minLenght = ValidationDecorators.GetMinlenght(obj, "MinLenght");
+        const minValue = ValidationDecorators.GetMinValue(obj, "MinValue");
+        const maxValue = ValidationDecorators.GetMaxValue(obj, "MaxValue");
+        const rule = ValidationDecorators.GetRule(obj, "Permissions");
+
+        ([
+            required,
+            maxLenght,
+            minLenght,
+            minValue,
+            maxValue,
+            rule
+        ] as { Message: string }[]).forEach(metadata => {
+
+            expect(metadata).not.toBeNull();
+            expect(metadata.Message.length).toBeGreaterThan(0);
+
         });
 
         expect(rule?.Function).not.toBeNull();
@@ -28,10 +33,9 @@ describe('Testing validations decorators', ()=>
 
     });
 
+    test("should validate the object successfully when all rules are satisfied", () => {
 
-    test("Testing validate the object, must exit with success status", ()=>{
-
-        let obj = new ValidatedObject();
+        const obj = new ValidatedObject();
 
         obj.MaxValue = 9;
         obj.MinValue = 11;
@@ -42,16 +46,15 @@ describe('Testing validations decorators', ()=>
         obj.RegExp = "adriano@test.com";
         obj.Permissions = ["a", "b", "c", "d", "e", "f"];
 
-        let result = ValidationDecorators.Validate(obj);
+        const result = ValidationDecorators.Validate(obj);
 
         expect(result.length).toBe(0);
-        
+
     });
 
+    test("should return validation errors when all rules fail", () => {
 
-    test("Testing validate the object, all must fail", ()=>{
-
-        let obj = new ValidatedObject();
+        const obj = new ValidatedObject();
 
         obj.MaxValue = 11;
         obj.MinValue = 9;
@@ -62,12 +65,10 @@ describe('Testing validations decorators', ()=>
         obj.RegExp = "adriano.test.com";
         obj.Permissions = ["a", "b", "c", "d", "e"];
 
-        let result = ValidationDecorators.Validate(obj);
+        const result = ValidationDecorators.Validate(obj);
 
         expect(result.length).toBe(8);
-        
+
     });
 
-    
-
-})
+});

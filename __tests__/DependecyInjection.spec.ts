@@ -1,3 +1,4 @@
+import 'reflect-metadata';
 import { ControllerTest } from "./classes/ControllerTest";
 import { SampleService } from "./classes/SampleServiceTest";
 import DependecyService from "../dependencyInjection/DependecyService";

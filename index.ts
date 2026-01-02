@@ -1,4 +1,47 @@
-import 'reflect-metadata';
+import OwnMetaDataContainer from "./metadata/OwnMetaDataContainer";
+
+
+const noHooksArg = process.argv.filter(arg => arg.toLowerCase() == '--donothook-reflect').length > 0;
+const noHookEnv = !!process.env["DO_NOT_HOOK_REFLECT"]
+
+if(!noHookEnv && !noHooksArg)
+{
+    const metadata = Reflect.metadata;
+
+    (Reflect as any).metadata = function(...args: any[]){
+
+        const decoratorFunction = (metadata as Function).apply(Reflect, args);
+
+        try
+        {
+            const key = args[0];
+            const value = args[1];
+
+            return function(...params: any[])
+            {
+                try
+                {
+                    const type = typeof params[0] == 'function' ? params[0] : params[0].constructor;
+                    const prop = params[1];
+                    OwnMetaDataContainer.Set(type, key, prop, value);
+                }
+                catch(e)
+                {
+                    console.log("Error inside reflect-metadata hook", e);
+                }
+                
+
+                return decoratorFunction(...params);
+            }
+        }
+        catch(e)
+        {
+            console.log("Error on reflect-metadata hook", e);
+            return decoratorFunction;
+        }
+    }
+}
+
 
 export { default as Application } from "./Application"
 export { default as ApplicationConfiguration } from "./ApplicationConfiguration";
@@ -46,7 +89,6 @@ import DependecyService from "./dependencyInjection/DependecyService";
 import { HTTPVerbs } from "./enums/httpVerbs/HttpVerbs";
 import IMidleware, { IRequestResultHandler } from "./midlewares/IMidleware";
 import MetadataDecorators from './decorators/metadata/MetadataDecorators';
-import OwnMetaDataContainer from './metadata/OwnMetaDataContainer';
 
 
 export {default as BodyParseException} from "./exceptions/BodyParseException";

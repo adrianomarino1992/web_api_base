@@ -1,3 +1,4 @@
+import 'reflect-metadata';
 import { ControllerTest } from "./classes/ControllerTest";
 import ControllersDecorators from "../decorators/controllers/ControllerDecorators";
 import { HTTPVerbs } from "../enums/httpVerbs/HttpVerbs";

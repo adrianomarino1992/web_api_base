@@ -1,3 +1,4 @@
+import 'reflect-metadata';
 import ValidatedObject from "./classes/ValidatedObject";
 import ValidationDecorators from "../decorators/validations/ValidationDecorators";
 

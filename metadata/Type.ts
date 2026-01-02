@@ -1,6 +1,7 @@
 import MetadataDecorators from "../decorators/metadata/MetadataDecorators";
 import ArgumentNullException from "../exceptions/ArgumentNullException";
 import InvalidEntityException from "../exceptions/InvalidEntityException";
+import OwnMetaDataContainer from "./OwnMetaDataContainer";
 
 
 export default class Type {
@@ -8,7 +9,14 @@ export default class Type {
     public static CreateTemplateFrom<T extends object>(ctor: new (...args: any[]) => T): T {
         let base = Reflect.construct(ctor, []) as T;
 
-        for (let map in base) {
+        let keysVisiteds : string[] = [];
+
+        let metadataOfCtor = OwnMetaDataContainer.GetAllMetadataForCtor(ctor).filter(s => s.Member && typeof (s.CTor.prototype as any)[s.Member] != 'function');        
+        
+        for(let map of [...metadataOfCtor.map(s => s.Member!), ...Object.keys(base as any)])
+        {
+            if(keysVisiteds.includes(map))
+                continue;
 
             if(map.indexOf('_') > -1)
                 continue;
@@ -19,8 +27,17 @@ export default class Type {
                 designType = Reflect.getMetadata("design:type", ctor.prototype, map);
 
             let elementType : ReturnType<typeof MetadataDecorators.GetArrayElementType>;
-            if(!designType && base[map] != undefined)
-                designType = base[map].constructor;
+            
+            if(!designType && (base as any)[map] != undefined)
+                designType = (base as any)[map].constructor;
+
+             if(!designType)
+            {
+                const metaOfField = designType = metadataOfCtor.filter(s => s.Member == map && s.Key == "design:type");
+
+                if(metaOfField.length > 0)
+                    designType = metaOfField[0].Value as Function;
+            }
             
 
             if(!designType || designType == Array)
@@ -127,9 +144,14 @@ export default class Type {
         let base = Reflect.construct(cTor, []) as T;
 
         let keysVisiteds : string[] = [];
+
+        let metadataOfCtor = OwnMetaDataContainer.GetAllMetadataForCtor(cTor).filter(s => s.Member && typeof (s.CTor.prototype as any)[s.Member] != 'function');        
         
-        for(let k in base)
+        for(let k of [...metadataOfCtor.map(s => s.Member!), ...Object.keys(base as any)])
         {
+            if(keysVisiteds.includes(k))
+                continue;
+
             keysVisiteds.push(k);
 
             if(obj[k] == undefined)
@@ -137,7 +159,7 @@ export default class Type {
                 let vdefault = MetadataDecorators.GetDefaultValue(cTor, k);
                 
                 if(vdefault != undefined)
-                    base[k] = vdefault;
+                    (base as any)[k] = vdefault;
 
                 continue;
             }
@@ -146,6 +168,15 @@ export default class Type {
 
             if(!designType)
                 designType = Reflect.getMetadata("design:type", cTor.prototype, k.toString());
+
+            if(!designType)
+            {
+                const metaOfField = designType = metadataOfCtor.filter(s => s.Member == k && s.Key == "design:type");
+
+                if(metaOfField.length > 0)
+                    designType = metaOfField[0].Value as Function;
+            }
+                
            
 
             let elementType : ReturnType<typeof MetadataDecorators.GetArrayElementType>;              

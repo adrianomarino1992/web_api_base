@@ -33,6 +33,22 @@ export default class OwnMetaDataContainer
         }
     }
 
+
+    public static GetAllMetadataForCtor(target : Function) : IMetaData[]
+    {
+        let metas : IMetaData[] = [];
+        let currentCtor = target;
+
+        while(currentCtor)
+        {
+            metas.push(... this._metadas.filter(s => s.CTor == currentCtor || s.CTor == currentCtor.constructor ));
+            currentCtor = currentCtor.prototype;
+        }
+
+        return metas;
+
+    }
+
     
 }
 

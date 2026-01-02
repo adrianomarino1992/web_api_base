@@ -1,3 +1,4 @@
+import 'reflect-metadata';
 import { ControllerTest } from "./classes/ControllerTest";
 import { DocumentationDecorators } from "../decorators/documentation/DocumentationDecorators";
 

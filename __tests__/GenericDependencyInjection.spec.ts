@@ -1,3 +1,4 @@
+import 'reflect-metadata';
 import DependecyService from "../dependencyInjection/DependecyService";
 import { DIEscope } from "../dependencyInjection/DependecyService";
 import GenericService from "./classes/GenericService";

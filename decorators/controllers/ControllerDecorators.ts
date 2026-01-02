@@ -1,5 +1,3 @@
-import 'reflect-metadata';
-
 import { HTTPVerbs } from '../../enums/httpVerbs/HttpVerbs';
 import IController from '../../interfaces/IController';
 import IMidleware, { IRequestResultHandler } from '../../midlewares/IMidleware';

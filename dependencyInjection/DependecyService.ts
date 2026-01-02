@@ -1,4 +1,3 @@
-import 'reflect-metadata';
 import IDIContext, { IDIItem } from './IDIContext';
 import FindDependencyException from '../exceptions/FindDependencyException';
 import OwnMetaDataContainer, { IMetaData } from '../metadata/OwnMetaDataContainer';

@@ -1,4 +1,4 @@
-import { ControllerBase, FileService, Route, Inject, InjectAbstract, UseBefore,  FromBody, DELETE, FromQuery, GET, POST, PUT, Description, ProducesResponse, ActionResult, FromFiles, ControllerHeader, ActionHeader,  UseAfter, InjectForTypeArgument } from "../../index";
+import { ControllerBase, FileService, Route, Inject, InjectAbstract, UseBefore,  FromBody, DELETE, FromQuery, GET, POST, PUT, Description, ProducesResponse, ActionResult, FromFiles, ControllerHeader, ActionHeader,  UseAfter, InjectForTypeArgument, Validate, FromPath } from "../../index";
 import { ConcreteService, SampleService, SampleServiceAbstract, WithGenericType } from "../service/SampleService";
 import {File} from '../../index';
 import Path from 'path';
@@ -32,6 +32,7 @@ import TestClass, { DerivedClass, ItemTest } from "./TestClass";
       
 })
 @ControllerHeader("api-key")
+@Validate()
 export default class StatusController extends ControllerBase
 {   
     @InjectAbstract(SampleServiceAbstract)
@@ -86,11 +87,34 @@ export default class StatusController extends ControllerBase
         return this.OK({status : "OK"});
     }
 
+
+    @GET() 
+    public GetWithPathParams(@FromPath()name : string, @FromPath()age : number) : ActionResult
+    {
+      
+        return this.OK({name, age});
+    }
+
     @GET() 
     public GetWithNoDecorators(name : string, age : number) : ActionResult
     {
       
         return this.OK({name, age});
+    }
+
+
+    @GET('/:lastName') 
+    public GetWithPathParamOnRoute(@FromPath()name : string, @FromPath()age : number, @FromPath() lastName : string) : ActionResult
+    {
+      
+        return this.OK({name, age, lastName});
+    }
+
+    @GET('/:lastName/user') 
+    public GetWithPathParamInsideRoute(@FromPath()name : string, @FromPath()age : number, @FromPath() lastName : string) : ActionResult
+    {
+      
+        return this.OK({name, age, lastName});
     }
 
 
@@ -202,6 +226,20 @@ export default class StatusController extends ControllerBase
 
     @POST()   
     public PostWithDecorator(@FromBody()user : TestClass) 
+    {
+        
+        return this.OK(user);
+    }
+
+    @POST()   
+    public PostOfAny(@FromBody()user : any) 
+    {
+        
+        return this.OK(user);
+    }
+
+    @POST()   
+    public PostOfEmpty(@FromBody()user : any) 
     {
         
         return this.OK(user);

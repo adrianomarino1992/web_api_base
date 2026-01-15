@@ -76,11 +76,14 @@ export default abstract class Application implements IApplication {
         this.Express.listen(this.ApplicationConfiguration.Port, this.ApplicationConfiguration.Host, () => {
             console.log(`Application running on ${this.ApplicationConfiguration.Host}:${this.ApplicationConfiguration.Port}`);
         });
+
+       
     }
 
     protected UseCors(): void {
         this.Express.use(require('cors')());
     }
+
 
     
     public UseStatic(path: string, folder: string)
@@ -152,11 +155,15 @@ export default abstract class Application implements IApplication {
                 controllersPath = this.TryFindControllerFolder(root ?? this.ApplicationConfiguration.RootPath);
 
             if (!controllersPath || !File.existsSync(controllersPath!))
-                return;
+                return reject(new ControllerLoadException( `No controller directory was found. If you intend to register controllers manually, remove the call to ${this.UseControllersAsync.name}.`));
+
 
             console.debug(`reading controllers in ${controllersPath}`);
 
             let files: string[] = File.readdirSync(controllersPath).filter(s => s.toLowerCase().endsWith("controller.js"));
+
+            if(files.length == 0)
+                  return reject(new ControllerLoadException(`No controllers were found in the specified directory: ${controllersPath}. If you intend to register controllers manually, remove the call to ${this.UseControllersAsync.name}.`));
 
             for (let controllerFile of files) {
 
@@ -177,7 +184,7 @@ export default abstract class Application implements IApplication {
                     controllerClass = controllerModule.default;
 
                 if (controllerClass == undefined)
-                    throw new ControllerLoadException(`Can find any controller from file : ${controllerFile}`);
+                    return reject(new ControllerLoadException(`Can not find any controller from file : ${controllerFile}`));
 
                 let controller = Reflect.construct(controllerClass.prototype.constructor, []) as IController;
 
@@ -186,7 +193,7 @@ export default abstract class Application implements IApplication {
 
                 } else {
 
-                    throw new ControllerLoadException(`Can not load ${controllerClass.name} controller from file : ${controllerFile}`);
+                    return reject(new ControllerLoadException(`Can not load ${controllerClass.name} controller from file : ${controllerFile}`));
                 }
 
 
@@ -206,14 +213,12 @@ export default abstract class Application implements IApplication {
     }
 
     protected AppendController<T extends ControllerBase>(ctor: { new(...args: any[]): T; }): void {
-        let empty = new ctor() as any;
+    
 
-        let methods = Reflect.ownKeys(empty.constructor.prototype).filter(m => {
-            return typeof empty[m] == "function";
-        })
+        let methods = Type.GetAllMethods(ctor).map(s => s.name);
 
-        let route = ControllersDecorators.GetRoute(empty);
-        let validateBody = ControllersDecorators.IsToValidate(empty);
+        let route = ControllersDecorators.GetRoute(ctor);
+        let validateBody = ControllersDecorators.IsToValidate(ctor);
 
         if (!route)
             return;
@@ -221,18 +226,21 @@ export default abstract class Application implements IApplication {
         this._createdControllers.push(ctor);
 
         for (let method of methods) {
-            let action = ControllersDecorators.GetAction(empty, method.toString());
+            let action = ControllersDecorators.GetAction(ctor, method.toString());
 
             if (!action) {
                 continue;
             }
 
-            let verb = ControllersDecorators.GetVerb(empty, method.toString());
-            let fromBody = ControllersDecorators.GetFromBodyArgs(empty.constructor, method.toString());
-            let fromQuery = ControllersDecorators.GetFromQueryArgs(empty.constructor, method.toString());
-            let fromFiles = ControllersDecorators.GetFromFilesArgs(empty.constructor, method.toString());
-            let maxFilesSize = ControllersDecorators.GetMaxFilesSize(empty.constructor);
-            ControllersDecorators.GetNonDecoratedArguments(empty, method, fromBody, fromQuery, fromFiles);
+            let verb = ControllersDecorators.GetVerb(ctor, method.toString());
+            let fromBody = ControllersDecorators.GetFromBodyArgs(ctor, method.toString());
+            let fromQuery = ControllersDecorators.GetFromQueryArgs(ctor, method.toString());
+            let fromFiles = ControllersDecorators.GetFromFilesArgs(ctor, method.toString());
+            let fromPath = ControllersDecorators.GetFromPathArgs(ctor, method.toString());
+            let maxFilesSize = ControllersDecorators.GetMaxFilesSize(ctor);
+            ControllersDecorators.GetNonDecoratedArguments(ctor, method, fromBody, fromQuery, fromPath, fromFiles);
+
+            fromQuery.push(...fromPath) //path params will work like a query param after this point 
             
             if (!verb)
                 verb = HTTPVerbs.GET;            
@@ -250,19 +258,34 @@ export default abstract class Application implements IApplication {
 
             console.debug("appended : ", verb, `${route}${action}`);
 
+            let pathParams = '';
+        
+            if(fromPath)
+            {
+                if(action.endsWith('/'))
+                    action = action.substring(0, action.length - 1);
+                
+                for(let path of fromPath)
+                {
+                    if(action.indexOf(`:${path.Field}`) == -1 && route.indexOf(`:${path.Field}`) == -1)                        
+                        pathParams+= `/:${path.Field}`;  
+                                      
+                }
+            }
+
             this._URIs.push({ URI : `${route}${action}`, Controller : `${ctor.name}.${method.toString()}`});
 
-            (this.Express as any)[verb.toString().toLowerCase()](`${route}${action}`, async (request: Request, response: Response) => {
+            (this.Express as any)[verb.toString().toLowerCase()](`${route}${action}${pathParams.trim()}`, async (request: Request, response: Response) => {
 
                 let midlewares = [...(this.ApplicationConfiguration as ApplicationConfiguration).GetMidlewares()];
                 
-                midlewares.push(...ControllersDecorators.GetMidlewares(empty).map(s => s).reverse());
+                midlewares.push(...ControllersDecorators.GetMidlewares(ctor).map(s => s).reverse());
 
-                midlewares.push(...ControllersDecorators.GetBefores(empty, method.toString()).map(s => s).reverse());
+                midlewares.push(...ControllersDecorators.GetBefores(ctor, method.toString()).map(s => s).reverse());
 
-                let afters = [...ControllersDecorators.GetMidlewaresAfter(empty).map(s => s).reverse()];
+                let afters = [...ControllersDecorators.GetMidlewaresAfter(ctor).map(s => s).reverse()];
 
-                afters.push(...ControllersDecorators.GetAfters(empty, method.toString()).map(s => s).reverse());
+                afters.push(...ControllersDecorators.GetAfters(ctor, method.toString()).map(s => s).reverse());
 
                 afters.push(...(this.ApplicationConfiguration as ApplicationConfiguration).GetResultHandlers());
 
@@ -271,8 +294,8 @@ export default abstract class Application implements IApplication {
 
                     let params: any[] = [];
 
-                    let ts = ((Reflect.getMetadata("design:paramtypes", empty, method.toString()) ??
-                        Reflect.getMetadata("design:paramtypes", empty.constructor, method.toString())) ?? []) as Function[]; 
+                    let ts = ((Reflect.getMetadata("design:paramtypes", ctor, method.toString()) ??
+                        Reflect.getMetadata("design:paramtypes", ctor.prototype, method.toString())) ?? []) as Function[]; 
 
                     let content_type= request.headers["content-type"];
 
@@ -382,7 +405,7 @@ export default abstract class Application implements IApplication {
                             }
                                 
 
-                            let param = Type.SetPrototype(obj, ts[f.Index] as new (...args: any[]) => any);
+                            let param = Type.SetPrototype(obj, ts[f.Index] as new (...args: any[]) => any, {UseJSONPropertyName: true});
                             fromBodyParams.push(param);
                             params[f.Index] = param;
                             return;       
@@ -411,9 +434,13 @@ export default abstract class Application implements IApplication {
                                 return;
                             }
 
-                            obj = request.query[f.Field]?.toString();
+                            if(request.query[f.Field])
+                                obj = request.query[f.Field]?.toString();
+                            else if(request.params[f.Field])
+                                obj = request.params[f.Field]?.toString();
+                                
 
-                            let param = Type.SetPrototype(obj, ts[f.Index] as new (...args: any[]) => any);
+                            let param = Type.SetPrototype(obj, ts[f.Index] as new (...args: any[]) => any, {UseJSONPropertyName: true});
                             fromQueryParams.push(param);
                             params[f.Index] = param;
                             return;
@@ -525,7 +552,7 @@ export default abstract class Application implements IApplication {
 
                     try {
 
-                        controller = DependecyService.ResolveCtor(empty.constructor) as ControllerBase;
+                        controller = DependecyService.ResolveCtor(ctor) as ControllerBase;
 
                         if (controller == undefined)
                             controller = new ctor() as ControllerBase;

@@ -104,9 +104,13 @@ export class ControllerBase implements IController, IDIContext
             if(typeof result == "object")
             {
                 try{
-                    this.Response.json(Type.RemoveCircularReferences(result));
+                    this.Response.json(Type.RemoveCircularReferences(Type.ChangeNameOfPropertyToJSONNames(result)));
                 }catch{
-                    this.Response.json(result);
+                    try{
+                        this.Response.json(Type.ChangeNameOfPropertyToJSONNames(result));
+                    }catch{
+                        this.Response.json(result);
+                    }                    
                 }
             }
             else if(typeof result == "number")

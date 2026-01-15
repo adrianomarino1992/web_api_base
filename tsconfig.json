@@ -102,7 +102,7 @@
   }, "exclude": [    
     "jest.config.js",     
     "coverage", 
-    "./__test__app__/*",
+    //"./__test__app__/*",
     "./dist/**/*",  
     "./__tests__/**/*" ,
     "./__tests__/**/*.spec.ts"  

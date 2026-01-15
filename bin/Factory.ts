@@ -17,11 +17,7 @@ import { Application, IApplicationConfiguration } from "web_api_base";
 
 export default class ${appName} extends Application
 {
-    constructor()
-    {
-        super();
-    }
-        
+       
     public override async ConfigureAsync(appConfig: IApplicationConfiguration): Promise<void>
     {  
         
@@ -53,7 +49,9 @@ export function CreateIndex(name?: string)
 
     var appName = name ? name : "App";
 
-    var index = `import ${appName} from "./${appName}";
+    var index = `
+    import 'reflect-metadata';
+    import ${appName} from "./${appName}";
 
 new ${appName}().StartAsync();`;
 
@@ -116,20 +114,14 @@ export function CreateController(name?: string)
         controllerName = `${controllerName}Controller`;
 
     var controller = `
-import { ControllerBase, Route, GET, ProducesResponse, ActionResult } from "web_api_base";
+import { ControllerBase, GET, ActionResult } from "web_api_base";
 
 
-@Route()
+
 export default class ${controllerName} extends ControllerBase
 { 
         
-    constructor()
-    {
-        super();              
-    }
-        
-    @GET()
-    @ProducesResponse({ Status : 200, Description: "OK", JSON : JSON.stringify({status : "pong"}, null, 2)})
+    @GET()    
     public Ping() : ActionResult
     {       
         return this.OK({status : "pong"});

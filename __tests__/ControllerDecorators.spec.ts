@@ -9,7 +9,7 @@ describe("Controller decorators", () => {
     test("should retrieve the action route value", () => {
         
         const controller = new ControllerTest(new SampleService());
-        const action = ControllersDecorators.GetAction(controller, "TestAction");
+        const action = ControllersDecorators.GetAction(ControllerTest, "TestAction");
 
         expect(action).toBe("/test");
 
@@ -18,7 +18,7 @@ describe("Controller decorators", () => {
     test("should retrieve GET HTTP verb from decorator", () => {
 
         const controller = new ControllerTest(new SampleService());
-        const verb = ControllersDecorators.GetVerb(controller, "TestAction");
+        const verb = ControllersDecorators.GetVerb(ControllerTest, "TestAction");
 
         expect(verb).toBe(HTTPVerbs.GET);
 
@@ -27,7 +27,7 @@ describe("Controller decorators", () => {
     test("should retrieve POST HTTP verb from decorator", () => {
 
         const controller = new ControllerTest(new SampleService());
-        const verb = ControllersDecorators.GetVerb(controller, "PostAction");
+        const verb = ControllersDecorators.GetVerb(ControllerTest, "PostAction");
 
         expect(verb).toBe(HTTPVerbs.POST);
 
@@ -36,7 +36,7 @@ describe("Controller decorators", () => {
     test("should retrieve PUT HTTP verb from decorator", () => {
 
         const controller = new ControllerTest(new SampleService());
-        const verb = ControllersDecorators.GetVerb(controller, "PutAction");
+        const verb = ControllersDecorators.GetVerb(ControllerTest, "PutAction");
 
         expect(verb).toBe(HTTPVerbs.PUT);
 
@@ -45,7 +45,7 @@ describe("Controller decorators", () => {
     test("should retrieve DELETE HTTP verb from decorator", () => {
 
         const controller = new ControllerTest(new SampleService());
-        const verb = ControllersDecorators.GetVerb(controller, "DeleteAction");
+        const verb = ControllersDecorators.GetVerb(ControllerTest, "DeleteAction");
 
         expect(verb).toBe(HTTPVerbs.DELETE);
 
@@ -127,10 +127,10 @@ describe("Controller decorators", () => {
     test("should retrieve controller route from decorator", () => {
 
         const controller = new ControllerTest(new SampleService());
-        const route = ControllersDecorators.GetRoute(controller);
+        const route = ControllersDecorators.GetRoute(ControllerTest);
 
         expect(route!).toBe("/test");
 
     });
 
-});
+});5

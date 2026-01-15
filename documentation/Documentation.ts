@@ -10,37 +10,35 @@ import cmd from 'child_process';
 import Application from "../Application";
 
 export default class Documentation {
-    public CreateDocumentation(controllers: { new(...args: any[]): IController; }[], app : Express): void
+    public CreateDocumentation(controllersConstructors: { new(...args: any[]): IController; }[], app : Express): void
     {
         let documentations : IDocument[] = [];
 
-        for(let c of controllers)
+        for(let ctor of controllersConstructors)
         {          
             
-            let empty = new c() as any;
+            let empty = new ctor();
+            
                 
-            let methods = Reflect.ownKeys(empty.constructor.prototype).filter(m => 
-                {
-                    return typeof empty[m] == "function" ;
-                })     
+            let methods = Type.GetAllMethods(ctor).map(s => s.name);
     
-            let route = ControllersDecorators.GetRoute(empty);
+            let route = ControllersDecorators.GetRoute(ctor);
 
             
             let doc : IDocument = 
             {
                 Id : 'c_' + documentations.length, 
                 Route : route ?? "",
-                Controller : c.name,
+                Controller : ctor.name,
                 Headers: [],
                 Resources : [],                
             };
            
-            doc.Headers = DocumentationDecorators.GetControllerHeaders(empty.constructor);             
+            doc.Headers = DocumentationDecorators.GetControllerHeaders(ctor);             
 
             for(let method of methods)
             {
-                let action = ControllersDecorators.GetAction(empty, method.toString());
+                let action = ControllersDecorators.GetAction(ctor, method.toString());
 
                 if(!action){
                     continue;                
@@ -48,21 +46,22 @@ export default class Documentation {
 
                 
                 
-                let verb = ControllersDecorators.GetVerb(empty, method.toString());
-                let fromBody = ControllersDecorators.GetFromBodyArgs(empty.constructor, method.toString());
-                let fromQuery = ControllersDecorators.GetFromQueryArgs(empty.constructor, method.toString());                
-                let fromFiles = ControllersDecorators.GetFromFilesArgs(empty.constructor, method.toString());
-                ControllersDecorators.GetNonDecoratedArguments(empty, method, fromBody, fromQuery, fromFiles);
+                let verb = ControllersDecorators.GetVerb(ctor, method.toString());
+                let fromBody = ControllersDecorators.GetFromBodyArgs(ctor, method.toString());
+                let fromQuery = ControllersDecorators.GetFromQueryArgs(ctor, method.toString());                
+                let fromPath = ControllersDecorators.GetFromPathArgs(ctor, method.toString());                
+                let fromFiles = ControllersDecorators.GetFromFilesArgs(ctor, method.toString());
+                ControllersDecorators.GetNonDecoratedArguments(ctor, method, fromBody, fromQuery, fromPath, fromFiles);
 
-                let template = DocumentationDecorators.GetRequestJson(empty, method.toString());
+                let template = DocumentationDecorators.GetRequestJson(ctor, method.toString());
 
                 if(!template && fromBody.length > 0)
                 {                    
-                    template = JSON.stringify(Type.CreateTemplateFrom(fromBody[0].Type as new (...args: any[]) => any));
+                    template = JSON.stringify(Type.CreateTemplateFrom(fromBody[0].Type as new (...args: any[]) => any, {UseIgnoreProperty: true, UseJSONPropertyName: true}));
                 }
                 
-                let description = DocumentationDecorators.GetDescription(empty, method.toString());
-                let actionHeaders = DocumentationDecorators.GetActionHeaders(empty.__proto__, method.toString());
+                let description = DocumentationDecorators.GetDescription(ctor, method.toString());
+                let actionHeaders = DocumentationDecorators.GetActionHeaders(ctor, method.toString());
 
                 doc.Resources.push({
 
@@ -74,6 +73,7 @@ export default class Documentation {
                     Response : DocumentationDecorators.GetProducesResponse(empty.constructor, method.toString()),
                     FromBody : fromBody.map(s => { return {Field : s.Field, Type : s.Type.name }}) , 
                     FromQuery : fromQuery.map(s => { return {Field : s.Field, Type : s.Type.name }}), 
+                    FromPath : fromPath.map(s => { return {Field : s.Field, Type : s.Type.name }}), 
                     FromFiles : fromFiles.map(s => {return {FieldName: s.FileName}}), 
                     Headers : actionHeaders 
                 });                          
@@ -143,6 +143,7 @@ interface IDocument
         Response : ReturnType<typeof DocumentationDecorators.GetProducesResponse>,
         Verb : string,
         FromQuery : {Field : string, Type : string }[], 
+        FromPath : {Field : string, Type : string }[], 
         FromBody : {Field? : string, Type : string }[],
         FromFiles : {FieldName? : string }[],
         Headers : string[] 

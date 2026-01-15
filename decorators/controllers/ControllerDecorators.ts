@@ -4,6 +4,7 @@ import IMidleware, { IRequestResultHandler } from '../../midlewares/IMidleware';
 import FunctionAnalizer from '../../metadata/FunctionAnalizer';
 import File from '../../files/File';
 import DecoratorException from '../../exceptions/DecoratorException';
+import ControllerLoadException from '../../exceptions/ControllerLoadException';
 
 export default class ControllersDecorators
 {
@@ -19,87 +20,92 @@ export default class ControllersDecorators
     private static _fromBodyKeyMetadata = "meta:fromBodyKey";
     private static _fromFilesKeyMetadata = "meta:fromFilesKey";
     private static _maxFilesSizeKeyMetadata = "meta:maxFilesSizeKey";
-    private static _controllerMidlewaresAfterKeyMetadata = "meta:controllerMidlewaresAfterKey";  
+    private static _controllerMidlewaresAfterKeyMetadata = "meta:controllerMidlewaresAfterKey";      
+    private static _fromPathParamsKeyMetadata = "meta:fromPathParamsKey";
     
 
     public static Route(route? : string)  
     {
-        return function( target : Function)
+        return function(target : Function)
         {
-            let value = route ?? target.name.toLocaleLowerCase().replace("controller",""); 
-            Reflect.defineMetadata(ControllersDecorators._routeKeyMetadata, value, target);
+            let value = route ?? target.name.toLowerCase().replace("controller",""); 
+
+             if(value && value.indexOf(' ') > 0)
+                throw new ControllerLoadException(`You can not use empty spaces on actions of controllers. Change the action name of ${target.name}`);
+
+            Reflect.defineMetadata(ControllersDecorators._routeKeyMetadata, value, target.prototype);
             
         }
     }
 
-    public static GetRoute(controller : IController) : string | undefined
+    public static GetRoute(ctor : Function) : string | undefined
     {
-       let meta = Reflect.getMetadata(ControllersDecorators._routeKeyMetadata, controller.constructor);
+       let meta = Reflect.getMetadata(ControllersDecorators._routeKeyMetadata, ctor.prototype);
 
-       let cName = controller.constructor.name.toLocaleLowerCase().replace("controller", "");
+       let cName = ctor.name.toLowerCase().replace("controller", "");
 
        if(!meta)
             meta = cName;
         
-        meta = meta.toLocaleLowerCase().replace("[controller]", cName);
+        meta = meta.toLowerCase().replace("[controller]", cName);
 
        if(meta && meta[0] != '/')
        {
-            return `/${meta}`.toLocaleLowerCase();
+            return `/${meta}`;
        }
 
-       return meta?.toLocaleLowerCase();
+       return meta;
 
     }
 
     
     public static Validate()  
     {
-        return function(target : Function)
+        return function(ctor : Function)
         {            
-            Reflect.defineMetadata(ControllersDecorators._validateBodyKeyMetadata, true, target);            
+            Reflect.defineMetadata(ControllersDecorators._validateBodyKeyMetadata, true, ctor.prototype);            
         }
     }
 
-    public static IsToValidate(controller : IController) : boolean 
+    public static IsToValidate(ctor : Function) : boolean 
     {
-       return Reflect.getMetadata(ControllersDecorators._validateBodyKeyMetadata, controller.constructor) ?? false;
+       return Reflect.getMetadata(ControllersDecorators._validateBodyKeyMetadata, ctor.prototype) ?? false;
     }
 
     public static UseBefore(midleware : IMidleware)  
     {
-        return function( target : Function)
+        return function(ctor : Function)
         {
-            let current : IMidleware[] = Reflect.getMetadata(ControllersDecorators._controllerMidlewaresKeyMetadata, target) ?? [];
+            let current : IMidleware[] = Reflect.getMetadata(ControllersDecorators._controllerMidlewaresKeyMetadata, ctor.prototype) ?? [];
 
             current.push(midleware);
 
-            Reflect.defineMetadata(ControllersDecorators._controllerMidlewaresKeyMetadata, current, target);            
+            Reflect.defineMetadata(ControllersDecorators._controllerMidlewaresKeyMetadata, current, ctor.prototype);            
         }
     }
 
     public static UseAfter(resultHandler : IRequestResultHandler)  
     {
-        return function( target : Function)
+        return function(ctor : Function)
         {
-            let current : IRequestResultHandler[] = Reflect.getMetadata(ControllersDecorators._controllerMidlewaresAfterKeyMetadata, target) ?? [];
+            let current : IRequestResultHandler[] = Reflect.getMetadata(ControllersDecorators._controllerMidlewaresAfterKeyMetadata, ctor.prototype) ?? [];
 
             current.push(resultHandler);
 
-            Reflect.defineMetadata(ControllersDecorators._controllerMidlewaresAfterKeyMetadata, current, target);            
+            Reflect.defineMetadata(ControllersDecorators._controllerMidlewaresAfterKeyMetadata, current, ctor.prototype);            
         }
     }
     
    
 
-    public static GetMidlewares(controller : IController) : IMidleware[]
+    public static GetMidlewares(ctor : Function) : IMidleware[]
     {
-       return Reflect.getMetadata(ControllersDecorators._controllerMidlewaresKeyMetadata, controller.constructor) ?? [];
+       return Reflect.getMetadata(ControllersDecorators._controllerMidlewaresKeyMetadata, ctor.prototype) ?? [];
     }
 
-    public static GetMidlewaresAfter(controller : IController) : IRequestResultHandler[]
+    public static GetMidlewaresAfter(ctor : Function) : IRequestResultHandler[]
     {
-       return Reflect.getMetadata(ControllersDecorators._controllerMidlewaresAfterKeyMetadata, controller.constructor) ?? [];
+       return Reflect.getMetadata(ControllersDecorators._controllerMidlewaresAfterKeyMetadata, ctor.prototype) ?? [];
     }
 
 
@@ -107,8 +113,6 @@ export default class ControllersDecorators
     {
         return function( target : Object, methodName : string, propertyDescriptor : PropertyDescriptor)
         {
-            const constructor = typeof target == 'function' ? target : target.constructor;
-
             const prototype = typeof target == 'function' ? target.prototype : target;
 
             let current : IMidleware[] = Reflect.getMetadata(ControllersDecorators._actionsMidlewaresKeyMetadata, prototype, methodName) ?? [];
@@ -125,46 +129,52 @@ export default class ControllersDecorators
     {
         return function( target : Object, methodName : string, propertyDescriptor : PropertyDescriptor)
         {
-            const constructor = typeof target == 'function' ? target : target.constructor;
+            const prototype = typeof target == 'function' ? target.prototype : target;
 
-            let current : IRequestResultHandler[] = Reflect.getMetadata(ControllersDecorators._controllerMidlewaresAfterKeyMetadata, constructor, methodName) ?? [];
+            let current : IRequestResultHandler[] = Reflect.getMetadata(ControllersDecorators._controllerMidlewaresAfterKeyMetadata, prototype, methodName) ?? [];
 
             current.push(resultHandler);
 
-            ControllersDecorators.SetMetaData(ControllersDecorators._controllerMidlewaresAfterKeyMetadata, constructor, methodName, current);
+            ControllersDecorators.SetMetaData(ControllersDecorators._controllerMidlewaresAfterKeyMetadata, prototype, methodName, current);
             
         }
     }
     
 
-    public static GetBefores(controller : IController, methodName : string) : IMidleware[]
+    public static GetBefores(ctor : Function, methodName : string) : IMidleware[]
     {
-       return ControllersDecorators.GetMetaData<IMidleware[]>(ControllersDecorators._actionsMidlewaresKeyMetadata, controller, methodName) ?? [];
+       return ControllersDecorators.GetMetaData<IMidleware[]>(ControllersDecorators._actionsMidlewaresKeyMetadata, ctor.prototype, methodName) ?? [];
     }
 
 
-    public static GetAfters(controller : IController, methodName : string) : IRequestResultHandler[]
+    public static GetAfters(ctor : Function, methodName : string) : IRequestResultHandler[]
     {
-       return ControllersDecorators.GetMetaData<IRequestResultHandler[]>(ControllersDecorators._controllerMidlewaresAfterKeyMetadata, controller, methodName) ?? [];
+       return ControllersDecorators.GetMetaData<IRequestResultHandler[]>(ControllersDecorators._controllerMidlewaresAfterKeyMetadata, ctor.prototype, methodName) ?? [];
     } 
 
     public static Verb(verb : HTTPVerbs, actionName? : String )  
-    {
+    {      
+
         return function( target : Object, methodName : string, propertyDescriptor : PropertyDescriptor)
         {
-            const constructor = typeof target == 'function' ? target : target.constructor;
+            const prototype = typeof target == 'function' ? target.prototype : target;
 
-            if(!!!ControllersDecorators.GetMetaData<string>(ControllersDecorators._actionNameKeyMetadata, constructor, methodName))
-                ControllersDecorators.SetMetaData(ControllersDecorators._actionNameKeyMetadata, constructor, methodName, actionName ?? methodName.toLocaleLowerCase());
+             if(actionName && actionName.indexOf(' ') > 0)
+                throw new ControllerLoadException(`You can not use empty spaces on actions of controllers. Change the action name of ${prototype.constructor.name}.${methodName}`);
 
-            ControllersDecorators.SetMetaData(ControllersDecorators._actionVerbKeyMetadata, constructor, methodName, verb);
+             
+
+            if(!!!ControllersDecorators.GetMetaData<string>(ControllersDecorators._actionNameKeyMetadata, prototype, methodName))
+                ControllersDecorators.SetMetaData(ControllersDecorators._actionNameKeyMetadata, prototype, methodName, actionName ?? methodName.toLowerCase());
+
+            ControllersDecorators.SetMetaData(ControllersDecorators._actionVerbKeyMetadata, prototype, methodName, verb);
             
         }
     }
     
-    public static GetVerb(target : IController, methodName : string ) : HTTPVerbs | undefined
+    public static GetVerb(ctor : Function, methodName : string ) : HTTPVerbs | undefined
     {
-        let meta = ControllersDecorators.GetMetaData<HTTPVerbs>(ControllersDecorators._actionVerbKeyMetadata, target.constructor, methodName);
+        let meta = ControllersDecorators.GetMetaData<HTTPVerbs>(ControllersDecorators._actionVerbKeyMetadata, ctor.prototype, methodName);
 
         return meta;
     }
@@ -173,23 +183,28 @@ export default class ControllersDecorators
     {
         return function( target : Object, methodName : string, propertyDescriptor : PropertyDescriptor)
         {
-            const constructor = typeof target == 'function' ? target : target.constructor;
+             const prototype = typeof target == 'function' ? target.prototype : target;
 
-            ControllersDecorators.SetMetaData(ControllersDecorators._actionNameKeyMetadata, constructor, methodName, actionName ?? methodName.toLowerCase());
+            if(actionName && actionName.indexOf(' ') > 0)
+                throw new ControllerLoadException(`You can not use empty spaces on actions of controllers. Change the action name of ${prototype.constructor.name}.${methodName}`);
+          
+          
+
+            ControllersDecorators.SetMetaData(ControllersDecorators._actionNameKeyMetadata, prototype, methodName, actionName ?? methodName.toLowerCase());
             
         }
     }
 
-    public static GetAction(target : IController, methodName : string ) : string | undefined
+    public static GetAction(ctor : Function, methodName : string ) : string | undefined
     {
-        let meta = ControllersDecorators.GetMetaData<string>(ControllersDecorators._actionNameKeyMetadata, target.constructor, methodName);
+        let meta = ControllersDecorators.GetMetaData<string>(ControllersDecorators._actionNameKeyMetadata, ctor.prototype, methodName);
 
         if(meta && meta[0] != '/')
         {  
-            return `/${meta}`.toLowerCase();
+            return `/${meta}`;
         }
 
-        return meta?.toLowerCase();
+        return meta;
     }
 
     public static RequiredFromBodyArg(bodyPropName? : string) 
@@ -231,11 +246,9 @@ export default class ControllersDecorators
         }
     }
 
-    public static GetFromBodyArgs(target : Function, method : string) : {Index : number, Field? : string, Type : Function, Required : boolean }[]
+    public static GetFromBodyArgs(ctor : Function, method : string) : {Index : number, Field? : string, Type : Function, Required : boolean }[]
     {
-        const prototype = typeof target == 'function' ? target.prototype : target;
-
-        return Reflect.getMetadata(ControllersDecorators._fromBodyKeyMetadata, prototype, method) ?? [];
+        return Reflect.getMetadata(ControllersDecorators._fromBodyKeyMetadata, ctor.prototype, method) ?? [];
     }
 
     public static OptionalFromFilesArg(fileName? : string, maxFileSizeMB? : number) 
@@ -279,16 +292,14 @@ export default class ControllersDecorators
     }
     
 
-    public static GetFromFilesArgs(target : Function, method : string) : {Index : number, FileName? : string, Required: boolean }[]
+    public static GetFromFilesArgs(ctor : Function, method : string) : {Index : number, FileName? : string, Required: boolean }[]
     {
-        const prototype = typeof target == 'function' ? target.prototype : target;
-
-        return Reflect.getMetadata(ControllersDecorators._fromFilesKeyMetadata, prototype, method) ?? [];
+        return Reflect.getMetadata(ControllersDecorators._fromFilesKeyMetadata, ctor.prototype, method) ?? [];
     }
 
     public static MaxFilesSize(bytes : number)  
     {
-        return function(target : Function)
+        return function(target : Object)
         {            
             const prototype = typeof target == 'function' ? target.prototype : target;
 
@@ -296,11 +307,9 @@ export default class ControllersDecorators
         }
     }
 
-    public static GetMaxFilesSize<T extends IController>(target : new (...args: any) => T) : number 
+    public static GetMaxFilesSize(ctor : Function) : number 
     {
-        const prototype = typeof target == 'function' ? target.prototype : target;
-
-       return Reflect.getMetadata(ControllersDecorators._maxFilesSizeKeyMetadata, prototype) ?? 0;
+       return Reflect.getMetadata(ControllersDecorators._maxFilesSizeKeyMetadata, ctor.prototype) ?? 0;
     }
 
 
@@ -343,22 +352,59 @@ export default class ControllersDecorators
         }
     }
    
-    public static GetFromQueryArgs(target : Function, method : string) :  {Index : number, Field : string, Type : Function, Required : boolean }[]
+    public static GetFromQueryArgs(ctor : Function, method : string) :  {Index : number, Field : string, Type : Function, Required : boolean }[]
     {
-        const prototype = typeof target == 'function' ? target.prototype : target;
+       
 
-        return Reflect.getMetadata(ControllersDecorators._fromQueryKeyMetadata, prototype, method) ?? [];
+        return Reflect.getMetadata(ControllersDecorators._fromQueryKeyMetadata, ctor.prototype, method) ?? [];
+    }
+
+    public static FromPath(argName? : string, required? : boolean)
+    {
+        return function( target : Object, methodName: string , parameterIndex: number)
+        {
+            const constructor = typeof target == 'function' ? target : target.constructor;
+
+            const prototype = typeof target == 'function' ? target.prototype : target;
+
+            let meta = ControllersDecorators.GetFromPathArgs(constructor, methodName); 
+
+            let params = FunctionAnalizer.ExtractParamsList(prototype, (prototype as any)[methodName]);
+
+            let thisParam = params.filter(s => s.Index == parameterIndex)[0];
+
+            let item = meta.filter(x => x.Index == parameterIndex);
+
+            if(item.length == 0)
+                meta.push({Index : parameterIndex, Field : argName ?? thisParam.Name, Type : thisParam.Type, Required : required ?? true});
+            
+            else {
+
+                item[0].Field = argName ?? thisParam.Name;
+                item[0].Type = thisParam.Type;
+            }
+
+            Reflect.defineMetadata(ControllersDecorators._fromPathParamsKeyMetadata, meta, prototype, methodName);             
+        }
+    }
+   
+    public static GetFromPathArgs(ctor : Function, method : string) :  {Index : number, Field : string, Type : Function, Required : boolean }[]
+    {       
+        return Reflect.getMetadata(ControllersDecorators._fromPathParamsKeyMetadata, ctor.prototype, method) ?? [];
     }
 
     
     public static GetNonDecoratedArguments(
-        empty: IController, method: Symbol | string, 
+        ctor: Function, method: Symbol | string, 
          fromBody: ReturnType<typeof ControllersDecorators.GetFromBodyArgs>, 
          fromQuery: ReturnType<typeof ControllersDecorators.GetFromQueryArgs>, 
+         fromPath: ReturnType<typeof ControllersDecorators.GetFromPathArgs>,
          fromFiles: ReturnType<typeof ControllersDecorators.GetFromFilesArgs>) : void
     {
-        let ts = ((Reflect.getMetadata("design:paramtypes", empty, method.toString()) ??
-        Reflect.getMetadata("design:paramtypes", empty.constructor, method.toString())) ?? []) as Function[];     
+        let ts = (
+            Reflect.getMetadata("design:paramtypes", ctor, method.toString()) ??
+            Reflect.getMetadata("design:paramtypes", ctor.prototype, method.toString())
+        ) as Function[];     
 
         ts.forEach((e, i) => 
         {
@@ -374,16 +420,16 @@ export default class ControllersDecorators
                     fromFiles.push({Index : i, Required : true});
             }   
 
-            if(fromQuery.filter(s => s.Index == i).length == 0)
+            if(fromQuery.filter(s => s.Index == i).length == 0 && fromPath.filter(s => s.Index == i).length == 0)
             {
                 if([Date, String, Number, Boolean].filter(t => t == e).length > 0)
                 {
                     try{
 
                         let paramName = '';
-                        if((empty as any)[method.toString()].name != '')
+                        if((ctor.prototype as any)[method.toString()].name != '')
                         {
-                            let funcParameters = FunctionAnalizer.ExtractParamsList(empty.constructor.prototype, (empty.constructor.prototype as any)[method.toString()]);
+                            let funcParameters = FunctionAnalizer.ExtractParamsList(ctor.prototype, (ctor.prototype as any)[method.toString()]);
                             
                             let thisParameter = funcParameters.filter(p => p.Index == i);
 
@@ -392,10 +438,17 @@ export default class ControllersDecorators
                         }
                         else
                         {
-                            let funcParameters = FunctionAnalizer.GetParametersNames(empty.constructor.toString(), method.toString());
+                            let funcParameters = FunctionAnalizer.GetParametersNames(ctor.toString(), method.toString());
 
-                            if(funcParameters.length == 0 && (empty as any).__proto__.__proto__ != undefined)
-                                funcParameters = FunctionAnalizer.GetParametersNames((empty as any).__proto__.__proto__.constructor.toString(), method.toString());
+                            let currentPrototype = (ctor as any).prototype;
+                            while(currentPrototype && funcParameters.length == 0)
+                            {
+                                if(funcParameters.length == 0)
+                                    funcParameters = FunctionAnalizer.GetParametersNames(currentPrototype.constructor.toString(), method.toString());
+
+                                currentPrototype = (currentPrototype as any).__proto__;
+                            }
+                            
 
                             if(funcParameters.length > i)
                                 paramName =  funcParameters[i];

@@ -4,9 +4,15 @@ import InvalidEntityException from "../exceptions/InvalidEntityException";
 import OwnMetaDataContainer from "./OwnMetaDataContainer";
 
 
+export interface IMethodOptions
+{
+    UseJSONPropertyName? : boolean;
+    UseIgnoreProperty? : boolean
+}
+
 export default class Type {
 
-    public static CreateTemplateFrom<T extends object>(ctor: new (...args: any[]) => T): T {
+    public static CreateTemplateFrom<T extends object>(ctor: new (...args: any[]) => T, options? : IMethodOptions & {IgnorePaths? : (keyof T)[]}): T {
         let base = Reflect.construct(ctor, []) as T;
 
         let keysVisiteds : string[] = [];
@@ -17,6 +23,12 @@ export default class Type {
         {
             if(keysVisiteds.includes(map))
                 continue;
+
+            if(options?.IgnorePaths && options.IgnorePaths.filter(s => s == map).length > 0)
+            {
+                delete (base as any)[map];
+                continue;
+            }
 
             if(map.indexOf('_') > -1)
                 continue;
@@ -33,7 +45,7 @@ export default class Type {
 
              if(!designType)
             {
-                const metaOfField = designType = metadataOfCtor.filter(s => s.Member == map && s.Key == "design:type");
+                const metaOfField = metadataOfCtor.filter(s => s.Member == map && s.Key == "design:type");
 
                 if(metaOfField.length > 0)
                     designType = metaOfField[0].Value as Function;
@@ -54,19 +66,19 @@ export default class Type {
             if (designType) 
             {
                 if (designType != Array)
-                    (base as any)[map] = Type.FillObject(Reflect.construct(designType, []) as object);
+                    (base as any)[map] = Type.FillObject(Reflect.construct(designType, []) as object, options);
 
                 else
                 {
                     if(elementType)
                     {
-                        (base as any)[map] = [Type.FillObject(Reflect.construct(elementType, []) as object)];
+                        (base as any)[map] = [Type.FillObject(Reflect.construct(elementType, []) as object, options)];
 
                     }
                     else if((base as any)[map] && ((base as any)[map] as Array<unknown>).length > 0)
                     {
                         let element = ((base as any)[map] as Array<unknown>)[0] as any;
-                        (base as any)[map] = [Type.FillObject(Reflect.construct(element.constructor, []) as object)];
+                        (base as any)[map] = [Type.FillObject(Reflect.construct(element.constructor, []) as object, options)];
 
                     }
                     else
@@ -80,16 +92,19 @@ export default class Type {
             }
         }
 
-        return Type.FillObject(base);
+        return Type.FillObject(base, options);
     }
 
-    public static FillObject<T extends object>(obj: T): T {
+    public static FillObject<T extends object>(obj: T, options? : IMethodOptions): T {
 
         let cs : string[] = [];
 
+        if(!obj)
+            return obj;
+
         for (let c in obj) 
         {
-            let d = Reflect.getMetadata("design:type", obj, c);
+            let d = Reflect.getMetadata("design:type", obj.constructor.prototype, c);
 
             if(!d && obj[c] != undefined && obj[c] != null)
                 d = obj[c].constructor;
@@ -102,27 +117,38 @@ export default class Type {
             }
 
             let vdefault = MetadataDecorators.GetDefaultValue(obj.constructor, c);
-            let toIgnore = MetadataDecorators.IsToIgnoreInDocumentation(obj.constructor, c);
+            let toIgnore = options?.UseIgnoreProperty? MetadataDecorators.IsToIgnoreInDocumentation(obj.constructor, c) : undefined;
 
             if(toIgnore)
                 cs.push(c);
 
+            let propertyOnJSON = options?.UseJSONPropertyName ? MetadataDecorators.GetJSONPropertyName(obj.constructor, c) : undefined;
+            let propertyOnObject = c.toString();
+
+            if(!toIgnore && propertyOnJSON){
+                propertyOnObject = propertyOnJSON;
+                (obj as any)[propertyOnObject] = (obj as any)[c];
+                cs.push(c);
+            }
+
             if(vdefault != undefined)
             {
-                (obj as any)[c] = vdefault;
-                continue;
+                (obj as any)[propertyOnObject] = vdefault;
+                    continue;
             }
 
             if (d.name === "Number")
-                (obj as any)[c] = -1;
+                (obj as any)[propertyOnObject] = -1;
             else if (d.name === "String")
-                (obj as any)[c] = "";
+                (obj as any)[propertyOnObject] = "";
             else if (d.name === "Boolean")
-                (obj as any)[c] = false;
+                (obj as any)[propertyOnObject] = false;
             else if (d.name === "Date")
-                (obj as any)[c] = new Date();
-            else if (d.name === "Object")
-                (obj as any)[c] = {};
+                (obj as any)[propertyOnObject] = new Date();
+            else if (d.name === "Object" && !(obj as any)[propertyOnObject])
+                (obj as any)[propertyOnObject] = {};
+             else if (d == Array && !(obj as any)[propertyOnObject])
+                (obj as any)[propertyOnObject] = [];
         }
 
         for(let c of cs)
@@ -131,10 +157,10 @@ export default class Type {
         return obj;
     }
 
-    public static SetPrototype<T>(obj : any, cTor: new (...args: any[]) => T) : T
+    public static SetPrototype<T>(obj : any, cTor: new (...args: any[]) => T, options? : IMethodOptions) : T
     {
         if([String, Date, Number, Boolean].filter(s => s.name == cTor.name).length > 0)
-            return Type.Cast(obj, cTor) as T;
+            return Type.Cast(obj, cTor, options) as T;
         
         if(cTor.name == Object.name)
             return obj;
@@ -151,10 +177,18 @@ export default class Type {
         {
             if(keysVisiteds.includes(k))
                 continue;
+           
 
             keysVisiteds.push(k);
 
-            if(obj[k] == undefined)
+            let propertyOnJSON = options?.UseJSONPropertyName ? MetadataDecorators.GetJSONPropertyName(cTor, k) : undefined;
+
+            if(propertyOnJSON)            
+                keysVisiteds.push(propertyOnJSON);
+            
+            let propertyOnObject = propertyOnJSON ?? k;
+
+            if(obj[propertyOnObject] == undefined)
             {
                 let vdefault = MetadataDecorators.GetDefaultValue(cTor, k);
                 
@@ -171,7 +205,7 @@ export default class Type {
 
             if(!designType)
             {
-                const metaOfField = designType = metadataOfCtor.filter(s => s.Member == k && s.Key == "design:type");
+                const metaOfField = metadataOfCtor.filter(s => s.Member == k && s.Key == "design:type");
 
                 if(metaOfField.length > 0)
                     designType = metaOfField[0].Value as Function;
@@ -195,20 +229,20 @@ export default class Type {
             if (designType) 
             {
                 if (designType != Array)
-                    (base as any)[k] = Type.Cast(obj[k], designType);    
+                    (base as any)[k] = Type.Cast(obj[propertyOnObject], designType, options);    
                 else
                 {
                     if(elementType)
                     {
-                        for(let i in ((obj[k] as any)))                        
-                           (base as any)[k][i] = Type.Cast(obj[k][i], elementType); 
+                        for(let i in ((obj[propertyOnObject] as any)))                        
+                           (base as any)[k][i] = Type.Cast(obj[propertyOnObject][i], elementType, options); 
                     }                    
                     else
-                        (base as any)[k] = obj[k];
+                        (base as any)[k] = obj[propertyOnObject];
                 }
             }
             else
-                (base as any)[k] = obj[k];
+                (base as any)[k] = obj[propertyOnObject];
                        
 
         }
@@ -222,9 +256,27 @@ export default class Type {
         return base;
     }
 
+
+    public static GetAllMethods(ctor: Function) : Function[]
+    {
+        let methods : Function[] = [];
+        let currentPrototype = ctor.prototype;
+
+        while(currentPrototype != undefined)
+        {
+            let currentMethods = Reflect.ownKeys(currentPrototype).filter(m => typeof currentPrototype[m] == "function");
+            methods.push(...currentMethods.map(s => currentPrototype[s] as Function));
+            
+            currentPrototype = currentPrototype.__proto__;
+        }
+
+        return methods;
+
+    }
+
     
 
-    public static Cast<T>(obj : any, type: new (...args: any[]) => T ) : T | undefined
+    public static Cast<T>(obj : any, type: new (...args: any[]) => T , options? : IMethodOptions) : T | undefined
     {
         if(obj == undefined || obj== null)
             return undefined;
@@ -238,7 +290,7 @@ export default class Type {
         if (type.name == Number.name) {
             let number = Number.parseFloat(obj.toString());
 
-            if (number != Number.NaN) {
+            if (!Number.isNaN(number)) {
                 return number as T;
             }
             else
@@ -269,38 +321,77 @@ export default class Type {
         }
         else {
            
-            return Type.SetPrototype(obj, type);
+            return Type.SetPrototype(obj, type, options);
         }
     }
 
-    public static ValidateType(source: any, cTor: new (...args: any[]) => any) {
+    public static ValidateType(source: any, cTor: new (...args: any[]) => any, options? : IMethodOptions) {
         
+         if(cTor == undefined || [String, Date, Number, Boolean].filter(s => s.name == cTor.name).length > 0)
+            return;
+
+          let keysVisiteds : string[] = [];           
+
         let empty = Reflect.construct(cTor, []);
+        let metadataOfCtor = OwnMetaDataContainer.GetAllMetadataForCtor(cTor).filter(s => s.Member && typeof (s.CTor.prototype as any)[s.Member] != 'function');        
 
-        for (let c of Object.keys(empty)) {
+        for (let c of [...metadataOfCtor.map(s => s.Member!), ...Object.keys(empty as any)]) {
 
-            let obj = source[c];
+             if(keysVisiteds.includes(c))
+                continue;
+
             
-            if (empty[c] != undefined && empty[c].constructor == Number) {
+
+            let propertyOnJSON = options ? MetadataDecorators.GetJSONPropertyName(cTor, c) ?? c : c;
+
+            let obj = source[propertyOnJSON];
+            
+            let designType = Reflect.getMetadata("design:type", cTor, c.toString());
+
+            if(!designType)
+                designType = Reflect.getMetadata("design:type", cTor.prototype, c.toString());
+
+            if(!designType)
+            {
+                const metaOfField = metadataOfCtor.filter(s => s.Member == c && s.Key == "design:type");
+
+                if(metaOfField.length > 0)
+                    designType = metaOfField[0].Value as Function;
+            }
+                
+            let elementType : ReturnType<typeof MetadataDecorators.GetArrayElementType>;              
+
+            if(!designType || designType == Array)
+            {
+                let elType = MetadataDecorators.GetArrayElementType(cTor, c);
+    
+                if(elType)
+                {
+                    designType = Array;
+                    elementType = elType;
+                }
+            } 
+            
+            if (designType == Number) {
                 let number = Number.parseFloat(obj?.toString());
 
                 if (number != Number.NaN && obj != undefined) {
-                    source[c] = number;
+                    source[propertyOnJSON] = number;
                 }
                 else {
                     throw new InvalidEntityException(`Can not cast the property "${c}" in Number`);
                 }
 
-            } else if (obj != undefined && empty[c] != undefined && empty[c].constructor == String) {
-                source[c] =  obj == undefined ? "" : obj.toString();
+            } else if (obj != undefined &&  designType == String) {
+                source[propertyOnJSON] =  obj == undefined ? "" : obj.toString();
             }
-            else if (empty[c] != undefined && empty[c].constructor == Date) {
+            else if (designType == Date && obj) {
                 try {
                     source[c] = new Date(obj);
                 } catch { throw new InvalidEntityException(`Can not cast the property "${c}" in Date`); }
 
             }
-            else if (empty[c] != undefined && empty[c].constructor == Boolean) {
+            else if (designType == Boolean) {
                 try {
 
                     if(obj == undefined)
@@ -311,22 +402,22 @@ export default class Type {
                     if (typeof obj != "boolean") {
 
                         if(obj.toString().toLowerCase().trim() == "true")
-                            source[c] = true;
+                            source[propertyOnJSON] = true;
                         else if (obj.toString().toLowerCase().trim() == "false")
-                            source[c] = false;
+                            source[propertyOnJSON] = false;
                         else
                             throw new InvalidEntityException(`Can not cast the property "${c}" in Boolean`);
                         
                     }
                     else {
-                        source[c] = obj;
+                        source[propertyOnJSON] = obj;
                     }
 
                 } catch { }
 
-            }else if (empty[c] != undefined) 
+            }else 
             {
-                this.ValidateType(source[c], empty[c].constructor);
+                this.ValidateType(source[propertyOnJSON], designType);
             }
         }
     }
@@ -447,5 +538,28 @@ export default class Type {
 
     }
 
+
+    public static ChangeNameOfPropertyToJSONNames(obj : any)
+    {
+        let cs : string[] = [];
+
+        if(!obj)
+            return obj;
+
+        for (let c in obj) 
+        {     
+            let propertyOnJSON =  MetadataDecorators.GetJSONPropertyName(obj.constructor, c);          
+
+            if(propertyOnJSON){               
+                obj[propertyOnJSON] = obj[c]
+                cs.push(c);
+            }
+        }
+
+        for(let c of cs)
+            delete (obj as any)[c];
+
+        return obj;
+    }
 
 }

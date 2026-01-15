@@ -17,6 +17,7 @@ export default class TestClass
 
 
     public Description: string;
+    
     private _phone: number;
 
     constructor(name: string, age: number, isActive: boolean, createdAt: Date, description: string, phone : number) 

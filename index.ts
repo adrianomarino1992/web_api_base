@@ -8,6 +8,10 @@ if(!noHookEnv && !noHooksArg)
 {
     const metadata = Reflect.metadata;
 
+    if(!metadata)
+        throw new Error("Metadata functions were not found on the global Reflect object. Please verify that the 'reflect-metadata' package is properly imported.");
+
+
     (Reflect as any).metadata = function(...args: any[]){
 
         const decoratorFunction = (metadata as Function).apply(Reflect, args);
@@ -60,14 +64,15 @@ export {FileService, AbstractFileService};
 
 export { default as File } from './files/File';
 
-export { default as DependecyService } from "./dependencyInjection/DependecyService";
+import DependecyService from "./dependencyInjection/DependecyService";
+
+export { DependecyService };
 
 export { default as IMidleware } from './midlewares/IMidleware';
 export { default as IApplicationConfiguration } from "./interfaces/IApplicationConfiguration"; 
 export { default as IApplication } from "./interfaces/IApplication"; 
 export { default as IApplicatiIControllernConfiguration } from "./interfaces/IController"; 
 export { IHTTPRequestContext, IRequestResult, IRequestResultHandler } from "./midlewares/IMidleware";
-
 export { default as ActionResult } from './controllers/ActionResult';
 export { default as AcceptedResult} from './controllers/AcceptedResult';
 export { default as BadRequestResult } from './controllers/BadRequestResult';
@@ -79,18 +84,12 @@ export { default as NoContentResult } from './controllers/NoContentResult';
 export { default as NotFoundResult } from './controllers/NotFoundResult';
 export { default as OKResult } from './controllers/OKResult';
 export { default as UnauthorizedResult } from './controllers/UnauthorizedResult';
-
-
-
 import ControllersDecorators from "./decorators/controllers/ControllerDecorators";
 import { DocumentationDecorators } from "./decorators/documentation/DocumentationDecorators";
 import ValidationDecorators from "./decorators/validations/ValidationDecorators";
-import DependecyService from "./dependencyInjection/DependecyService";
 import { HTTPVerbs } from "./enums/httpVerbs/HttpVerbs";
 import IMidleware, { IRequestResultHandler } from "./midlewares/IMidleware";
 import MetadataDecorators from './decorators/metadata/MetadataDecorators';
-
-
 export {default as BodyParseException} from "./exceptions/BodyParseException";
 export {default as ControllerLoadException} from "./exceptions/ControllerLoadException";
 export {default as ArgumentNullException} from "./exceptions/ArgumentNullException";
@@ -100,35 +99,6 @@ export {default as InvalidEntityException} from "./exceptions/InvalidEntityExcep
 export {default as FileNotFoundException} from "./exceptions/FileNotFoundException";
 
 
-
-export function CreateMetada()
-{
-    return MetadataDecorators.CreateMetada();
-}
-
-
-export function IgnoreInDocumentation()
-{
-    return MetadataDecorators.IgnoreInDocumentation();
-}
-
-export function ShowInDocumentation()
-{
-    return MetadataDecorators.ShowInDocumentation();
-}
-
-export function ArrayElementType(typeBuilder : () => new (...args: any[])=> any)
-{
-    return MetadataDecorators.ArrayElementType(typeBuilder);
-}
-
-
-export function DefaultValue(value: any) 
-{
-    return MetadataDecorators.DefaultValue(value);
-}
-
-    
 
 export function UseBefore(midleware : IMidleware)  
 {
@@ -182,121 +152,12 @@ export function DELETE(action? : string)
 } ;
 
 
-export function ControllerHeader(header : string)       
-{
-    return DocumentationDecorators.ControllerHeader(header); 
-} ;
-
-
-export function ActionHeader(header : string)       
-{
-    return DocumentationDecorators.ActionHeader(header); 
-} ;
-
-export function Description(description : string)       
-{
-    return DocumentationDecorators.Description(description); 
-} ;
-
-export function RequestJson(json : string)       
-{
-    return DocumentationDecorators.RequestJson(json); 
-} ;
-
-
-export function ProducesResponse(response : Parameters<typeof DocumentationDecorators.ProducesResponse>[0])       
-{
-    return DocumentationDecorators.ProducesResponse(response); 
-} ;
-
-
-
-
 export function Verb(verb : HTTPVerbs)      
 {
     return ControllersDecorators.Verb(verb); 
 } ;
 
-export function Inject()
-{
-    return DependecyService.Injectable();
-}
 
-import {Ctors} from './dependencyInjection/DependecyService';
-export {Ctors} from './dependencyInjection/DependecyService';
-
-export function InjectOne<T, U>(constructorFunction: Ctors<T>, genericArgumentType? : Ctors<U>)
-{
-    return DependecyService.InjectOne(constructorFunction, genericArgumentType);
-}
-
-export function InjectGenericTypeArgument<T, U>(constructorFunction: Ctors<T>, genericArgumentType : Ctors<U>)
-{
-    return DependecyService.InjectGenericType(constructorFunction, genericArgumentType);
-       
-}
-
-
-
-export function InjectForTypeArgument<T>(genericArgumentType : Ctors<T>)
-{
-    return function(target : Object, property : string | symbol) : void 
-    {
-        DependecyService.DefinePropertyAsInjectable(target.constructor as Ctors<any>, property.toString());
-        OwnMetaDataContainer.Set(target.constructor, DependecyService["_injectableTypeKey"], property.toString(), {Type: Reflect.getMetadata("design:type", target, property), GenericType: genericArgumentType});
-    }           
-}
-
-
-export function InjectAbstract<T>(cTor : Ctors<T>)
-{
-    return DependecyService.InjectOne(cTor);
-}
-
-export function Validate()
-{
-    return ControllersDecorators.Validate();
-}
-
-export function ValidateObject<T>(obj : T)
-{
-    return ValidationDecorators.Validate<T>(obj);
-}
-
-export function Required(message?: string)
-{
-    return ValidationDecorators.Required(message);
-}
-
-export function MaxLenght(max : number, message?: string)
-{
-    return ValidationDecorators.MaxLenght(max, message);
-}
-
-export function MinLenght(min : number, message?: string)
-{
-    return ValidationDecorators.MinLenght(min, message);
-}
-
-export function Max(max : number, message?: string)
-{
-    return ValidationDecorators.MaxValue(max, message);
-}
-
-export function Min(min : number, message?: string)
-{
-    return ValidationDecorators.MinValue(min, message);
-}
-
-export function Regex(regex: RegExp, message?: string)
-{
-    return ValidationDecorators.Regex(regex, message);
-}
-
-export function Rule<T>(action: (a : T) => boolean, message?: string)
-{
-    return ValidationDecorators.Rule<T>(action, message);
-}
 
 export function RequiredFromBodyArg(paramName? : string)
 {
@@ -341,6 +202,183 @@ export function FromQuery(paramName? : string, required? : boolean)
 }
 
 
+export function FromPath(paramName? : string, required? : boolean)
+{
+    return ControllersDecorators.FromPath(paramName, required);
+}
+
+
+
+
+
+
+
+
+
+export function CreateMetada()
+{
+    return MetadataDecorators.CreateMetada();
+}
+
+export function ArrayElementType(typeBuilder : () => new (...args: any[])=> any)
+{
+    return MetadataDecorators.ArrayElementType(typeBuilder);
+}
+
+export function DefaultValue(value: any) 
+{
+    return MetadataDecorators.DefaultValue(value);
+}
+
+export function JSONProperty(jsonPropertyName: string)
+{
+    return MetadataDecorators.JSONPropertyName(jsonPropertyName);
+}
+
+
+
+
+
+
+export function IgnoreInDocumentation()
+{
+    return MetadataDecorators.IgnoreInDocumentation();
+}
+
+export function ShowInDocumentation()
+{
+    return MetadataDecorators.ShowInDocumentation();
+}
+    
+
+export function ControllerHeader(header : string)       
+{
+    return DocumentationDecorators.ControllerHeader(header); 
+} ;
+
+
+export function ActionHeader(header : string)       
+{
+    return DocumentationDecorators.ActionHeader(header); 
+} ;
+
+export function Description(description : string)       
+{
+    return DocumentationDecorators.Description(description); 
+} ;
+
+export function RequestJson(json : string)       
+{
+    return DocumentationDecorators.RequestJson(json); 
+} ;
+
+
+export function ProducesResponse(response : Parameters<typeof DocumentationDecorators.ProducesResponse>[0])       
+{
+    return DocumentationDecorators.ProducesResponse(response); 
+} ;
+
+
+
+
+
+
+
+
+import {Ctors} from './dependencyInjection/DependecyService';
+
+
+
+export function Inject()
+{
+    return DependecyService.Injectable();
+}
+
+export function InjectOne<T, U>(constructorFunction: Ctors<T>, genericArgumentType? : Ctors<U>)
+{
+    return DependecyService.InjectOne(constructorFunction, genericArgumentType);
+}
+
+export function InjectGenericTypeArgument<T, U>(constructorFunction: Ctors<T>, genericArgumentType : Ctors<U>)
+{
+    return DependecyService.InjectGenericType(constructorFunction, genericArgumentType);
+       
+}
+
+export function InjectForTypeArgument<T>(genericArgumentType : Ctors<T>)
+{
+    return function(target : Object, property : string | symbol) : void 
+    {
+        DependecyService.DefinePropertyAsInjectable(target.constructor as Ctors<any>, property.toString());
+        OwnMetaDataContainer.Set(target.constructor, DependecyService["_injectableTypeKey"], property.toString(), {Type: Reflect.getMetadata("design:type", target, property), GenericType: genericArgumentType});
+    }           
+}
+
+
+export function InjectAbstract<T>(cTor : Ctors<T>)
+{
+    return DependecyService.InjectOne(cTor);
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+export function Validate()
+{
+    return ControllersDecorators.Validate();
+}
+
+export function ValidateObject<T extends Object>(obj : T)
+{
+    return ValidationDecorators.Validate<T>(obj);
+}
+
+export function Required(message?: string)
+{
+    return ValidationDecorators.Required(message);
+}
+
+
+export function MaxLenght(max : number, message?: string)
+{
+    return ValidationDecorators.MaxLenght(max, message);
+}
+
+export function MinLenght(min : number, message?: string)
+{
+    return ValidationDecorators.MinLenght(min, message);
+}
+
+export function Max(max : number, message?: string)
+{
+    return ValidationDecorators.MaxValue(max, message);
+}
+
+export function Min(min : number, message?: string)
+{
+    return ValidationDecorators.MinValue(min, message);
+}
+
+export function Regex(regex: RegExp, message?: string)
+{
+    return ValidationDecorators.Regex(regex, message);
+}
+
+export function Rule<T extends Object, U extends keyof T>(action: (a : T[U]) => boolean, message?: string)
+{
+    return ValidationDecorators.Rule<T, U>(action, message);
+}
 
 
 

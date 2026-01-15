@@ -8,6 +8,7 @@ export default class MetadataDecorators
     private static _showInDocumentationKeyMetadata : string = "meta:show-documentation-property-key";
     private static _arrayOfTypeKeyMetadata : string = "meta:array-oftype-property-key";
     private static _defaultValueKeyMetadata : string = "meta:default-value-property-key";
+    private static _jsonPropertyNameKeyMetadata : string = "meta:default-json-property-key";
 
 
     public static CreateMetada()
@@ -41,7 +42,7 @@ export default class MetadataDecorators
     {
         return function(target : Object, property : string)
         {
-                        Reflect.defineMetadata(MetadataDecorators._showInDocumentationKeyMetadata, true, typeof target == 'function' ? target.prototype : target, property);
+            Reflect.defineMetadata(MetadataDecorators._showInDocumentationKeyMetadata, true, typeof target == 'function' ? target.prototype : target, property);
 
         }
     }
@@ -76,6 +77,23 @@ export default class MetadataDecorators
         return meta.Value();
     }
     
+
+    public static JSONPropertyName(name: string)
+    {
+        return function(target : any, property : string)
+        {
+                Reflect.defineMetadata(MetadataDecorators._jsonPropertyNameKeyMetadata, name, typeof target == 'function' ? target.prototype : target, property);
+
+        }
+    }
+
+    
+    public static GetJSONPropertyName(cTor : Function, property : string) : string | undefined
+    {
+        let meta =  Reflect.getMetadata(MetadataDecorators._jsonPropertyNameKeyMetadata, cTor.prototype, property);
+
+        return meta;
+    }
 
 
     public static DefaultValue(value: any) 

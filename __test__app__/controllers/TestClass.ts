@@ -1,4 +1,6 @@
-import {ShowInDocumentation, ArrayElementType, CreateMetada, IgnoreInDocumentation, DefaultValue} from '../../index';
+import {ShowInDocumentation, ArrayElementType, CreateMetada, IgnoreInDocumentation, DefaultValue, Route, RunBefore, JSONProperty} from '../../index';
+
+
 
 export default class TestClass 
 {
@@ -15,10 +17,12 @@ export default class TestClass
     @CreateMetada()
     public CreatedAt: Date;
 
+    @JSONProperty('option_text')
     public OptionText?: string;
 
 
     public Description: string;
+
     private _phone: number;
 
     constructor(name: string, age: number, isActive: boolean, createdAt: Date, description: string, phone : number) 
@@ -31,6 +35,7 @@ export default class TestClass
         this._phone = phone;
     }
 
+    @RunBefore(async (e) => { return })
     public DisplayInfo(): void 
     {
         console.log(`Name: ${this.Name}`);

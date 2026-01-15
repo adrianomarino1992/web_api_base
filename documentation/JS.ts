@@ -4,7 +4,9 @@ import Application from '../Application';
 
 export default class JS
 {
-    private static _js = ` document.getElementById('root').innerHTML += '<div class="header" ><div class="DivHeader"><p>Made with <a href="https://www.npmjs.com/package/web_api_base" target="_blank">web_api_base</a></p></div></div>';
+    private static _js = ` 
+    
+    document.getElementById('root').innerHTML += '<div class="header" ><div class="DivHeader"><p>Made with <a href="https://www.npmjs.com/package/web_api_base" target="_blank">web_api_base</a></p></div></div>';
     document.getElementsByClassName('header')[0].innerHTML += '<div class="DivHeader DivHeaderRight"><p class="pTitle" style="font-size: 14px;font-weight:600;">??APP ??VERSION</p><p>??DESC</p></div>';
     
        
@@ -34,9 +36,9 @@ export default class JS
             }               
 
             let date = new Date();
+
             for(let r of route.Resources)
-            {
-        
+            {        
                 let expandId = { ID : 'link_' + r.Id, RID : r.Id};
         
                 try{
@@ -52,6 +54,7 @@ export default class JS
     
                 root.innerHTML += '<div class="row-div"><span class="'+ verbClass+'">'+r.Verb+'</span><h2 id="'+ expandId.ID +'"> '+window.location.origin+r.Route+'</h2></div>';
                 root.innerHTML += '<div id="'+r.Id+'_container" class="container"></div>';
+
                 let container = document.getElementById(r.Id + '_container');
     
                 if(r.Headers.length > 0)
@@ -65,17 +68,82 @@ export default class JS
                 if(r.Headers.length > 0 && (r.FromQuery.length > 0 || r.FromBody.length > 0 || r.FromFiles.length == 0))
                     container.innerHTML +='</br>'
 
+                 let getURLFunction = (_) => 
+                 {                 
+                    let args = '?';
+                    let path = '';
+
+                    for(let c of r.FromQuery)
+                    {
+                        let input = document.getElementById('key-'+r.Id+r.FromQuery.indexOf(c));   
+
+                        if(input.value.trim() != '')                            
+                            args+= c.Field + '="' + input.value + '"&';                           
+
+                    }
+
+
+                    if(args.length > 1)
+                        args = args.substring(0, args.length -1);
+                    else
+                        args = '';
+
+
+                    let route = r.Route;
+                    for(let c of r.FromPath)
+                    {
+                        let input = document.getElementById('path-'+r.Id+r.FromPath.indexOf(c));    
+
+                        if(route.indexOf(':'+c.Field) == -1)                        
+                           path+= '/' + input.value.trim();   
+                        else
+                           route = route.replace(':'+c.Field, input.value.trim());  
+
+                    }
+
+                    if(route.endsWith('/') && path.length > 0)
+                        path = path.substring(1);
+
+                    return  window.location.origin+route+path+args;   
+                }
+
+
+                if(r.FromPath.length > 0)
+                    container.innerHTML += "<h3>Path parameters:</h3>";
+
+
+
+                for(let c of r.FromPath)
+                {
+                    let isDate = c.Type && c.Type == "Date";                    
+
+                    let placeholder = isDate ? date.getUTCFullYear()+"-"+(date.getUTCMonth() + 1) +"-"+ date.getUTCDate() : c.Field;
+
+                    container.innerHTML += '<div class="token-container"><input type="text" id="path-'+r.Id+r.FromPath.indexOf(c)+'" placeholder="'+placeholder+'"></div>'; 
+
+                }
+
+                if(r.FromPath.length > 0 && (r.FromQuery.length > 0 || r.FromBody.length > 0 || r.FromFiles.length > 0 || r.FromFiles.length == 0))
+                    container.innerHTML +='</br>'
+
                 if(r.FromQuery.length > 0)
                     container.innerHTML += "<h3>Query parameters:</h3>";
 
-                  for(let c of r.FromQuery)
+
+
+                for(let c of r.FromQuery)
                 {
+
                     let isDate = c.Type && c.Type == "Date";                    
+
                     let placeholder = isDate ? date.getUTCFullYear()+"-"+(date.getUTCMonth() + 1) +"-"+ date.getUTCDate() : c.Field;
-                    container.innerHTML += '<div class="token-container"><input type="text" id="key-'+r.Id+r.FromQuery.indexOf(c)+'" placeholder="'+placeholder+'"></div>';                   
+
+                    container.innerHTML += '<div class="token-container"><input type="text" id="key-'+r.Id+r.FromQuery.indexOf(c)+'" placeholder="'+placeholder+'"></div>';  
+                   
+
                 }
 
-                if(r.FromQuery.length > 0 && (r.FromBody.length > 0 || r.FromFiles.length == 0))
+                if(r.FromQuery.length > 0 && (r.FromBody.length > 0 || r.FromFiles.length > 0 || r.FromFiles.length == 0))
                     container.innerHTML +='</br>'
 
                 
@@ -119,7 +187,7 @@ export default class JS
                     });
                 }
 
-                if(r.FromFiles.length > 0 && r.FromBody.length > 0)
+                if(r.FromFiles.length > 0 && (r.FromBody.length > 0 || r.FromBody.length == 0))
                     container.innerHTML +='</br>'
     
                 if(r.FromBody.length > 0)
@@ -161,14 +229,10 @@ export default class JS
                 }
     
                     
-                if(r.Description)
-                {
-                    container.innerHTML += '<h3>'+r.Description+'</h3>';
-    
-                }else {
-    
-                    container.innerHTML += '<h3>Use @Description(...) to add a description to a action</h3>';
-                }
+                if(r.Description)                
+                    container.innerHTML += '<h3>'+r.Description+'</h3>';    
+                else    
+                    container.innerHTML += '<h3>Use @Description(...) to add a description to a action</h3>';               
                 
                
                 container.innerHTML += '<div class="btn-container" ><button id="bt-'+expandId.ID+'">Send</button></div>';
@@ -177,7 +241,7 @@ export default class JS
                 {
                     container.innerHTML += '<h3 id="response-bar-'+r.Id+'">Response'+(r.Response.length > 1 ? 's': '')+':</h3>';
     
-                    container.innerHTML += '<div id="status-bar-'+r.Id+'" class="btn-container" ></div>';              
+                    container.innerHTML += '<div id="status-bar-'+r.Id+'" class="btn-container" ></div>';             
     
     
                     for(let s of r.Response.sort((a, b)=> a.Status - b.Status))
@@ -199,7 +263,6 @@ export default class JS
                             classValue = "ErrorServer";
                         }    
                         
-                       
                         bar.innerHTML += '<div><status id="status-'+r.Id+s.Status+'" class="'+classValue+'"> '+s.Status+ '</status> <tx>' + (s.Description ?? '')+'</tx></div>';
     
                         document.addEventListener('DOMContentLoaded', function() {
@@ -209,23 +272,18 @@ export default class JS
                                 let textarea = document.getElementById('response-area-'+r.Id);
                                 textarea.value = s.JSON;
                                
-                            });
-    
-                           
+                            }); 
                         });
-    
-                        
-                    }
-    
+                    }    
                    
-                }else{
-    
+                }
+                else
+                {    
                     container.innerHTML += '<h3 id="response-bar-'+r.Id+'">Response:</h3>';
                     container.innerHTML += '<div id="status-bar-'+r.Id+'" class="btn-container" style="display:none;" ></div>';
                 }
     
-                document.addEventListener('DOMContentLoaded', function() {
-                                 
+                document.addEventListener('DOMContentLoaded', function() {                                 
     
                     document.getElementById('bt-'+expandId.ID).addEventListener('click', (evt) => 
                     {
@@ -235,28 +293,12 @@ export default class JS
                         let h3 = document.getElementById('response-bar-'+r.Id);                
                         resp.value = '';
                         let req = new XMLHttpRequest();
-                        let args = '?';
-                        for(let c of r.FromQuery)
-                        {
-                            let input = document.getElementById('key-'+r.Id+r.FromQuery.indexOf(c));
-    
-                            if(input.value.trim() != ''){
-                                args+= c.Field + '="' + input.value + '"&';
-                            }
-                        }
-    
-                        if(args.length > 1){
-                            args = args.substring(0, args.length -1);
-                        }else 
-                        {
-                            args = '';
-                        }
-    
-                        req.open(r.Verb, window.location.origin+r.Route+args, true);                        
-                        if (r.FromFiles.length == 0 && r.FromBody.length > 0)
-                        {
+                        req.open(r.Verb, getURLFunction(), true);   
+
+                        if (r.FromFiles.length == 0 && r.FromBody.length > 0)                        
                             req.setRequestHeader('Content-type', 'application/json');
-                        }
+                        
+
                         if(route.Headers.length > 0)
                         {
                             if(route.Headers.length > 0)
@@ -274,12 +316,14 @@ export default class JS
                         if(r.Headers.length > 0)
                         {
                             for(let v of r.Headers)
-                                {   
-                                    let header = document.getElementById('action-header-'+r.Id+r.Headers.indexOf(v));
-                                    req.setRequestHeader(v,header.value);           
+                            {   
+                                let header = document.getElementById('action-header-'+r.Id+r.Headers.indexOf(v));
+                                req.setRequestHeader(v,header.value);           
                                                       
-                                }
+                            }
                         }
+
+                        document.getElementById( expandId.ID).innerHTML = getURLFunction();
 
                         req.onerror = ()=>
                         {
@@ -328,15 +372,15 @@ export default class JS
                             let form = new FormData();
 
                             for(let c of r.FromFiles)
-                                    {
-                                        let cIndex = r.FromFiles.indexOf(c);  
-                                        let file = document.getElementById('file-'+r.Id+cIndex);                          
-                                        if(file.files.length > 0)
-                                        {                                            
-                                            form.append(c.FieldName, file.files[0]);
-                                        }
+                            {
+                                let cIndex = r.FromFiles.indexOf(c);  
+                                let file = document.getElementById('file-'+r.Id+cIndex);                          
+                                if(file.files.length > 0)
+                                {                                            
+                                    form.append(c.FieldName, file.files[0]);
+                                }
                                         
-                                    }  
+                            }  
                             if(body)
                             {
                                 form.append('body', body.value);

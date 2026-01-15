@@ -10,11 +10,34 @@ web_api_base is a npm packaged that allows to create web-apis like MVC of .NET
 npm install web_api_base
 ```
 
-### Enable decorators on tsconfig.json
-```json
-"experimentalDecorators": true,                   
-"emitDecoratorMetadata": true,
+
+---
+## Configuration
+
+#### Peer Dependencies
+
+This framework relies on the `reflect-metadata` package to enable runtime type reflection used by decorators.
+
+Make sure it is installed and imported **once** in your application entry point:
+
+```typescript
+import 'reflect-metadata';
 ```
+
+#### Typescript
+
+Decorators and metadata emission must be enabled in your `tsconfig.json`:
+
+```json
+{
+  "experimentalDecorators": true,
+  "emitDecoratorMetadata": true
+}
+```
+
+These options are required for entity mapping, dependency injection, and relationship metadata to work correctly.
+
+---
 
 
 
@@ -101,6 +124,7 @@ export default class SampleController extends ControllerBase {
 ### Index.ts
 
 ```typescript
+import 'reflect-metadata';
 import App from './App';
 
 new App().StartAsync();
@@ -426,8 +450,22 @@ public async GetByIdAsync(@FromQuery()id : number) : Promise<OKResult<User>>
      return this.OK(await this._service.GetByIdAsync(id));
 }     
 ```
-In the example above, the __model binding system__ will get the first query argument of request. 
-We can also determine the name of parameter: __@FromQuery('id')__. 
+
+
+
+### @FromPath()
+Extract the method parameter from path params of request
+
+```typescript
+@GET()    
+public async GetByIdAsync(@FromPath()id : number) : Promise<OKResult<User>>
+{ 
+     return this.OK(await this._service.GetByIdAsync(id));
+}     
+```
+
+
+
 
 ### @FromFiles()
 Extract a method File(web_api_base) type parameter from multipart/form-data request
@@ -440,6 +478,47 @@ Extract a method File(web_api_base) type parameter from multipart/form-data requ
      return await this._service.MoveFiles(file, newPath);
  }
 ```
+
+### @FromFiles()
+Extract a method File(web_api_base) type parameter from multipart/form-data request
+
+
+```typescript
+ @POST()
+ public async InsertAsync(@FromFiles()file: File) : Promise<User>
+ {  
+     return await this._service.MoveFiles(file, newPath);
+ }
+```
+
+### @JSONProperty('from_json')
+Maps a JSON field name to a class property during model binding.
+
+When a request payload is bound to a class instance, the value of the JSON field specified in the decorator is assigned to the decorated property.
+When the controller returns the model as a response, the mapping is automatically reversed, converting the class property back to the original JSON field name.
+
+#### Behavior:
+
+Request → Model: from_json → JSONProperty
+
+Response → JSON: JSONProperty→ from_json
+
+This decorator is useful when your API needs to follow a different naming convention (e.g. snake_case) than your TypeScript models (e.g. camelCase).
+
+
+```typescript
+export class SomeClass
+{
+  ...
+
+  @JSONProperty('from_json')
+  public JSONProperty : string;
+
+   ...
+
+}
+```
+   
 
 ## Sample of a complete controller
 
@@ -539,7 +618,7 @@ Determine the minumun number of characters of a string
 ### @Regex(exp : RegExp)
 Determine the pattern expression to validate the string property 
 
-### @Rule<T>(action : (arg : T) => boolean)
+### @Rule<T, U extends keyof T>(action : (arg : T[U]) => boolean)
 Determine the delegate used to validate the property 
 
 
@@ -574,7 +653,7 @@ export default class ValidatedObject
     @MinLenght(10)
     public MinLenght : string;
     
-    @Rule<string[]>(p => p.length > 5)    
+    @Rule(p => p.length > 5)    
     public Permissions : string[];
 
     constructor()

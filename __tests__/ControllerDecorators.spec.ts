@@ -11,7 +11,7 @@ describe("Controller decorators", () => {
         const controller = new ControllerTest(new SampleService());
         const action = ControllersDecorators.GetAction(ControllerTest, "TestAction");
 
-        expect(action).toBe("/test");
+        expect(action).toBe("/Test");
 
     });
 

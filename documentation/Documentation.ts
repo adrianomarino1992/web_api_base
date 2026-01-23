@@ -23,7 +23,10 @@ export default class Documentation {
             let methods = Type.GetAllMethods(ctor).map(s => s.name);
     
             let route = ControllersDecorators.GetRoute(ctor);
+            let ignoreOnRoute = ControllersDecorators.GetOmmitOnRoute(ctor);
 
+            if(ignoreOnRoute)
+                route = "";
             
             let doc : IDocument = 
             {
@@ -39,12 +42,13 @@ export default class Documentation {
             for(let method of methods)
             {
                 let action = ControllersDecorators.GetAction(ctor, method.toString());
+                let ignoreActioName = ControllersDecorators.GetOmmitActionName(ctor, method.toString());
 
-                if(!action){
-                    continue;                
-                }
-
+                if(!action)
+                    continue;
                 
+                if(ignoreActioName)
+                    action = "";
                 
                 let verb = ControllersDecorators.GetVerb(ctor, method.toString());
                 let fromBody = ControllersDecorators.GetFromBodyArgs(ctor, method.toString());

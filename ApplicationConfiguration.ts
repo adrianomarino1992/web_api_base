@@ -3,6 +3,7 @@ import Path from 'path';
 import IApplicationConfiguration from './interfaces/IApplicationConfiguration';
 import DependecyService, { DIEscope, Ctors } from './dependencyInjection/DependecyService';
 import IMidleware, { IRequestResultHandler } from './midlewares/IMidleware';
+import path from 'path';
 
 export default class ApplicationConfiguration implements IApplicationConfiguration
 {
@@ -11,7 +12,7 @@ export default class ApplicationConfiguration implements IApplicationConfigurati
     public Port : number = 60000;
     public RootPath : string;
     public CurrentWorkingDirectory : string;
-    public ConfigJSONFile : string;
+    public EnvFile : string;
     public ExecutablePath : string;
     public DEBUG : boolean;
     public EnviromentVariables : {[key : string] : any} = {};
@@ -36,7 +37,6 @@ export default class ApplicationConfiguration implements IApplicationConfigurati
 
         this.RootPath = Path.parse(this.ExecutablePath).dir;        
         
-        this.ConfigJSONFile = `${this.RootPath}/config.json`;
 
         if(process.argv.indexOf("--debug") > -1 || 
         process.argv.indexOf("--DEBUG")  > 1 || 
@@ -45,6 +45,12 @@ export default class ApplicationConfiguration implements IApplicationConfigurati
             this.DEBUG = true; 
         else 
             this.DEBUG = false;
+
+         if(this.DEBUG)
+            this.EnvFile = path.join(this.RootPath,'.env.dev');
+         else
+             this.EnvFile = path.join(this.RootPath,'.env');
+
     }
     
    
@@ -76,15 +82,6 @@ export default class ApplicationConfiguration implements IApplicationConfigurati
         DependecyService.RegisterGeneric(type, undefined, undefined, DIEscope.SCOPED, builder);
     }
 
-
-
-
-
-
-
-
-
-
     
     public AddTransient<T>(type: Ctors<T>, ctor?: new (...args: any[]) => T, builder?: (() => T)): void
     {
@@ -114,10 +111,6 @@ export default class ApplicationConfiguration implements IApplicationConfigurati
         DependecyService.RegisterGeneric(type, undefined, undefined, DIEscope.TRANSIENT, builder);
     }
 
-
-
-
-
     
     public AddSingleton<T>(type: Ctors<T>, ctor?: new (...args: any[]) => T, builder?: () => T): void
     {
@@ -146,14 +139,10 @@ export default class ApplicationConfiguration implements IApplicationConfigurati
         DependecyService.RegisterGeneric(type, undefined, undefined, DIEscope.SINGLETON, builder);
     }
 
-    
-
-
-
 
     private async CheckFileAsync() : Promise<boolean>
     {
-        return new Promise<boolean>((resolve, _) => resolve(File.existsSync(this.ConfigJSONFile)));        
+        return new Promise<boolean>((resolve, _) => resolve(File.existsSync(this.EnvFile)));        
     }
 
     public async LoadAsync() : Promise<boolean>
@@ -166,24 +155,27 @@ export default class ApplicationConfiguration implements IApplicationConfigurati
                 return resolve(false);
             }
 
-            File.readFile(this.ConfigJSONFile, 'utf-8', (error, data) => 
+            File.readFile(this.EnvFile, 'utf-8', (error, data) => 
             {
                 if(error)
                     return reject(error);
 
-                try{
+                for(let line of data.split(/\r?\n/))
+                {
+                    if(!line || line.trim().startsWith("#"))
+                        continue;
 
-                    let json : any = JSON.parse(data);
+                    if(line.indexOf('=') > 0)
+                    {
+                        let param = line.substring(0, line.indexOf('=')).trim();
 
-                    for(let key in this)
-                    {   
-                        if(json[key] != undefined && key.indexOf('_') ==-1)
-                        {      
-                            this[key] = json[key];                            
-                        }
+                        let value = "";
+                        if(line.indexOf('=') < line.length - 1)
+                            value = line.substring((line.indexOf('=') + 1));
+
+                        this.EnviromentVariables[param] = value;
                     }
-                    
-                }catch{}
+                }
 
                 this.UpdateEnviroment();
 
@@ -193,31 +185,7 @@ export default class ApplicationConfiguration implements IApplicationConfigurati
         })
     }
 
-    public async SaveAsync() : Promise<boolean>
-    {
-
-        return new Promise<boolean>((resolve, reject)=>{
-
-            let copy = JSON.parse(JSON.stringify(this));
-
-            delete copy.RootPath;
-            delete copy.DEBUG; 
-            delete copy.CurrentWorkingDirectory;
-            delete copy.ExecutablePath;
-            delete copy._midlewares;
-            delete copy._afters;           
-
-            File.writeFile(`${this.RootPath}\\config.json`, JSON.stringify(copy, null, 2), 'utf-8', error => 
-            { 
-                if(error)
-                    return reject(error);
-
-                resolve(true);
     
-            });   
-        })
-             
-    }
 
     public Use(midleware: IMidleware): void 
     {

@@ -131,6 +131,17 @@ export function Route(route? : string)
     return ControllersDecorators.Route(route); 
 } ;
 
+export function OmmitOnRoute()       
+{
+    return ControllersDecorators.OmmitOnRoute(); 
+} ;
+
+export function OmmitActionNameOnRoute()       
+{
+    return ControllersDecorators.OmmitActionName(); 
+} ;
+
+
 export function GET(action? : string)       
 {
     return ControllersDecorators.Verb(HTTPVerbs.GET, action); 

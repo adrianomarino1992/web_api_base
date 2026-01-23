@@ -79,14 +79,14 @@ export default class DependecyService
     }
 
     
-    public static GetDIType(target : object, property : string) :  IRegister<unknown, unknown> | undefined
+    public static GetDIType(target : Function, property : string) :  IRegister<unknown, unknown> | undefined
     {
-        let meta = OwnMetaDataContainer.Get(target.constructor, DependecyService._injectableTypeKey, property);
+        let meta = OwnMetaDataContainer.Get(target, DependecyService._injectableTypeKey, property);
 
         if(meta)
             return meta.Value;
 
-        return { Type: Reflect.getMetadata("design:type", (target as any).prototype, property)};
+        return { Type: Reflect.getMetadata("design:type", target.prototype, property)};
     }
 
 
@@ -289,18 +289,35 @@ export default class DependecyService
    
     public static CheckForDependenciesAndResolve(object : any, context? : IDIContext)
     {
-        let keys = Object.keys(object);
-        keys.push(...DependecyService.GetInjectablesProperties(object.constructor));
-        for(let k of keys)
+        let ctor = object.constructor;
+
+        while(ctor)
         {
-            if(object[k] != 'function')
-            {
-                if(DependecyService.IsInjectable(object.constructor, k))
+            let keys = DependecyService.GetInjectablesProperties(ctor);
+            this.ResolveDependencies({ Keys : keys, Type : ctor}, object, context);
+            
+            if(ctor.prototype.__proto__)
+                ctor = ctor.prototype.__proto__.constructor;
+            else
+                break;
+            
+        }
+    }
+
+    private static ResolveDependencies(keysMap : IInjectableKeysMap, object : any, context? : IDIContext)
+    {
+        
+        for(let k of keysMap.Keys)
+        {
+            if(object[k] == 'function')
+                continue;
+            
+            if(DependecyService.IsInjectable(keysMap.Type, k))
                 {
-                    let tp = DependecyService.GetDIType(object, k);
+                    let tp = DependecyService.GetDIType(keysMap.Type, k);
 
                     if(!tp)
-                        throw new FindDependencyException(`Can not resolve the dependecy of ${object.constructor.name}.${k}`);
+                        throw new FindDependencyException(`Can not resolve the dependecy of ${keysMap.Type.name}.${k}`);
 
                     let service: IService | undefined;
 
@@ -324,7 +341,7 @@ export default class DependecyService
                     let instance = tp.GenericType ? DependecyService.ResolveGeneric(tp.Type, tp.GenericType) : DependecyService.Resolve(tp.Type);                    
 
                     if(instance == undefined)
-                        throw new FindDependencyException(`Can not resolve the dependecy of ${object.constructor.name}.${k}`);                   
+                        throw new FindDependencyException(`Can not resolve the dependecy of ${keysMap.Type.name}.${k}`);                   
                    
 
                     if(DependecyService.IsDIConext(object) && service?.Scope == DIEscope.SCOPED)
@@ -342,7 +359,6 @@ export default class DependecyService
 
                     object[k] = instance;
                 }
-            }
         }
     }
     
@@ -363,6 +379,7 @@ export default class DependecyService
     
     
 }
+
 
 export enum DIEscope
 {
@@ -385,5 +402,9 @@ interface IService
     Scope : DIEscope
 }
 
-
+interface IInjectableKeysMap
+{ 
+    Keys : string[];
+    Type: Function
+}
 

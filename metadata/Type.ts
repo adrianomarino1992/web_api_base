@@ -234,8 +234,8 @@ export default class Type {
                 {
                     if(elementType)
                     {
-                        for(let i in ((obj[propertyOnObject] as any)))                        
-                           (base as any)[k][i] = Type.Cast(obj[propertyOnObject][i], elementType, options); 
+                        for (let i of obj[propertyOnObject])
+                            (base as any)[k][obj[propertyOnObject].indexOf(i)] = Type.Cast(obj[propertyOnObject][obj[propertyOnObject].indexOf(i)], elementType, options);
                     }                    
                     else
                         (base as any)[k] = obj[propertyOnObject];

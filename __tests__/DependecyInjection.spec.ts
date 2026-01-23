@@ -1,5 +1,5 @@
 import 'reflect-metadata';
-import { ControllerTest } from "./classes/ControllerTest";
+import { ControllerTest, InheritDependecyController } from "./classes/ControllerTest";
 import { SampleService } from "./classes/SampleServiceTest";
 import DependecyService from "../dependencyInjection/DependecyService";
 import { DIEscope } from "../dependencyInjection/DependecyService";
@@ -64,6 +64,25 @@ describe("Dependency Injection service", () => {
 
     });
 
+   test("should create a controller from a ControllerTest subclass using the DI container", () => {
+
+        const controller = DependecyService.Build(InheritDependecyController);
+
+        expect(controller).not.toBeNull();
+
+    });
+
+    test("should inject dependencies via the @Inject decorator in a ControllerTest subclass", () => {
+
+        const controller = DependecyService.Build(InheritDependecyController);
+
+        expect(controller).not.toBeNull();
+        expect(controller.SomeDepency).not.toBeNull();
+        expect(controller.SomeDepency instanceof SampleService).toBeTruthy();
+
+    });
+
+
     test("should inject abstract dependencies using the @InjectAbstract decorator", () => {
 
         const controller = DependecyService.Build(ControllerTest);
@@ -74,9 +93,22 @@ describe("Dependency Injection service", () => {
 
     });
 
+
+    
+
     test("should inject dependencies into private properties", () => {
 
         const controller = DependecyService.Build(ControllerTest);
+        const prop = Reflect.get(controller, "_somePrivateDepency");
+
+        expect(prop).not.toBeNull();
+        expect(prop instanceof SampleService).toBeTruthy();
+
+    });
+
+    test("should inject dependencies into private properties of a subclass of ControllerTest", () => {
+
+        const controller = DependecyService.Build(InheritDependecyController);
         const prop = Reflect.get(controller, "_somePrivateDepency");
 
         expect(prop).not.toBeNull();

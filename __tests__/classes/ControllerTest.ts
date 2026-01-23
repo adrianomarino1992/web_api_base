@@ -84,3 +84,9 @@ export class ControllerTest extends ControllerBase
 
 
 }
+
+
+export class InheritDependecyController extends ControllerTest
+{
+
+}

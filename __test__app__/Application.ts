@@ -33,7 +33,6 @@ export default class App extends Application
         appConfig.AddScopedForGenericType(WithGenericType, DerivedClass, DerivedClassService);
 
         appConfig.AddScopedForGenericArgumentType(WithGenericType,  e => new WithGenericType(e as new(...args: any[]) => typeof e));
-
        
 
         this.UseStatic("/static", Path.join(this.ApplicationConfiguration.RootPath, "static", "files"));

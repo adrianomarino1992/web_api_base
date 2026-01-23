@@ -320,6 +320,28 @@ export default class CSS
         color: rgb(115, 206, 223);
     }
     
+
+    
+    .spinner {
+        display: inline-block;
+        width: 12px;
+        height: 12px;
+        border: 2px solid rgba(255,255,255,.3);
+        border-radius: 50%;
+        border-top-color: #fff;
+        animation: spin 1s ease-in-out infinite;
+        margin-right: 5px;
+    }
+
+    @keyframes spin {
+        to { transform: rotate(360deg); }
+    }
+
+
+    button:disabled {
+        cursor: not-allowed;
+        opacity: 0.7;
+    }
     
     
     

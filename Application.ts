@@ -32,7 +32,7 @@ export default abstract class Application implements IApplication {
 
     private _createdControllers: { new(...args: any[]): IController }[] = [];
 
-    private _URIs : {URI: string, Controller: string}[] = [];
+    private _URIs : {URI: string, Controller: string, Verb : HTTPVerbs}[] = [];
 
     public ApplicationConfiguration: IApplicationConfiguration;
 
@@ -219,9 +219,11 @@ export default abstract class Application implements IApplication {
 
         let route = ControllersDecorators.GetRoute(ctor);
         let validateBody = ControllersDecorators.IsToValidate(ctor);
+        let ignoreRouteName = ControllersDecorators.GetOmmitOnRoute(ctor);
+        
+        if(ignoreRouteName)
+            route = '';
 
-        if (!route)
-            return;
 
         this._createdControllers.push(ctor);
 
@@ -238,6 +240,11 @@ export default abstract class Application implements IApplication {
             let fromFiles = ControllersDecorators.GetFromFilesArgs(ctor, method.toString());
             let fromPath = ControllersDecorators.GetFromPathArgs(ctor, method.toString());
             let maxFilesSize = ControllersDecorators.GetMaxFilesSize(ctor);
+            let ignoreActioName = ControllersDecorators.GetOmmitActionName(ctor, method.toString());
+
+            if(ignoreActioName)
+                action = "";
+
             ControllersDecorators.GetNonDecoratedArguments(ctor, method, fromBody, fromQuery, fromPath, fromFiles);
 
             fromQuery.push(...fromPath) //path params will work like a query param after this point 
@@ -251,10 +258,10 @@ export default abstract class Application implements IApplication {
             if(verb != HTTPVerbs.POST && fromFiles.length > 0)
                 throw new ControllerLoadException(`Method: ${ctor.name}.${method.toString()} must be a POST method to allow File type parameters`);
 
-            let collision = this._URIs.filter(s => s.URI == `${route}${action}`);
+            let collision = this._URIs.filter(s => s.URI == `${route}${action}` && s.Verb == verb);
             
             if(collision.length > 0)
-                throw new ControllerLoadException(`The URI: ${route}${action} exists in two controllers: ${collision[0].Controller} and ${ctor.name}.${method.toString()}`);
+                throw new ControllerLoadException(`The URI: ${verb.toString().toUpperCase()} ${route}${action} exists in two controllers: ${collision[0].Controller} and ${ctor.name}.${method.toString()}`);
 
             console.debug("appended : ", verb, `${route}${action}`);
 
@@ -273,7 +280,14 @@ export default abstract class Application implements IApplication {
                 }
             }
 
-            this._URIs.push({ URI : `${route}${action}`, Controller : `${ctor.name}.${method.toString()}`});
+            if(ignoreRouteName && ignoreActioName && !pathParams)
+                action = "/";
+
+            if(!this.IsValidExpressRoute(`${route}${action}${pathParams.trim()}`))
+                throw new ControllerLoadException(`The URI: ${verb.toString().toUpperCase()} ${route}${action} of ${ctor.name}.${method.toString()} is invalid`);
+ 
+
+            this._URIs.push({ URI : `${route}${action}`, Controller : `${ctor.name}.${method.toString()}`, Verb : verb});
 
             (this.Express as any)[verb.toString().toLowerCase()](`${route}${action}${pathParams.trim()}`, async (request: Request, response: Response) => {
 
@@ -782,8 +796,8 @@ export default abstract class Application implements IApplication {
         if (err instanceof Exception)
             ex = err;
         else {
-            ex = new Exception(err.message);
-            ex.stack = err.stack;
+            ex = new Exception(err?.message?? "Unknown error");
+            ex.stack = err?.stack ?? "";
         }
 
         return ex;
@@ -819,6 +833,22 @@ export default abstract class Application implements IApplication {
             defaultHandler(request, response, this.CastToExpection(exception));
         }
     }
+
+
+    private IsValidExpressRoute(route: string): boolean {
+
+        if (!route || typeof route !== 'string') 
+            return false;
+
+        if (!route.startsWith('/')) 
+            return false;
+
+        const expressRouteRegex =
+            /^\/([A-Za-z0-9\-._~%!$&'()+,;=:@]+|\*|:[A-Za-z0-9_]+[?*+]?)?(\/([A-Za-z0-9\-._~%!$&'()+,;=:@]+|\*|:[A-Za-z0-9_]+[?*+]?)?)*$/;
+
+        return expressRouteRegex.test(route);
+    }
+
 
 
 

@@ -287,11 +287,18 @@ export default class JS
     
                     document.getElementById('bt-'+expandId.ID).addEventListener('click', (evt) => 
                     {
+                        let btn = evt.currentTarget; 
+                        let originalContent = btn.innerHTML; 
+
                         let body = document.getElementById('body-'+r.Id);   
                         let resp = document.getElementById('response-area-'+r.Id);   
                         let bar = document.getElementById('status-bar-'+r.Id);
                         let h3 = document.getElementById('response-bar-'+r.Id);                
                         resp.value = '';
+
+                        btn.disabled = true;
+                        btn.innerHTML = '<span class="spinner"></span>'; 
+
                         let req = new XMLHttpRequest();
                         req.open(r.Verb, getURLFunction(), true);   
 
@@ -325,8 +332,14 @@ export default class JS
 
                         document.getElementById( expandId.ID).innerHTML = getURLFunction();
 
+                        const resetBtn = () => {
+                            btn.disabled = false;
+                            btn.innerHTML = originalContent;
+                        };
+
                         req.onerror = ()=>
                         {
+                            resetBtn();
                             h3.innerText = "Current response:";
                             bar.style.display = "flex";
                             resp.value = 'Error to send the request';
@@ -338,6 +351,8 @@ export default class JS
                         {
                             if(req.readyState == 4 && req.status > 0)
                             {
+                                resetBtn();
+                                
                                 h3.innerText = "Current response:";
     
                                 bar.style.display = "flex";

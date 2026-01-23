@@ -22,6 +22,7 @@ export default class ControllersDecorators
     private static _maxFilesSizeKeyMetadata = "meta:maxFilesSizeKey";
     private static _controllerMidlewaresAfterKeyMetadata = "meta:controllerMidlewaresAfterKey";      
     private static _fromPathParamsKeyMetadata = "meta:fromPathParamsKey";
+    private static _ommitOnRouteNameKeyMetadata = "meta:ommitOnRouteKey";
     
 
     public static Route(route? : string)  
@@ -38,7 +39,7 @@ export default class ControllersDecorators
         }
     }
 
-    public static GetRoute(ctor : Function) : string | undefined
+    public static GetRoute(ctor : Function) : string
     {
        let meta = Reflect.getMetadata(ControllersDecorators._routeKeyMetadata, ctor.prototype);
 
@@ -47,18 +48,34 @@ export default class ControllersDecorators
        if(!meta)
             meta = cName;
         
-        meta = meta.toLowerCase().replace("[controller]", cName);
+        meta = meta.replace("[controller]", cName);
 
-       if(meta && meta[0] != '/')
+       if(meta && meta[0].trim() != '/')
        {
-            return `/${meta}`;
+            return `/${meta.trim()}`;
        }
 
        return meta;
 
     }
 
-    
+    public static OmmitOnRoute()  
+    {
+        return function(target : Function)
+        {
+            Reflect.defineMetadata(ControllersDecorators._ommitOnRouteNameKeyMetadata, true, target.prototype);
+        }
+    }
+
+    public static GetOmmitOnRoute(ctor : Function) : boolean
+    {
+       let meta = Reflect.getMetadata(ControllersDecorators._ommitOnRouteNameKeyMetadata, ctor.prototype);
+
+       return !!meta;
+
+    }
+
+  
     public static Validate()  
     {
         return function(ctor : Function)
@@ -179,6 +196,27 @@ export default class ControllersDecorators
         return meta;
     }
 
+     public static OmmitActionName()  
+    {      
+
+        return function( target : Object, methodName : string, propertyDescriptor : PropertyDescriptor)
+        {
+            const prototype = typeof target == 'function' ? target.prototype : target;
+
+            ControllersDecorators.SetMetaData(ControllersDecorators._ommitOnRouteNameKeyMetadata, prototype, methodName, true);
+            
+        }
+    }
+    
+    public static GetOmmitActionName(ctor : Function, methodName : string ) : boolean
+    {
+        let meta = !!ControllersDecorators.GetMetaData<boolean>(ControllersDecorators._ommitOnRouteNameKeyMetadata, ctor.prototype, methodName);
+
+        return meta;
+    }
+
+    
+
     public static Action(actionName? : String)  
     {
         return function( target : Object, methodName : string, propertyDescriptor : PropertyDescriptor)
@@ -199,9 +237,9 @@ export default class ControllersDecorators
     {
         let meta = ControllersDecorators.GetMetaData<string>(ControllersDecorators._actionNameKeyMetadata, ctor.prototype, methodName);
 
-        if(meta && meta[0] != '/')
+        if(meta && meta[0].trim() != '/')
         {  
-            return `/${meta}`;
+            return `/${meta.trim()}`;
         }
 
         return meta;
@@ -292,9 +330,12 @@ export default class ControllersDecorators
     }
     
 
-    public static GetFromFilesArgs(ctor : Function, method : string) : {Index : number, FileName? : string, Required: boolean }[]
+    public static GetFromFilesArgs(ctor : Function, method : string) : IMethodFileParam[]
     {
-        return Reflect.getMetadata(ControllersDecorators._fromFilesKeyMetadata, ctor.prototype, method) ?? [];
+        let params : IMethodFileParam[] = Reflect.getMetadata(ControllersDecorators._fromFilesKeyMetadata, ctor.prototype, method) ?? [];
+
+        return params.sort((a, b) => a.Index-b.Index);
+        
     }
 
     public static MaxFilesSize(bytes : number)  
@@ -352,11 +393,11 @@ export default class ControllersDecorators
         }
     }
    
-    public static GetFromQueryArgs(ctor : Function, method : string) :  {Index : number, Field : string, Type : Function, Required : boolean }[]
+    public static GetFromQueryArgs(ctor : Function, method : string) :  IMethodParam[]
     {
-       
+         let params : IMethodParam[] = Reflect.getMetadata(ControllersDecorators._fromQueryKeyMetadata, ctor.prototype, method) ?? [];
 
-        return Reflect.getMetadata(ControllersDecorators._fromQueryKeyMetadata, ctor.prototype, method) ?? [];
+         return params.sort((a, b) => a.Index-b.Index);
     }
 
     public static FromPath(argName? : string, required? : boolean)
@@ -388,9 +429,11 @@ export default class ControllersDecorators
         }
     }
    
-    public static GetFromPathArgs(ctor : Function, method : string) :  {Index : number, Field : string, Type : Function, Required : boolean }[]
+    public static GetFromPathArgs(ctor : Function, method : string) : IMethodParam[]
     {       
-        return Reflect.getMetadata(ControllersDecorators._fromPathParamsKeyMetadata, ctor.prototype, method) ?? [];
+        let params : IMethodParam[] = Reflect.getMetadata(ControllersDecorators._fromPathParamsKeyMetadata, ctor.prototype, method) ?? [];
+
+        return params.sort((a, b) => a.Index-b.Index);
     }
 
     
@@ -489,3 +532,17 @@ export default class ControllersDecorators
 }
 
 
+export interface IMethodParam
+{   
+    Index : number; 
+    Field : string;
+    Type : Function; 
+    Required : boolean; 
+}
+
+export interface IMethodFileParam
+{
+    Index : number;
+    FileName? : string; 
+    Required: boolean; 
+}

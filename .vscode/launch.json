@@ -15,7 +15,7 @@
             "args": ["--light"],
             "program": "${workspaceFolder}\\dist\\__test__app__\\index.js",
             "env": {
-              "DEBUG": true             
+               "DEBUG": "true"   
             },
             "outFiles": [
                 "${workspaceFolder}/**/*.js"

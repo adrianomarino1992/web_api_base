@@ -244,39 +244,39 @@ export default class ValidationDecorators
             
             if(required)
             {
-                if(!objectAsAny[k])
+                if(objectAsAny[k] == undefined || objectAsAny[k] == null || (typeof objectAsAny[k] == "string" && objectAsAny[k].trim() == ""))
                     result.push({Field : k , Message : required.Message, Type: ctor});
             }
 
             if(maxLenght)
             {              
-                if(objectAsAny[k] && (typeof objectAsAny[k] == "string" && objectAsAny[k].length > maxLenght.Max))
+                if(typeof objectAsAny[k] == "string" && objectAsAny[k].length > maxLenght.Max)
                     result.push({Field :  k , Message : maxLenght.Message, Type: ctor});
             }
 
             if(minLenght)
             {               
-                if(!objectAsAny[k] || (typeof objectAsAny[k] == "string" && objectAsAny[k].length < minLenght.Min))
+                if(typeof objectAsAny[k] == "string" && objectAsAny[k].length < minLenght.Min)
                     result.push({Field : k , Message : minLenght.Message, Type: ctor});
             }
 
             if(regex)
             {                
-                if(!objectAsAny[k] || (typeof objectAsAny[k] == "string" && !regex.RegExp.test(objectAsAny[k] )))
+                if(typeof objectAsAny[k] == "string" && !regex.RegExp.test(objectAsAny[k] ))
                     result.push({Field : k , Message : regex.Message, Type: ctor});
             }
 
             if(minValue)
             {
                
-                if(!objectAsAny[k] || (typeof objectAsAny[k] == "number" && objectAsAny[k] < minValue.Min))
+                if(typeof objectAsAny[k] == "number" && objectAsAny[k] < minValue.Min)
                     result.push({Field :  k , Message : minValue.Message, Type: ctor});
             }
 
             if(maxValue )
             {
                 
-                if(!objectAsAny[k] || (typeof objectAsAny[k] == "number" && objectAsAny[k] > maxValue.Max))
+                if(typeof objectAsAny[k] == "number" && objectAsAny[k] > maxValue.Max)
                     result.push({Field :  k , Message : maxValue.Message, Type: ctor});
             }
 

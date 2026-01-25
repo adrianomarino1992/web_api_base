@@ -214,7 +214,9 @@ export default class ApplicationConfiguration implements IApplicationConfigurati
         for(let k in this.EnviromentVariables)
         {
              process.env[k] = this.EnviromentVariables[k];
-        }                  
+        }     
+        
+        this.UpdateHostAndPort();
     }
 
     private UpdateConfigWithEnviroment() : void
@@ -222,19 +224,24 @@ export default class ApplicationConfiguration implements IApplicationConfigurati
         for(let k in process.env)
         {
             this.EnviromentVariables[k] = process.env[k];
-        }
+        }      
+        
+        this.UpdateHostAndPort();
+    }
 
-        if(!!process.env["PORT"])
+    private UpdateHostAndPort()
+    {
+        if(!!this.EnviromentVariables["PORT"])
         {
-            let port = Number.parseInt(process.env["PORT"]);
+            let port = Number.parseInt(this.EnviromentVariables["PORT"]);
 
             if(port != Number.NaN)
                 this.Port = port;
         }
 
-        if(!!process.env["HOST"])
+        if(!!this.EnviromentVariables["HOST"])
         {
-           this.Host = process.env["HOST"]
+           this.Host = this.EnviromentVariables["HOST"]
         }
     }
 

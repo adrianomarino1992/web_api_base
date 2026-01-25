@@ -18,7 +18,7 @@ export default class App extends Application
     {  
         this.UseCors();         
 
-        console.log(process.env)
+        console.log(appConfig.EnviromentVariables)
         
         await this.UseControllersAsync();
 

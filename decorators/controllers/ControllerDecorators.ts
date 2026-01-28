@@ -5,6 +5,9 @@ import FunctionAnalizer from '../../metadata/FunctionAnalizer';
 import File from '../../files/File';
 import DecoratorException from '../../exceptions/DecoratorException';
 import ControllerLoadException from '../../exceptions/ControllerLoadException';
+import path from 'path';
+import OwnMetaDataContainer from '../../metadata/OwnMetaDataContainer';
+import Exception from '../../exceptions/Exception';
 
 export default class ControllersDecorators
 {
@@ -23,6 +26,7 @@ export default class ControllersDecorators
     private static _controllerMidlewaresAfterKeyMetadata = "meta:controllerMidlewaresAfterKey";      
     private static _fromPathParamsKeyMetadata = "meta:fromPathParamsKey";
     private static _ommitOnRouteNameKeyMetadata = "meta:ommitOnRouteKey";
+    private static _controllerPathKeyMetadata = "meta:controllerPathKey";
     
 
     public static Route(route? : string)  
@@ -39,6 +43,10 @@ export default class ControllersDecorators
         }
     }
 
+    public static GetControllerPathKey()
+    {
+        return this._controllerPathKeyMetadata;
+    }
     public static GetRoute(ctor : Function) : string
     {
        let meta = Reflect.getMetadata(ControllersDecorators._routeKeyMetadata, ctor.prototype);
@@ -50,10 +58,40 @@ export default class ControllersDecorators
         
         meta = meta.replace("[controller]", cName);
 
+        if(meta.indexOf("[folder]") >= 0)
+        {
+            let metadata = OwnMetaDataContainer.Get(ctor, ControllersDecorators.GetControllerPathKey());
+
+            if(!metadata)
+                throw new Exception(`The controller type ${ctor.name} was not initialized yet`);
+
+            let parts : string[] = [];
+
+            let currentDir = path.dirname(metadata.Value!);
+            let currentBase = path.basename(currentDir);
+            while(currentBase && currentBase != "controllers")
+            {
+                parts.push(path.basename(currentBase));
+                currentDir = path.normalize(currentDir.substring(0, currentDir.length - currentBase.length - 1));
+                currentBase = path.basename(currentDir);
+            }
+
+            let fullPath= "";
+            for(let part of parts.reverse())
+            {
+                fullPath += `/${part}`;
+            }
+            
+             meta = meta.replace("[folder]", fullPath);
+        }
+
        if(meta && meta[0].trim() != '/')
        {
-            return `/${meta.trim()}`;
+            meta = `/${meta.trim()}`;
        }
+
+       while(meta.indexOf("//") >= 0)
+            meta = meta.replace("//", "/");
 
        return meta;
 

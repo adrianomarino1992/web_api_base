@@ -208,6 +208,7 @@ export default class CSS
         color: var(--b-color);
         border: none;
         cursor: pointer;
+        border-radius: 5px;
     }
     
     button:hover

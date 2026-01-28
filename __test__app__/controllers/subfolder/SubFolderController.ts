@@ -1,12 +1,11 @@
-import ActionResult from "../../controllers/ActionResult";
-import { ControllerBase } from "../../controllers/base/ControllerBase";
-import { Route, GET, FromPath, OmmitActionNameOnRoute, OmmitOnRoute } from "../../";
+import ActionResult from "../../../controllers/ActionResult";
+import { ControllerBase } from "../../../controllers/base/ControllerBase";
+import { Route, GET, FromPath, OmmitActionNameOnRoute, OmmitOnRoute } from "../../../";
 
 
 
-
-@OmmitOnRoute()
-export default class OmmitController extends ControllerBase {
+@Route("[folder]/[controller]/test")
+export default class SubFolderController extends ControllerBase {
 
     constructor() {
         super();
@@ -28,6 +27,7 @@ export default class OmmitController extends ControllerBase {
     }
 
 }
+
 
 
 

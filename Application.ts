@@ -24,6 +24,7 @@ import FileClass from './files/File';
 import Type from "./metadata/Type";
 import SendFileResult from "./controllers/SendFileResult";
 import DownloadFileResult from "./controllers/DownloadFileResult";
+import OwnMetaDataContainer from "./metadata/OwnMetaDataContainer";
 
 
 export default abstract class Application implements IApplication {
@@ -144,7 +145,28 @@ export default abstract class Application implements IApplication {
         return undefined;
     }
 
+    protected GetAllControllersFilesRecursively(dir: string) : string[]
+    {
+        let controllersPaths : string[] = [];
 
+        let itens = File.readdirSync(dir, {withFileTypes: true });
+
+        for(let item of itens)
+        {
+            let fullPath = Path.join(dir, item.name);
+
+            if(item.isDirectory())
+            {
+                controllersPaths.push(...this.GetAllControllersFilesRecursively(fullPath));
+            }
+            else if(fullPath.toLowerCase().endsWith("controller.js"))
+            {
+               controllersPaths.push(fullPath);
+            }    
+        }
+
+        return controllersPaths;
+    }
 
     protected UseControllersAsync(root?: string): Promise<void> {
         return new Promise<void>(async (resolve, reject) => {
@@ -160,43 +182,49 @@ export default abstract class Application implements IApplication {
 
             console.debug(`reading controllers in ${controllersPath}`);
 
-            let files: string[] = File.readdirSync(controllersPath).filter(s => s.toLowerCase().endsWith("controller.js"));
+            let files: string[] = this.GetAllControllersFilesRecursively(controllersPath);
 
             if(files.length == 0)
                   return reject(new ControllerLoadException(`No controllers were found in the specified directory: ${controllersPath}. If you intend to register controllers manually, remove the call to ${this.UseControllersAsync.name}.`));
 
-            for (let controllerFile of files) {
+            for (let controllerFile of files) 
+            {
+                let controllerModule = await import(controllerFile);
+               
+                let controllersCtors : Function[] = []
 
-
-                let controllerModule = await import(Path.join(controllersPath, controllerFile));
-
-                let controllerClass: any | undefined = undefined;
-
-                if (controllerModule.default == undefined) {
-
-                    for (let c in controllerModule) {
-                        if (c.toLowerCase().endsWith("controller")) {
-                            controllerClass = controllerModule[c];
-                        }
+                for (let c in controllerModule) 
+                {
+                    if (c.toLowerCase().endsWith("controller")) 
+                    {
+                            let t = controllerModule[c];
+                            if(typeof t == 'function')
+                                controllersCtors.push(t);
                     }
-
-                } else
-                    controllerClass = controllerModule.default;
-
-                if (controllerClass == undefined)
-                    return reject(new ControllerLoadException(`Can not find any controller from file : ${controllerFile}`));
-
-                let controller = Reflect.construct(controllerClass.prototype.constructor, []) as IController;
-
-                if (controller != undefined && controller != null) {
-                    this.AppendController(controllerClass.prototype.constructor);
-
-                } else {
-
-                    return reject(new ControllerLoadException(`Can not load ${controllerClass.name} controller from file : ${controllerFile}`));
                 }
 
+                if (controllerModule.default != undefined) 
+                {
+                    controllersCtors.push(controllerModule.default);
+                } 
 
+                for(let cTor of controllersCtors)
+                {                    
+                    if (cTor == undefined)
+                        continue;                  
+                    
+                    let controller = Reflect.construct(cTor.prototype.constructor, []) as IController;
+    
+                    if (controller != undefined && controller != null) 
+                    {
+                        if(controller instanceof ControllerBase){
+                            OwnMetaDataContainer.Set(cTor.prototype.constructor, ControllersDecorators.GetControllerPathKey(), undefined, controllerFile);
+                            this.AppendController(cTor.prototype.constructor);    
+                        }                   
+    
+                    } 
+
+                }
             }
 
             resolve();

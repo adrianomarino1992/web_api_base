@@ -457,11 +457,32 @@ public async GetByIdAsync(@FromQuery()id : number) : Promise<OKResult<User>>
 Extract the method parameter from path params of request
 
 ```typescript
-@GET()    
-public async GetByIdAsync(@FromPath()id : number) : Promise<OKResult<User>>
-{ 
-     return this.OK(await this._service.GetByIdAsync(id));
-}     
+
+@Route(':paRam/path') //add a controller path param
+export default class PathParamController extends ControllerBase {
+
+    constructor() {
+        super();
+    }
+
+    @GET()   //:paRam/path/ping
+    public Ping(@FromPath()paRam : string): ActionResult {
+        return this.OK({ status: "pong", paRam });
+    }
+
+    @GET() 
+    @OmmitActionNameOnRoute()   //:paRam/path
+    public WithNoName(@FromPath()paRam : string): ActionResult {
+        return this.OK({ status: "pong", paRam });
+    }
+    
+    @GET()   //:paRam/path/getatoasync/:cod_param  
+    public async GetAtoAsync(@FromPath()paRam: string, @FromPath('cod_param')codigoParam: string): Promise<ActionResult> 
+    {
+        return this.OK({paRam, codigoParam });
+    }
+
+}  
 ```
 
 
@@ -475,21 +496,11 @@ Extract a method File(web_api_base) type parameter from multipart/form-data requ
  @POST()
  public async InsertAsync(@FromFiles()file: File) : Promise<User>
  {  
-     return await this._service.MoveFiles(file, newPath);
+     await this._storage.SaveAsync(file);
+     return this.NoContent();
  }
 ```
 
-### @FromFiles()
-Extract a method File(web_api_base) type parameter from multipart/form-data request
-
-
-```typescript
- @POST()
- public async InsertAsync(@FromFiles()file: File) : Promise<User>
- {  
-     return await this._service.MoveFiles(file, newPath);
- }
-```
 
 ### @JSONProperty('from_json')
 Maps a JSON field name to a class property during model binding.

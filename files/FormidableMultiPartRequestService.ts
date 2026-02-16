@@ -2,6 +2,7 @@ import formidable from 'formidable';
 
 import AbstractMultiPartRequestService, { IGetPartsOptions, IRequestPart, PartType } from './AbstractMultiPartRequestService';
 import Exception from '../exceptions/Exception';
+import MaxFileSizeException from '../exceptions/MaxFileSizeException';
 
 export default class FormidableMultiPartRequestService extends AbstractMultiPartRequestService {
     
@@ -22,7 +23,12 @@ export default class FormidableMultiPartRequestService extends AbstractMultiPart
                 let result : IRequestPart[] = [];
 
                 if (err)
+                {
+                    if(err.httpCode == 413)
+                        return reject(new MaxFileSizeException(err.message));
+
                     return reject(new Exception(err.message));
+                }
 
                 for(let c in fields)
                      result.push(

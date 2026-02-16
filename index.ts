@@ -1,6 +1,8 @@
 import OwnMetaDataContainer from "./metadata/OwnMetaDataContainer";
 
 
+// #region REFLECT-METADATA HOOK
+
 const noHooksArg = process.argv.filter(arg => arg.toLowerCase() == '--donothook-reflect').length > 0;
 const noHookEnv = !!process.env["DO_NOT_HOOK_REFLECT"]
 
@@ -46,6 +48,13 @@ if(!noHookEnv && !noHooksArg)
     }
 }
 
+// #endregion
+
+
+
+
+
+// #region IMPORTS
 
 export { default as Application } from "./Application"
 export { default as ApplicationConfiguration } from "./ApplicationConfiguration";
@@ -98,7 +107,13 @@ export {default as DecoratorException} from "./exceptions/DecoratorException";
 export {default as InvalidEntityException} from "./exceptions/InvalidEntityException";
 export {default as FileNotFoundException} from "./exceptions/FileNotFoundException";
 
+// #endregion
 
+
+
+
+
+// #region CONTROLLERS DECORATORS
 
 export function UseBefore(midleware : IMidleware)  
 {
@@ -170,9 +185,18 @@ export function Verb(verb : HTTPVerbs)
 
 
 
-export function RequiredFromBodyArg(paramName? : string)
+// #endregion
+
+
+
+
+
+
+// #region METHODS PARAMS
+
+export function RequiredFromBodyArg(paramName? : string, notProvidedMessage?: string)
 {
-    return ControllersDecorators.RequiredFromBodyArg(paramName);
+    return ControllersDecorators.RequiredFromBodyArg(paramName, notProvidedMessage);
 }
 
 
@@ -181,24 +205,42 @@ export function OptionalFromBodyArg(paramName? : string)
     return ControllersDecorators.OptionalFromBodyArg(paramName);
 }
 
-export function FromBody(paramName? : string, required? : boolean)
+export function FromBody(paramName? : string, required? : boolean, notProvidedMessage?: string)
 {
-    return ControllersDecorators.FromBody(paramName, required);
+    return ControllersDecorators.FromBody(paramName, required, notProvidedMessage);
 }
 
-export function FromFiles(fileName? : string, required? : boolean)
+
+
+export function RequiredFromFileArg(fileName? : string, fileNotProvidedMessage?: string)
 {
-    return ControllersDecorators.FromFiles(fileName, required);
+    return ControllersDecorators.RequiredFromFilesArg(fileName, fileNotProvidedMessage);
 }
 
-export function MaxFilesSize(bytes : number)
+export function OptionalFromFileArg(fileName? : string)
 {
-    return ControllersDecorators.MaxFilesSize(bytes);
+    return ControllersDecorators.OptionalFromFilesArg(fileName);
 }
 
-export function RequiredFromQueryArg(paramName? : string)
+export function FromFiles(fileName? : string, required? : boolean, fileNotProvidedMessage? : string)
 {
-    return ControllersDecorators.RequiredFromQueryArg(paramName);
+    return ControllersDecorators.FromFiles(fileName, required, fileNotProvidedMessage);
+}
+
+
+export function MaxFilesSize(bytes : number, fileBiggerThanMaxMessage?: string)
+{
+    return ControllersDecorators.MaxFilesSize(bytes, fileBiggerThanMaxMessage);
+}
+
+export function MaxFileSize(bytes : number, fileBiggerThanMaxMessage?: string)
+{
+    return ControllersDecorators.MaxFileSize(bytes, fileBiggerThanMaxMessage);
+}
+
+export function RequiredFromQueryArg(paramName? : string, notProvidedMessage?: string)
+{
+    return ControllersDecorators.RequiredFromQueryArg(paramName, notProvidedMessage);
 }
 
 export function OptionalFromQueryArg(paramName? : string)
@@ -207,22 +249,31 @@ export function OptionalFromQueryArg(paramName? : string)
 }
 
 
-export function FromQuery(paramName? : string, required? : boolean)
+export function FromQuery(paramName? : string, required? : boolean, notProvidedMessage?: string)
 {
-    return ControllersDecorators.FromQuery(paramName, required);
+    return ControllersDecorators.FromQuery(paramName, required, notProvidedMessage);
 }
 
 
-export function FromPath(paramName? : string, required? : boolean)
+export function FromPath(paramName? : string)
 {
-    return ControllersDecorators.FromPath(paramName, required);
+    return ControllersDecorators.FromPath(paramName);
 }
 
 
 
 
+// #endregion
 
 
+
+
+
+
+
+
+
+// #region METADATA
 
 
 
@@ -247,9 +298,17 @@ export function JSONProperty(jsonPropertyName: string)
 }
 
 
+// #endregion
 
 
 
+
+
+
+
+
+
+// #region DOCUMENTATION
 
 export function IgnoreInDocumentation()
 {
@@ -290,9 +349,12 @@ export function ProducesResponse(response : Parameters<typeof DocumentationDecor
 } ;
 
 
+// #endregion
 
 
 
+
+// #region DEPENDENCY INJECTION
 
 
 
@@ -334,6 +396,7 @@ export function InjectAbstract<T>(cTor : Ctors<T>)
 
 
 
+// #endregion
 
 
 
@@ -343,6 +406,8 @@ export function InjectAbstract<T>(cTor : Ctors<T>)
 
 
 
+
+// #region VALIDATIONS
 
 
 export function Validate()
@@ -395,3 +460,4 @@ export function Rule<T extends Object, U extends keyof T>(action: (a : T[U]) => 
 
 
 
+// #endregion

@@ -23,6 +23,7 @@ export default class ControllersDecorators
     private static _fromBodyKeyMetadata = "meta:fromBodyKey";
     private static _fromFilesKeyMetadata = "meta:fromFilesKey";
     private static _maxFilesSizeKeyMetadata = "meta:maxFilesSizeKey";
+    private static _maxFilesSizeOfActionKeyMetadata = "meta:maxFilesSizeOfActionKey";
     private static _controllerMidlewaresAfterKeyMetadata = "meta:controllerMidlewaresAfterKey";      
     private static _fromPathParamsKeyMetadata = "meta:fromPathParamsKey";
     private static _ommitOnRouteNameKeyMetadata = "meta:ommitOnRouteKey";
@@ -283,9 +284,9 @@ export default class ControllersDecorators
         return meta;
     }
 
-    public static RequiredFromBodyArg(bodyPropName? : string) 
+    public static RequiredFromBodyArg(bodyPropName? : string, notProvidedMessage? : string) 
     {
-        return ControllersDecorators.FromBody(bodyPropName, true);
+        return ControllersDecorators.FromBody(bodyPropName, true, notProvidedMessage);
     }
 
     public static OptionalFromBodyArg(bodyPropName? : string) 
@@ -293,7 +294,7 @@ export default class ControllersDecorators
         return ControllersDecorators.FromBody(bodyPropName, false);
     }
 
-    public static FromBody(bodyPropName? : string, required? : boolean)
+    public static FromBody(bodyPropName? : string, required? : boolean, notProvidedMessage? : string)
     {
         return function( target : Object, methodName: string , parameterIndex: number)
         {
@@ -310,19 +311,20 @@ export default class ControllersDecorators
             let thisParam = params.filter(s => s.Index == parameterIndex)[0];            
 
             if(item.length == 0)
-                meta.push({Index : parameterIndex, Field : bodyPropName, Type : thisParam.Type, Required : required ?? true});
+                meta.push({Index : parameterIndex, Field : bodyPropName, Type : thisParam.Type, Required : required ?? true, NotProvidedMessage : notProvidedMessage});
             
             else {
 
                 item[0].Field = bodyPropName;
                 item[0].Type = thisParam.Type;
+                item[0].NotProvidedMessage = notProvidedMessage;
             }
 
             Reflect.defineMetadata(ControllersDecorators._fromBodyKeyMetadata, meta, prototype, methodName);            
         }
     }
 
-    public static GetFromBodyArgs(ctor : Function, method : string) : {Index : number, Field? : string, Type : Function, Required : boolean }[]
+    public static GetFromBodyArgs(ctor : Function, method : string) : IFromBodyMethodParam[]
     {
         return Reflect.getMetadata(ControllersDecorators._fromBodyKeyMetadata, ctor.prototype, method) ?? [];
     }
@@ -332,12 +334,12 @@ export default class ControllersDecorators
         return ControllersDecorators.FromFiles(fileName, false);
     }
 
-    public static RequiredFromFilesArg(fileName? : string) 
+    public static RequiredFromFilesArg(fileName? : string, fileNotProvidedMessage? : string) 
     {
-        return ControllersDecorators.FromFiles(fileName, true);
+        return ControllersDecorators.FromFiles(fileName, true, fileNotProvidedMessage);
     }
 
-    public static FromFiles(fileName? : string, required? : boolean)
+    public static FromFiles(fileName? : string, required? : boolean, fileNotProvidedMessage? : string)
     {
         return function( target : Object, methodName: string , parameterIndex: number)
         {
@@ -357,10 +359,11 @@ export default class ControllersDecorators
                 throw new DecoratorException('FromFiles decorator must be used in a web_api_base File type parameter');
 
             if(item.length == 0)
-                meta.push({Index : parameterIndex, FileName : fileName,  Required : required ?? true});
-            
-            else {
+                meta.push({Index : parameterIndex, FileName : fileName,  Required : required ?? true, NotProvidedMessage: fileNotProvidedMessage});            
+            else 
+            {
                 item[0].FileName = fileName;                
+                item[0].Required = required ?? true;                
             }
 
             Reflect.defineMetadata(ControllersDecorators._fromFilesKeyMetadata, meta, prototype, methodName);            
@@ -376,25 +379,57 @@ export default class ControllersDecorators
         
     }
 
-    public static MaxFilesSize(bytes : number)  
+    public static MaxFilesSize(bytes : number, fileBiggerThanMaxMessage?: string)  
     {
         return function(target : Object)
         {            
             const prototype = typeof target == 'function' ? target.prototype : target;
 
-            Reflect.defineMetadata(ControllersDecorators._maxFilesSizeKeyMetadata, bytes, prototype);            
+            if(!bytes || bytes < 0)
+                throw new Exception(`Max file size on ${prototype.constructor.name} can not be less than 0 bytes`);
+
+            let meta : IMethodMaxFileSize = {
+                MaxFileSize: bytes,
+                FileBiggerThanMaxMessage: fileBiggerThanMaxMessage
+            }
+
+            Reflect.defineMetadata(ControllersDecorators._maxFilesSizeKeyMetadata, meta, prototype);            
         }
     }
 
-    public static GetMaxFilesSize(ctor : Function) : number 
+    public static GetMaxFilesSize(ctor : Function) : IMethodMaxFileSize | undefined 
     {
        return Reflect.getMetadata(ControllersDecorators._maxFilesSizeKeyMetadata, ctor.prototype) ?? 0;
     }
 
-
-    public static RequiredFromQueryArg(bodyPropName? : string) 
+    
+    public static MaxFileSize(bytes : number, fileBiggerThanMaxMessage?: string)  
     {
-        return ControllersDecorators.FromQuery(bodyPropName, true);
+        return function(target : Object, methodName : string, propertyDescriptor : PropertyDescriptor)
+        {
+            const prototype = typeof target == 'function' ? target.prototype : target;
+
+            if(!bytes || bytes < 0)
+                throw new Exception(`Max file size on ${prototype.constructor.name} can not be less than 0 bytes`);
+
+              let meta : IMethodMaxFileSize = {
+                MaxFileSize: bytes,
+                FileBiggerThanMaxMessage: fileBiggerThanMaxMessage
+            }
+           
+            Reflect.defineMetadata(ControllersDecorators._maxFilesSizeOfActionKeyMetadata, meta, prototype, methodName);            
+        }
+    }
+
+    public static GetMaxFileSize(ctor : Function, methodName : string) : IMethodMaxFileSize | undefined 
+    {
+       return Reflect.getMetadata(ControllersDecorators._maxFilesSizeOfActionKeyMetadata, ctor.prototype, methodName);
+    }
+
+
+    public static RequiredFromQueryArg(bodyPropName? : string, notProvidedMessage? : string) 
+    {
+        return ControllersDecorators.FromQuery(bodyPropName, true, notProvidedMessage);
     }
 
     public static OptionalFromQueryArg(bodyPropName? : string) 
@@ -402,7 +437,7 @@ export default class ControllersDecorators
         return ControllersDecorators.FromQuery(bodyPropName, false);
     }
 
-    public static FromQuery(bodyPropName? : string, required? : boolean)
+    public static FromQuery(bodyPropName? : string, required? : boolean, notProvidedMessage? : string)
     {
         return function( target : Object, methodName: string , parameterIndex: number)
         {
@@ -419,26 +454,29 @@ export default class ControllersDecorators
             let item = meta.filter(x => x.Index == parameterIndex);
 
             if(item.length == 0)
-                meta.push({Index : parameterIndex, Field : bodyPropName ?? thisParam.Name, Type : thisParam.Type, Required : required ?? true});
+                meta.push({Index : parameterIndex, Field : bodyPropName ?? thisParam.Name, Type : thisParam.Type, Required : required ?? true, NotProvidedMessage: notProvidedMessage});
             
             else {
 
                 item[0].Field = bodyPropName ?? thisParam.Name;
                 item[0].Type = thisParam.Type;
+                item[0].NotProvidedMessage = notProvidedMessage;
             }
 
             Reflect.defineMetadata(ControllersDecorators._fromQueryKeyMetadata, meta, prototype, methodName);             
         }
     }
    
-    public static GetFromQueryArgs(ctor : Function, method : string) :  IMethodParam[]
+    public static GetFromQueryArgs(ctor : Function, method : string) :  IFromQueryMethodParam[]
     {
-         let params : IMethodParam[] = Reflect.getMetadata(ControllersDecorators._fromQueryKeyMetadata, ctor.prototype, method) ?? [];
+         let params : IFromQueryMethodParam[] = Reflect.getMetadata(ControllersDecorators._fromQueryKeyMetadata, ctor.prototype, method) ?? [];
 
          return params.sort((a, b) => a.Index-b.Index);
     }
 
-    public static FromPath(argName? : string, required? : boolean)
+   
+
+    public static FromPath(argName? : string)
     {
         return function( target : Object, methodName: string , parameterIndex: number)
         {
@@ -455,21 +493,21 @@ export default class ControllersDecorators
             let item = meta.filter(x => x.Index == parameterIndex);
 
             if(item.length == 0)
-                meta.push({Index : parameterIndex, Field : argName ?? thisParam.Name, Type : thisParam.Type, Required : required ?? true});
+                meta.push({Index : parameterIndex, Field : argName ?? thisParam.Name, Type : thisParam.Type, Required : true});
             
             else {
 
                 item[0].Field = argName ?? thisParam.Name;
-                item[0].Type = thisParam.Type;
+                item[0].Type = thisParam.Type;               
             }
 
             Reflect.defineMetadata(ControllersDecorators._fromPathParamsKeyMetadata, meta, prototype, methodName);             
         }
     }
    
-    public static GetFromPathArgs(ctor : Function, method : string) : IMethodParam[]
+    public static GetFromPathArgs(ctor : Function, method : string) : IFromQueryMethodParam[]
     {       
-        let params : IMethodParam[] = Reflect.getMetadata(ControllersDecorators._fromPathParamsKeyMetadata, ctor.prototype, method) ?? [];
+        let params : IFromQueryMethodParam[] = Reflect.getMetadata(ControllersDecorators._fromPathParamsKeyMetadata, ctor.prototype, method) ?? [];
 
         return params.sort((a, b) => a.Index-b.Index);
     }
@@ -572,15 +610,32 @@ export default class ControllersDecorators
 
 export interface IMethodParam
 {   
-    Index : number; 
-    Field : string;
+    Index : number;     
     Type : Function; 
     Required : boolean; 
+    NotProvidedMessage? : string;
+}
+
+export interface IFromQueryMethodParam extends IMethodParam
+{
+    Field : string;
+}
+
+export interface IFromBodyMethodParam extends IMethodParam
+{
+    Field? : string;
 }
 
 export interface IMethodFileParam
 {
     Index : number;
     FileName? : string; 
-    Required: boolean; 
+    Required?: boolean; 
+    NotProvidedMessage? : string;
+}
+
+export interface IMethodMaxFileSize
+{
+    MaxFileSize: number 
+    FileBiggerThanMaxMessage? : string;
 }

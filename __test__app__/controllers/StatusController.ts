@@ -1,4 +1,4 @@
-import { ControllerBase, FileService, Route, Inject, InjectAbstract, UseBefore,  FromBody, DELETE, FromQuery, GET, POST, PUT, Description, ProducesResponse, ActionResult, FromFiles, ControllerHeader, ActionHeader,  UseAfter, InjectForTypeArgument, Validate, FromPath } from "../../index";
+import { ControllerBase, OptionalFromBodyArg, FileService, Route, Inject, InjectAbstract, UseBefore,  FromBody, DELETE, FromQuery, GET, POST, PUT, Description, ProducesResponse, ActionResult, FromFiles, ControllerHeader, ActionHeader,  UseAfter, InjectForTypeArgument, Validate, FromPath, RequiredFromBodyArg, RequiredFromQueryArg, OptionalFromQueryArg } from "../../index";
 import { ConcreteService, SampleService, SampleServiceAbstract, WithGenericType } from "../service/SampleService";
 import {File} from '../../index';
 import Path from 'path';
@@ -153,76 +153,6 @@ export default class StatusController extends ControllerBase
     }    
 
 
-    @POST()  
-    public async UploadFileWithDecorator(@FromQuery("name")name : string, @FromQuery()age : number, @FromFiles()file: File)
-    {
-        await this.CreateFilesDirAsync();        
-        let fs = new FileService();
-        await fs.CopyAsync(file.Path, Path.join(this._uploadsDir, file.FileName));
-        await fs.DeleteAsync(file.Path);
-        return this.OK({ name, age, file});
-    }  
-
-
-    private _uploadsDir = Path.join(__dirname, "uploads");
-
-    private async CreateFilesDirAsync()
-    {
-        const fs = new FileService();
-
-        if(!(await fs.DirectoryExistsAsync(this._uploadsDir)))
-            await fs.CreateDirectoryAsync(this._uploadsDir);        
-    }
-    
-    @POST()  
-    public async UploadFileWithNoDecorator(name : string, age : number, file: File)
-    {
-        await this.CreateFilesDirAsync();
-       
-        let fs = new FileService();
-        await fs.CopyAsync(file.Path, Path.join(this._uploadsDir, file.FileName));
-        await fs.DeleteAsync(file.Path);
-        return this.OK({ name, age, file});
-    }  
-
-     @GET()  
-    public async GetListOfFiles()
-    {        
-         await this.CreateFilesDirAsync();
-        let fs = new FileService();
-        let files = await fs.GetAllFilesAsync(this._uploadsDir);
-        
-        if(files.length == 0)
-            return this.NotFound();
-        
-        return this.OK(files);
-    } 
-
-    @GET()  
-    public async SendFileAsync()
-    {        
-         await this.CreateFilesDirAsync();
-        let fs = new FileService();
-        let files = await fs.GetAllFilesAsync(this._uploadsDir);
-
-         if(files.length == 0)
-            return this.NotFound();
-
-        return this.SendFile(files[0]);
-    }   
-    
-    @GET()  
-    public async DownloadFileAsync()
-    {        
-         await this.CreateFilesDirAsync();
-        let fs = new FileService();
-        let files = await fs.GetAllFilesAsync(this._uploadsDir);
-        
-        if(files.length == 0)
-            return this.NotFound();
-        
-        return this.DownloadFile(files[0]);
-    }   
 
     @POST()   
     public PostWithDecorator(@FromBody()user : TestClass) 
@@ -274,5 +204,50 @@ export default class StatusController extends ControllerBase
     {
         return id;
     }
+
+
+    @POST()       
+    public PostOfRequiredBody(some : DerivedClass) 
+    {
+        let result = this.GenericDerivedDependecy.Run([some]);
+        return result;
+    }
+
+    @POST()       
+    public PostOfRequiredBodyAndCustomMessage(@RequiredFromBodyArg(undefined, "Some argument is required") some : DerivedClass) 
+    {
+        let result = this.GenericDerivedDependecy.Run([some]);
+        return result;
+    }
+
+    @POST()       
+    public PostOfOptionalBody(@OptionalFromBodyArg() some : DerivedClass) 
+    {
+        if(!some)
+            return this.OK("Some is not provided");
+
+        let result = this.GenericDerivedDependecy.Run([some]);
+        return result;
+    }
     
+    @GET() 
+    public GetWithRequiredQueryArg(name : string) : string
+    {
+        return name;
+    }
+
+    @GET() 
+    public GetWithRequiredQueryArgAndCustomMessage(@RequiredFromQueryArg(undefined, "Name is required for this GET") name : string) : string
+    {
+        return name;
+    }
+    
+    @GET() 
+    public GetWithOptionalQueryArg(@OptionalFromQueryArg() name : string) : string
+    {
+        return name ?? "not provided";
+    }
 }
+
+
+

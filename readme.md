@@ -93,32 +93,106 @@ export default class App extends Application {
 
 ```
 
-### Controllers
-All controllers must be placed inside the **./controllers** folder.
+## Controllers
 
-Controller class names must end with **Controller**, and each controller must **extend the ControllerBase** class.
+All controllers must be placed inside the **`./controllers`** folder.
 
-You can create a new controller using the create-controller command:
+### Naming Convention
+
+- Controller class names **must end with `Controller`**
+- Every controller **must extend `ControllerBase`**
+
+Example:
+
+```typescript
+export default class SampleController extends ControllerBase
+```
+
+---
+
+## Creating a Controller
+
+You can scaffold a new controller using:
 
 ```bash
 npx create-controller -c=SampleController
 ```
 
-### Example: ./controllers/SampleController.ts
+This will generate the file inside the `./controllers` directory following the required conventions.
+
+---
+
+## Basic Example
+
+**File:** `./controllers/SampleController.ts`
 
 ```typescript
-import { ControllerBase, Route, GET } from "web_api_base";
+import { ControllerBase, Route, GET, ActionResult } from "web_api_base";
 
 // @Route("some/route") // Optional custom route prefix
 export default class SampleController extends ControllerBase {   
-    
+
     @GET()
     public Hello(): ActionResult {
         return this.OK({ message: "Hello World!" });
     }
 }
+```
+
+---
+
+## Using Subfolders
+
+Controllers can be organized into subfolders inside the `./controllers` directory.
+
+Example structure:
 
 ```
+controllers/
+ └── admin/
+      └── SubController.ts
+```
+
+When using subfolders, routes can be composed dynamically using the following placeholders:
+
+- `[folder]` → Name of the subfolder
+- `[controller]` → Controller name without the `Controller` suffix
+
+Example:
+
+```typescript
+@Route("[folder]/[controller]/test")
+```
+
+If the file is located at:
+
+```
+controllers/admin/SubController.ts
+```
+
+- `[folder]` → `admin`
+- `[controller]` → `sub`
+
+Final route:
+
+```
+admin/sub/test
+```
+
+---
+
+## Route Resolution Rules
+
+| Controller Location | Controller Name | Route Template | Final Route |
+|---------------------|-----------------|----------------|-------------|
+| controllers/SampleController.ts | SampleController | `[controller]` | `sample` |
+| controllers/admin/SubController.ts | SubController | `[folder]/[controller]` | `admin/sub` |
+| controllers/sub1/sub2/SubController.ts | SubController | `[folder]/[controller]` | `sub1/sub2/sub` |
+
+---
+
+This approach keeps routes predictable, scalable, and aligned with folder structure — similar to convention-based routing in frameworks like ASP.NET Core.
+
 
 
 ### Index.ts

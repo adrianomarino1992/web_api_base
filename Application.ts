@@ -25,6 +25,7 @@ import Type from "./metadata/Type";
 import SendFileResult from "./controllers/SendFileResult";
 import DownloadFileResult from "./controllers/DownloadFileResult";
 import OwnMetaDataContainer from "./metadata/OwnMetaDataContainer";
+import MaxFileSizeException from "./exceptions/MaxFileSizeException";
 
 
 export default abstract class Application implements IApplication {
@@ -268,6 +269,9 @@ export default abstract class Application implements IApplication {
             let fromFiles = ControllersDecorators.GetFromFilesArgs(ctor, method.toString());
             let fromPath = ControllersDecorators.GetFromPathArgs(ctor, method.toString());
             let maxFilesSize = ControllersDecorators.GetMaxFilesSize(ctor);
+            let maxFileSizeOfAction = ControllersDecorators.GetMaxFileSize(ctor, method.toString());
+
+
             let ignoreActioName = ControllersDecorators.GetOmmitActionName(ctor, method.toString());
 
             if(ignoreActioName)
@@ -361,9 +365,36 @@ export default abstract class Application implements IApplication {
                         let multiPartService = DependecyService.Resolve<AbstractMultiPartRequestService>(AbstractMultiPartRequestService);
                         
                         try{
-                            parts = await multiPartService!.GetPartsFromRequestAsync(request, { MaxFileSize: maxFilesSize});
+
+                            let maxFileSizeInBytes = 0;
+
+                            if(maxFileSizeOfAction)
+                                maxFileSizeInBytes = maxFileSizeOfAction.MaxFileSize;
+                            else if(maxFilesSize)
+                                maxFileSizeInBytes = maxFilesSize.MaxFileSize;
+
+                            parts = await multiPartService!.GetPartsFromRequestAsync(request, { MaxFileSize: maxFileSizeInBytes});
 
                         }catch (err) {
+
+                            if(err instanceof MaxFileSizeException)
+                            {
+                                 let maxFileSizeErroMessage = err.Message;
+
+                                if(maxFileSizeOfAction && maxFileSizeOfAction.FileBiggerThanMaxMessage)
+                                    maxFileSizeErroMessage = maxFileSizeOfAction.FileBiggerThanMaxMessage;
+                                else if(maxFilesSize && maxFilesSize.FileBiggerThanMaxMessage)
+                                    maxFileSizeErroMessage = maxFilesSize.FileBiggerThanMaxMessage;
+
+                                response.status(413);
+                                response.json(
+                                            {
+                                                Message: "Model binding fail",
+                                                Detailts: maxFileSizeErroMessage
+                                            });
+                                return;
+                                
+                            }
                             return this.CallErrorHandler(request, response, this.CastToExpection(err as Error));
                         }
 
@@ -446,6 +477,12 @@ export default abstract class Application implements IApplication {
                                     
                             }
                                 
+                            if(!obj || JSON.stringify(obj) == "{}")
+                            {
+                                fromBodyParams.push(undefined);
+                                params[f.Index] = undefined;
+                                return;       
+                            }
 
                             let param = Type.SetPrototype(obj, ts[f.Index] as new (...args: any[]) => any, {UseJSONPropertyName: true});
                             fromBodyParams.push(param);
@@ -501,6 +538,9 @@ export default abstract class Application implements IApplication {
                                 }
                                 else
                                 {
+                                    if(!p.Required && params[p.Index] == undefined)
+                                        continue;
+
                                     try{
                                         Type.ValidateType(params[p.Index], ts[p.Index] as new (...args: any[]) => any);
                                     }catch(e)
@@ -521,7 +561,7 @@ export default abstract class Application implements IApplication {
                                 response.json(
                                     {
                                         Message: "Model binding fail",
-                                        Detailts: modelBindErros.map(s => `Parameter "${s.Field}" is required`)
+                                        Detailts: modelBindErros.map(s => s.NotProvidedMessage ? s.NotProvidedMessage :  `Parameter "${s.Field}" is required`)
                                     });
                                 return;
                             }
@@ -542,7 +582,7 @@ export default abstract class Application implements IApplication {
                                 response.json(
                                     {
                                         Message: "Model binding fail",
-                                        Detailts: modelBindErros.map(s => `Parameter "${s.Field}" is required`)
+                                        Detailts: modelBindErros.map(s => s.NotProvidedMessage ? s.NotProvidedMessage : `Parameter "${s.Field}" is required`)
                                     });
                                 return;
                             }
@@ -563,7 +603,7 @@ export default abstract class Application implements IApplication {
                                 response.json(
                                     {
                                         Message: "Model binding fail",
-                                        Detailts: modelBindErros.map(s => `The file ${(s.FileName ? `"${s.FileName} "` : "")}is required`)
+                                        Detailts: modelBindErros.map(s =>  s.NotProvidedMessage ? s.NotProvidedMessage : `The file ${(s.FileName ? `"${s.FileName} "` : "")}is required`)
                                     });
                                 return;
                             }
@@ -660,6 +700,8 @@ export default abstract class Application implements IApplication {
 
                                 if (afters.length == 0)
                                     this.CallErrorHandler(request, response, this.CastToExpection(err as Error));
+                                if(!response.headersSent)
+                                    this.CallErrorHandler(request, response, this.CastToExpection(err as Error));
                             }
                            
 
@@ -703,6 +745,8 @@ export default abstract class Application implements IApplication {
                         }
 
                         if (afters.length == 0)
+                            this.CallErrorHandler(request, response, this.CastToExpection(err as Error));
+                        if(!response.headersSent)
                             this.CallErrorHandler(request, response, this.CastToExpection(err as Error));
                     }
                 }

@@ -12,6 +12,7 @@ import {
     WithGenericType
 } from "./classes/GenericService";
 import TestClass, { DerivedClass, ItemTest } from "./classes/TestClass";
+import { describe, test, expect } from '@jest/globals';
 
 describe("Dependency Injection service", () => {
 

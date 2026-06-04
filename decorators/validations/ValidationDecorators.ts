@@ -191,9 +191,9 @@ export default class ValidationDecorators
         
     }
     
-    public static Rule<T extends Object, U extends keyof T>(validationFunction : (arg : T[U]) => boolean, message? : string)  
+    public static Rule<T>(validationFunction : (arg : T) => boolean, message? : string)  
     {
-        return function(target : T, property : U)
+        return function(target : Object, property : string)
         {            
             const constructor = typeof target == 'function' ? target : target.constructor;
 
@@ -201,12 +201,12 @@ export default class ValidationDecorators
 
             let msg = message ?? `The field ${constructor.name}.${property.toString()} fails on validation expression`;
 
-            let rules = ValidationDecorators.TryGetValue<IRuleValidation<T, U>[]>(constructor, property.toString(), ValidationDecorators._ruleKeyMetadata) ?? [];
+            let rules = ValidationDecorators.TryGetValue<IRuleValidation<T>[]>(constructor, property.toString(), ValidationDecorators._ruleKeyMetadata) ?? [];
 
             let ruleValidation = {
                 Message : msg, 
                 Function : validationFunction
-            } as IRuleValidation<T, U>
+            } as IRuleValidation<T>
 
             rules.push(ruleValidation);
 
@@ -218,9 +218,9 @@ export default class ValidationDecorators
         }
     }
 
-    public static GetRules<T extends Object, U extends keyof T>(ctor : Function, property : string) :  IRuleValidation<T, U>[] 
+    public static GetRules<T extends Object, U extends keyof T>(ctor : Function, property : string) :  IRuleValidation<T>[] 
     {
-        return ValidationDecorators.TryGetValue<IRuleValidation<T, U>[]>(ctor, property, ValidationDecorators._ruleKeyMetadata) ?? [];         
+        return ValidationDecorators.TryGetValue<IRuleValidation<T>[]>(ctor, property, ValidationDecorators._ruleKeyMetadata) ?? [];         
     }
 
 
@@ -355,9 +355,9 @@ export interface IValidationResult extends IValidationWithMessage
     Type: Function
 }
 
-export interface IRuleValidation<T extends Object, U extends keyof T> extends IValidationWithMessage
+export interface IRuleValidation<T> extends IValidationWithMessage
 {     
-    Function : (arg : T[U]) => boolean
+    Function : (arg : T) => boolean
 }
 
 

@@ -703,7 +703,7 @@ Determine the minumun number of characters of a string
 ### @Regex(exp : RegExp)
 Determine the pattern expression to validate the string property 
 
-### @Rule<T, U extends keyof T>(action : (arg : T[U]) => boolean)
+### @Rule<T>(action : (arg : T) => boolean)
 Determine the delegate used to validate the property 
 
 
@@ -738,7 +738,7 @@ export default class ValidatedObject
     @MinLenght(10)
     public MinLenght : string;
     
-    @Rule(p => p.length > 5)    
+    @Rule<string[]>(p => p.length > 5)    
     public Permissions : string[];
 
     constructor()

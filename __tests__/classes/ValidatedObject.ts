@@ -27,8 +27,8 @@ export default class ValidatedObject extends ValidableClass
     @MinLenght(10)
     public MinLenght : string;
     
-    @Rule(p => p.length > 5)  
-    @Rule(p => p.length < 10, 'Permission max lenght: 10')    
+    @Rule<string[]>(p => p.length > 5)  
+    @Rule<string[]>(p => p.length < 10, 'Permission max lenght: 10')    
     public Permissions : string[];
 
     
@@ -89,7 +89,7 @@ export class RelatedClass
     @MinLenght(10)
     public MinLenght : string;
     
-    @Rule(p => p.length > 5)    
+    @Rule<string[]>(p => p.length > 5)    
     public Permissions : string[];
 
     constructor()

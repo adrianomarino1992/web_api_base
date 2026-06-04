@@ -3,6 +3,7 @@ import { ControllerTest } from "./classes/ControllerTest";
 import ControllersDecorators from "../decorators/controllers/ControllerDecorators";
 import { HTTPVerbs } from "../enums/httpVerbs/HttpVerbs";
 import { SampleService } from "./classes/SampleServiceTest";
+import { describe, test, expect } from '@jest/globals';
 
 describe("Controller decorators", () => {
 

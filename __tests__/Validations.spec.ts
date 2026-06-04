@@ -1,6 +1,7 @@
 import 'reflect-metadata';
 import ValidatedObject, { RelatedClass, SubClassOfValidationObject } from "./classes/ValidatedObject";
 import ValidationDecorators from "../decorators/validations/ValidationDecorators";
+import { describe, test, expect } from '@jest/globals';
 
 describe("Validation decorators", () => {
 
@@ -29,7 +30,7 @@ describe("Validation decorators", () => {
         expect(rules.length).toBe(2);
 
         for(let rule of rules)
-        {5
+        {
             expect(rule.Function).not.toBeNull();
             expect(rule.Message.length).toBeGreaterThan(0);
             expect(typeof rule.Function).toBe("function");

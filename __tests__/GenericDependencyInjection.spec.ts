@@ -4,6 +4,7 @@ import { DIEscope } from "../dependencyInjection/DependecyService";
 import GenericService from "./classes/GenericService";
 import ControllerWithGenericProperty from "./classes/ControllerWithGenericProperty";
 import TestClass, { DerivedClass } from "./classes/TestClass";
+import { describe, test, expect } from '@jest/globals';
 
 describe("Dependency Injection service – generic resolution", () => {
 

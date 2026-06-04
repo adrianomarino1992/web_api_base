@@ -2,6 +2,7 @@ import 'reflect-metadata';
 import ValidatedObject, { RelatedClass, SubClassOfValidationObject } from "./classes/ValidatedObject";
 import MetadataDecorators from '../decorators/metadata/MetadataDecorators';
 import Type from '../metadata/Type';
+import { describe, test, expect } from '@jest/globals';
 
 
 describe("Validation decorators", () => {

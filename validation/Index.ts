@@ -41,7 +41,7 @@ export function Regex(regex: RegExp, message?: string)
     return ValidationDecorators.Regex(regex, message);
 }
 
-export function Rule<T extends Object, U extends keyof T>(action: (a : T[U]) => boolean, message?: string)
+export function Rule<T>(action: (a : T) => boolean, message?: string)
 {
-    return ValidationDecorators.Rule<T, U>(action, message);
+    return ValidationDecorators.Rule<T>(action, message);
 }

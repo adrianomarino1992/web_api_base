@@ -417,7 +417,8 @@ export default class Type {
 
             }else 
             {
-                this.ValidateType(source[propertyOnJSON], designType);
+                if(source[propertyOnJSON])
+                    this.ValidateType(source[propertyOnJSON], designType);
             }
         }
     }

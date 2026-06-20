@@ -211,7 +211,10 @@ export default class Type {
                     designType = metaOfField[0].Value as Function;
             }
                 
-           
+            if(!designType && (base as any)[k] != undefined)
+            {
+                designType = ((base as any)[k] as any).constructor;
+            }           
 
             let elementType : ReturnType<typeof MetadataDecorators.GetArrayElementType>;              
 
@@ -492,6 +495,35 @@ export default class Type {
         return new Date(dateParts[0], dateParts[1] - 1, dateParts[2], hours[0], hours[1], hours[2]);       
 
     }
+
+    public static ReplaceCaseInsensitive(source: string, content: string, newContent: string)
+    {
+        let txt = source;
+
+        if(!txt || !content || content.length > txt.length)
+            return txt;
+
+        let breakControl = txt.length;
+        let time = 0;
+        while(txt.toLowerCase().indexOf(content.toLowerCase()) > -1)
+        {
+            time++;
+
+            if(time >= breakControl)
+                break;
+
+            let i = txt.toLowerCase().indexOf(content.toLowerCase());
+            let l = content.length;
+
+            if(i == 0)
+                txt = txt.substring(l) + newContent;
+            else
+                txt = txt.substring(0, i -1) + newContent + txt.substring(i + l);       
+        }
+
+        return txt;
+    }
+
 
     public static RemoveCircularReferences<T extends object>(obj : T) : T
     {

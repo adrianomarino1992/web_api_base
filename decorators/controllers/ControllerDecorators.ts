@@ -8,6 +8,7 @@ import ControllerLoadException from '../../exceptions/ControllerLoadException';
 import path from 'path';
 import OwnMetaDataContainer from '../../metadata/OwnMetaDataContainer';
 import Exception from '../../exceptions/Exception';
+import Type from '../../metadata/Type';
 
 export default class ControllersDecorators
 {
@@ -50,16 +51,16 @@ export default class ControllersDecorators
     }
     public static GetRoute(ctor : Function) : string
     {
-       let meta = Reflect.getMetadata(ControllersDecorators._routeKeyMetadata, ctor.prototype);
+       let meta: string = Reflect.getMetadata(ControllersDecorators._routeKeyMetadata, ctor.prototype);
 
        let cName = ctor.name.toLowerCase().replace("controller", "");
 
        if(!meta)
             meta = cName;
         
-        meta = meta.replace("[controller]", cName);
+        meta = Type.ReplaceCaseInsensitive(meta, "[controller]", cName);
 
-        if(meta.indexOf("[folder]") >= 0)
+        if(meta.toLowerCase().indexOf("[folder]") >= 0)
         {
             let metadata = OwnMetaDataContainer.Get(ctor, ControllersDecorators.GetControllerPathKey());
 
@@ -83,7 +84,7 @@ export default class ControllersDecorators
                 fullPath += `/${part}`;
             }
             
-             meta = meta.replace("[folder]", fullPath);
+             meta = Type.ReplaceCaseInsensitive(meta, "[folder]", fullPath);
         }
 
        if(meta && meta[0].trim() != '/')

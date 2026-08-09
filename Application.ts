@@ -1,7 +1,7 @@
 import { Express, static as static_ } from "express";
 import ExpressModule from "express";
 import ApplicationConfiguration from "./ApplicationConfiguration"
-import IApplication, { ApplicationExceptionHandler } from "./interfaces/IApplication";
+import IApplication, { ApplicationExceptionHandler, ApplicationRouteNotFoundHandler } from "./interfaces/IApplication";
 import IApplicationConfiguration from "./interfaces/IApplicationConfiguration";
 import IController from "./interfaces/IController";
 import ControllersDecorators from './decorators/controllers/ControllerDecorators';
@@ -39,6 +39,8 @@ export default abstract class Application implements IApplication {
     public ApplicationConfiguration: IApplicationConfiguration;
 
     public Express: Express;
+    
+    public ApplicationRouteNotFoundHandler?: ApplicationRouteNotFoundHandler;
 
     public ApplicationThreadExeptionHandler?: ApplicationExceptionHandler;
 
@@ -62,6 +64,12 @@ export default abstract class Application implements IApplication {
 
         await this.ConfigureAsync(this.ApplicationConfiguration);
 
+
+        this.Express.use((req : any, resp: any) => {
+            this.CallFoundDefaultHandler(req, resp);
+        });
+
+        
         if(this.ApplicationConfiguration)
             this.Express.use((e : any, rq : any, rs : any, n : any) => 
             {
@@ -873,6 +881,25 @@ export default abstract class Application implements IApplication {
         }
 
         return ex;
+    }
+
+    private CallFoundDefaultHandler(request: Request, response: Response)
+    {
+        try{
+
+            if(this.ApplicationRouteNotFoundHandler)
+                this.ApplicationRouteNotFoundHandler(request, response);
+            else
+                response.status(404).end();
+
+        }
+        catch(err)
+        {            
+            if(err instanceof Error)
+                this.CallErrorHandler(request, response, this.CastToExpection(err as any as Error));
+            else
+                this.CallErrorHandler(request, response, this.CastToExpection(new Error(err ? (err as any)["message"] : 'unknown error')));
+        }
     }
 
     private CallErrorHandler(request: Request, response: Response, exception: Error) {

@@ -66,9 +66,16 @@ export class DerivedClass extends TestClass
 
 export class ItemTest
 {
-    public Name: string;    
+     @CreateMetada()
+    public Name: string;  
+
+     @CreateMetada()
     public IsActive: boolean;
+
+     @CreateMetada()
     public CreatedAt: Date;
+
+     @CreateMetada()
     public Description: string;
     
 

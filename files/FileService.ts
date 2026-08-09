@@ -5,6 +5,7 @@ import Path from 'path';
 import AbstractFileService from './AbstractFileService';
 import FileNotFoundException from '../exceptions/FileNotFoundException';
 import Exception from '../exceptions/Exception';
+import { IFileInfo } from "./IFileInfo";
 
 
 
@@ -175,6 +176,84 @@ export default class FileService extends AbstractFileService
         });
         
     }      
+
+    public async RenameAsync(oldPath: string, newPath: string): Promise<void> 
+    {
+        try 
+        {
+            await FileAsync.rename(oldPath, newPath);
+        } 
+        catch (err) 
+        {
+            throw new Exception(
+                err instanceof Error
+                    ? err.message
+                    : "Error renaming file or directory"
+            );
+        }
+    }
+
+    public async DeleteDirectoryAsync(path: string): Promise<void> {
+        
+        try 
+        {
+            await FileAsync.rm(path, {
+                recursive: true,
+                force: true
+            });
+        } 
+        catch (err) 
+        {
+            throw new Exception(
+                err instanceof Error
+                    ? err.message
+                    : "Error deleting directory"
+            );
+        }
+    }
+
+    public async IsFileAsync(path: string): Promise<boolean> 
+    {
+        if(!await this.FileExistsAsync(path))
+                throw new FileNotFoundException(`File: ${path} not found`);
+
+        const stats = await FileAsync.stat(path);
+        return stats.isFile();
+    }
+
+    public async GetFileInfoAsync(path: string): Promise<IFileInfo> 
+    {
+        try 
+        {
+            if(!await this.FileExistsAsync(path))
+                throw new FileNotFoundException(`File: ${path} not found`);
+
+            const stats = await FileAsync.stat(path);
+
+            if (!stats.isFile())
+                throw new Exception(`The path ${path} is not a file`);
+
+            const fullPath = Path.resolve(path);
+            const extension = Path.extname(fullPath);
+
+            return {
+                Name: Path.basename(fullPath),
+                FullPath: fullPath,
+                SizeEmBytes: stats.size,
+                SizeEmMBs: stats.size / 1024 / 1024,
+                Ext: extension,
+                Folder: Path.dirname(fullPath)
+            };
+        } 
+        catch (err: unknown) 
+        {
+            throw new Exception(
+                err instanceof Error
+                    ? err.message
+                    : `Error getting file information from ${path}`
+            );
+        }
+    }
 
     
     

@@ -1,5 +1,4 @@
 import MetadataDecorators from "../decorators/metadata/MetadataDecorators";
-import ArgumentNullException from "../exceptions/ArgumentNullException";
 import InvalidEntityException from "../exceptions/InvalidEntityException";
 import OwnMetaDataContainer from "./OwnMetaDataContainer";
 
@@ -23,6 +22,8 @@ export default class Type {
         {
             if(keysVisiteds.includes(map))
                 continue;
+
+            keysVisiteds.push(map);
 
             if(options?.IgnorePaths && options.IgnorePaths.filter(s => s == map).length > 0)
             {
@@ -237,8 +238,7 @@ export default class Type {
                 {
                     if(elementType)
                     {
-                        for (let i of obj[propertyOnObject])
-                            (base as any)[k][obj[propertyOnObject].indexOf(i)] = Type.Cast(obj[propertyOnObject][obj[propertyOnObject].indexOf(i)], elementType, options);
+                        (base as any)[k] = (obj[propertyOnObject] as Array<unknown>).map(item => Type.Cast(item, elementType, options));
                     }                    
                     else
                         (base as any)[k] = obj[propertyOnObject];
@@ -343,7 +343,7 @@ export default class Type {
              if(keysVisiteds.includes(c))
                 continue;
 
-            
+            keysVisiteds.push(c);
 
             let propertyOnJSON = options ? MetadataDecorators.GetJSONPropertyName(cTor, c) ?? c : c;
 
@@ -378,7 +378,7 @@ export default class Type {
             if (designType == Number) {
                 let number = Number.parseFloat(obj?.toString());
 
-                if (number != Number.NaN && obj != undefined) {
+                if (!Number.isNaN(number) && obj != undefined) {
                     source[propertyOnJSON] = number;
                 }
                 else {
@@ -389,39 +389,36 @@ export default class Type {
                 source[propertyOnJSON] =  obj == undefined ? "" : obj.toString();
             }
             else if (designType == Date && obj) {
-                try {
-                    source[c] = new Date(obj);
-                } catch { throw new InvalidEntityException(`Can not cast the property "${c}" in Date`); }
+                let date = new Date(obj);
+
+                if(Number.isNaN(date.getTime()))
+                    throw new InvalidEntityException(`Can not cast the property "${c}" in Date`);
+
+                source[propertyOnJSON] = date;
 
             }
             else if (designType == Boolean) {
-                try {
+                if(obj == undefined)
+                    throw new InvalidEntityException(`Can not cast the property "${c}" in Boolean`);
 
-                    if(obj == undefined)
-                    {
+                if (typeof obj != "boolean") {
+
+                    if(obj.toString().toLowerCase().trim() == "true")
+                        source[propertyOnJSON] = true;
+                    else if (obj.toString().toLowerCase().trim() == "false")
+                        source[propertyOnJSON] = false;
+                    else
                         throw new InvalidEntityException(`Can not cast the property "${c}" in Boolean`);
-                    }
-
-                    if (typeof obj != "boolean") {
-
-                        if(obj.toString().toLowerCase().trim() == "true")
-                            source[propertyOnJSON] = true;
-                        else if (obj.toString().toLowerCase().trim() == "false")
-                            source[propertyOnJSON] = false;
-                        else
-                            throw new InvalidEntityException(`Can not cast the property "${c}" in Boolean`);
-                        
-                    }
-                    else {
-                        source[propertyOnJSON] = obj;
-                    }
-
-                } catch { }
+                    
+                }
+                else {
+                    source[propertyOnJSON] = obj;
+                }
 
             }else 
             {
                 if(source[propertyOnJSON])
-                    this.ValidateType(source[propertyOnJSON], designType);
+                    this.ValidateType(source[propertyOnJSON], designType, options);
             }
         }
     }
@@ -438,6 +435,8 @@ export default class Type {
         while (funcCtor) {
             if (funcCtor == ctor)
                 return true;
+
+            funcCtor = Object.getPrototypeOf(funcCtor);
         }
 
         return false;
@@ -471,7 +470,7 @@ export default class Type {
         {
             let r = Number.parseInt(p);
 
-            if(r == Number.NaN)
+            if(Number.isNaN(r))
                 return new Date(Date.UTC(0,0,0)); 
             
             dateParts.push(r);
@@ -482,7 +481,7 @@ export default class Type {
         {
             let r = Number.parseInt(p);
 
-            if(r == Number.NaN)           
+            if(Number.isNaN(r))           
                 hours.push(0);
             else
                 hours.push(r);
@@ -516,9 +515,9 @@ export default class Type {
             let l = content.length;
 
             if(i == 0)
-                txt = txt.substring(l) + newContent;
+                txt = newContent + txt.substring(l);
             else
-                txt = txt.substring(0, i -1) + newContent + txt.substring(i + l);       
+                txt = txt.substring(0, i) + newContent + txt.substring(i + l);       
         }
 
         return txt;
@@ -527,8 +526,7 @@ export default class Type {
 
     public static RemoveCircularReferences<T extends object>(obj : T) : T
     {
-        let clone = Reflect.construct(obj.constructor, []);
-        Object.assign(clone, obj);
+        
         let seenRefereces : any[] = [];
 
         let removeReferences = (target : any) => 
@@ -566,8 +564,8 @@ export default class Type {
           
         }
 
-        removeReferences(clone);
-        return clone;
+        removeReferences(obj);
+        return obj;
 
     }
 

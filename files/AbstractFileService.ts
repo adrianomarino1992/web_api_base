@@ -1,3 +1,5 @@
+import { IFileInfo } from "./IFileInfo";
+
 
 export default abstract class AbstractFileService 
 {  
@@ -11,10 +13,11 @@ export default abstract class AbstractFileService
     public abstract CreateDirectoryAsync(path: string): Promise<void>;
     public abstract WriteAllTextAsync(path : string, text : string, encoding : 'utf-8' | 'win-1252') : Promise<void>;  
     public abstract ReadAllTextAsync(path : string, encoding : 'utf-8' | 'win-1252') : Promise<string>;  
+    public abstract DeleteDirectoryAsync(path : string) : Promise<void>;
+    public abstract RenameAsync(oldPath: string, newPath: string): Promise<void>;
+    public abstract IsFileAsync(path: string): Promise<boolean>;
+    public abstract GetFileInfoAsync(path: string): Promise<IFileInfo>;
    
 }
-
-
-
 
 

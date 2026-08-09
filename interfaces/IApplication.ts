@@ -8,6 +8,8 @@ export default interface IApplication
 
     ApplicationThreadExeptionHandler? : ApplicationExceptionHandler;
 
+    ApplicationRouteNotFoundHandler? : ApplicationRouteNotFoundHandler;
+
     StartAsync() : Promise<void>;    
 
     ConfigureAsync (appConfig : IApplicationConfiguration): Promise<void>;
@@ -18,6 +20,11 @@ export default interface IApplication
 export interface ApplicationExceptionHandler
 {
     (request : Request, response : Response, exception : Exception) : void;
+}
+
+export interface ApplicationRouteNotFoundHandler
+{
+    (request : Request, response : Response) : void;
 }
 
 

@@ -198,6 +198,14 @@ export default class StatusController extends ControllerBase
         return result;
     }
 
+
+     @POST()       
+    public PostOfItemClassAndRunMethod(some : ItemTest) 
+    {
+        let result = this.GenericDerivedDependecy.Run([some]);
+        return result;
+    }
+
    
     @DELETE()
     public DeleteAction(id : number) : number

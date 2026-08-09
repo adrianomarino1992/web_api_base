@@ -540,8 +540,13 @@ export default class ControllersDecorators
                     fromFiles.push({Index : i, Required : true});
             }   
 
+            const route = ControllersDecorators.GetRoute(ctor);
+            const action = ControllersDecorators.GetAction(ctor, method.toString());
+            const pathsParams = ControllersDecorators.GetPathParamsFromURL(`${route}${action}`);
+
             if(fromQuery.filter(s => s.Index == i).length == 0 && fromPath.filter(s => s.Index == i).length == 0)
-            {
+            {                
+
                 if([Date, String, Number, Boolean].filter(t => t == e).length > 0)
                 {
                     try{
@@ -575,7 +580,10 @@ export default class ControllersDecorators
  
                         }
                         
-                        fromQuery.push({Field: paramName, Index: i, Required : true, Type : e});
+                        if(paramName && pathsParams.indexOf(paramName) > -1)
+                            fromPath.push({Field: paramName, Index: i, Required : true, Type : e});
+                        else
+                            fromQuery.push({Field: paramName, Index: i, Required : true, Type : e});
 
                     }catch{
 
@@ -605,6 +613,12 @@ export default class ControllersDecorators
         else 
             return undefined;
     }    
+
+    private static GetPathParamsFromURL(path: string): string[] 
+    {
+        const matches = path.match(/:([A-Za-z0-9_]+)/g);
+        return matches?.map(p => p.substring(1)) ?? [];
+    }
 
 }
 

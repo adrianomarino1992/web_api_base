@@ -467,9 +467,9 @@ export default class JS
             if(FS.existsSync(applicationPackageJson))
             {
                 let j = JSON.parse(FS.readFileSync(applicationPackageJson, 'utf-8'));
-                app = j.name;
-                version = j.version;
-                description = j.description;        
+                app = j.name ?? '';
+                version = j.version ?? '';
+                description = j.description ?? '';        
                 
                 this._js = this._js.replace('??APP', app);
                 this._js = this._js.replace('??DESC', description);

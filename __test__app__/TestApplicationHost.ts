@@ -66,6 +66,12 @@ export async function StartTestApplicationAsync(): Promise<ITestApplicationHost>
     appConfig.ExecutablePath = path.join(appConfig.RootPath, "Index.ts");
     appConfig.DEBUG = false;
     appConfig.EnvFile = path.join(appConfig.RootPath, ".env.dev");
+    appConfig.SetLogger({
+        Debug: () => { },
+        Info: () => { },
+        Warn: () => { },
+        Error: () => { }
+    });
 
     await appConfig.LoadAsync();
 

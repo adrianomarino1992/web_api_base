@@ -1,4 +1,5 @@
 import OwnMetaDataContainer from "./metadata/OwnMetaDataContainer";
+import { DefaultApplicationLogger } from "./logging/DefaultLogger";
 
 
 // #region REFLECT-METADATA HOOK
@@ -33,7 +34,7 @@ if(!noHookEnv && !noHooksArg)
                 }
                 catch(e)
                 {
-                    console.log("Error inside reflect-metadata hook", e);
+                    DefaultApplicationLogger.Error("Error inside reflect-metadata hook", e);
                 }
                 
 
@@ -42,7 +43,7 @@ if(!noHookEnv && !noHooksArg)
         }
         catch(e)
         {
-            console.log("Error on reflect-metadata hook", e);
+            DefaultApplicationLogger.Error("Error on reflect-metadata hook", e);
             return decoratorFunction;
         }
     }
@@ -79,6 +80,7 @@ export { DependecyService };
 
 export { default as IMidleware } from './midlewares/IMidleware';
 export { default as IApplicationConfiguration } from "./interfaces/IApplicationConfiguration"; 
+export { default as ILogger } from "./interfaces/ILogger";
 export { default as IApplication } from "./interfaces/IApplication"; 
 export { default as IApplicatiIControllernConfiguration } from "./interfaces/IController"; 
 export { IHTTPRequestContext, IRequestResult, IRequestResultHandler } from "./midlewares/IMidleware";
@@ -106,6 +108,7 @@ export {default as FindDependencyException} from "./exceptions/FindDependencyExc
 export {default as DecoratorException} from "./exceptions/DecoratorException";
 export {default as InvalidEntityException} from "./exceptions/InvalidEntityException";
 export {default as FileNotFoundException} from "./exceptions/FileNotFoundException";
+export { DefaultLogger, DefaultApplicationLogger } from "./logging/DefaultLogger";
 
 // #endregion
 

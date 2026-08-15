@@ -8,10 +8,12 @@ import { DocumentationDecorators } from "../decorators/documentation/Documentati
 import { Express } from "express";
 import cmd from 'child_process';
 import Application from "../Application";
+import { DefaultApplicationLogger } from "../logging/DefaultLogger";
 
 export default class Documentation {
     public CreateDocumentation(controllersConstructors: { new(...args: any[]): IController; }[], app : Express): void
     {
+        const logger = Application.Configurations?.Logger ?? DefaultApplicationLogger;
         let documentations : IDocument[] = [];
 
         for(let ctor of controllersConstructors)
@@ -113,8 +115,6 @@ export default class Documentation {
                 resp.sendFile(`${__dirname}\\script.js`);
             });
 
-            console.log(Application.Configurations);
-
             if(Application.Configurations.DEBUG && process.argv.indexOf("--no-open") == -1 && process.argv.indexOf("--NO-OPEN") == -1)
             {
                 let hostname = Application.Configurations.Host;
@@ -125,7 +125,7 @@ export default class Documentation {
                 cmd.exec(`start "" "http://${hostname}:${Application.Configurations.Port}/playground"`, (error, stdout, stdin) => 
                 {
                     if(error)
-                        console.error(error);                
+                        logger.Error(error);                
                 });
             }
         }        

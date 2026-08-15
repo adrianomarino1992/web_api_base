@@ -1,7 +1,9 @@
 import File from 'fs';
 import Path from 'path';
 import IApplicationConfiguration from './interfaces/IApplicationConfiguration';
+import ILogger from './interfaces/ILogger';
 import DependecyService, { DIEscope, Ctors } from './dependencyInjection/DependecyService';
+import { DefaultApplicationLogger } from './logging/DefaultLogger';
 import IMidleware, { IRequestResultHandler } from './midlewares/IMidleware';
 import path from 'path';
 
@@ -15,6 +17,7 @@ export default class ApplicationConfiguration implements IApplicationConfigurati
     public EnvFile : string;
     public ExecutablePath : string;
     public DEBUG : boolean;
+    public Logger : ILogger = DefaultApplicationLogger;
     public EnviromentVariables : {[key : string] : any} = {};
     private _midlewares : IMidleware[] = [];
     private _afters : IRequestResultHandler[] = []; 
@@ -202,6 +205,11 @@ export default class ApplicationConfiguration implements IApplicationConfigurati
         this._afters.push(resultHandler);
     }
 
+    public SetLogger(logger?: ILogger): void
+    {
+        this.Logger = logger ?? DefaultApplicationLogger;
+    }
+
     public GetResultHandlers()
     {
         return this._afters;
@@ -235,7 +243,7 @@ export default class ApplicationConfiguration implements IApplicationConfigurati
         {
             let port = Number.parseInt(this.EnviromentVariables["PORT"]);
 
-            if(port != Number.NaN)
+            if(!Number.isNaN(port))
                 this.Port = port;
         }
 

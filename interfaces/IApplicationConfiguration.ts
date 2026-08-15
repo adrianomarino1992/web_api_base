@@ -1,4 +1,5 @@
 import { Ctors } from "../dependencyInjection/DependecyService";
+import ILogger from "./ILogger";
 import IMidleware, { IRequestResultHandler } from "../midlewares/IMidleware";
 
 export default interface IApplicationConfiguration
@@ -9,6 +10,7 @@ export default interface IApplicationConfiguration
     CurrentWorkingDirectory : string;
     ExecutablePath : string;
     DEBUG : boolean;
+    Logger : ILogger;
     EnviromentVariables : {[key : string] : any};
     
     
@@ -32,4 +34,5 @@ export default interface IApplicationConfiguration
     
     Use(midleware : IMidleware) : void;    
     Run(resultHandler : IRequestResultHandler) : void
+    SetLogger(logger?: ILogger): void;
 }

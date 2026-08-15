@@ -221,6 +221,11 @@ export default class FileService extends AbstractFileService
         return stats.isFile();
     }
 
+    public async IsFile(path: string): Promise<boolean>
+    {
+        return this.IsFileAsync(path);
+    }
+
     public async GetFileInfoAsync(path: string): Promise<IFileInfo> 
     {
         try 
@@ -253,6 +258,11 @@ export default class FileService extends AbstractFileService
                     : `Error getting file information from ${path}`
             );
         }
+    }
+
+    public async GetFileInfo(path: string): Promise<IFileInfo>
+    {
+        return this.GetFileInfoAsync(path);
     }
 
     

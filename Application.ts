@@ -26,6 +26,8 @@ import SendFileResult from "./controllers/SendFileResult";
 import DownloadFileResult from "./controllers/DownloadFileResult";
 import OwnMetaDataContainer from "./metadata/OwnMetaDataContainer";
 import MaxFileSizeException from "./exceptions/MaxFileSizeException";
+import ILogger from "./interfaces/ILogger";
+import { DefaultApplicationLogger } from "./logging/DefaultLogger";
 
 
 export default abstract class Application implements IApplication {
@@ -50,6 +52,11 @@ export default abstract class Application implements IApplication {
 
         this.Express = ExpressModule();
 
+    }
+
+    private GetLogger(): ILogger
+    {
+        return this.ApplicationConfiguration?.Logger ?? DefaultApplicationLogger;
     }
 
 
@@ -84,7 +91,7 @@ export default abstract class Application implements IApplication {
             });        
 
         this.Express.listen(this.ApplicationConfiguration.Port, this.ApplicationConfiguration.Host, () => {
-            console.log(`Application running on ${this.ApplicationConfiguration.Host}:${this.ApplicationConfiguration.Port}`);
+            this.GetLogger().Info(`Application running on ${this.ApplicationConfiguration.Host}:${this.ApplicationConfiguration.Port}`);
         });
 
        
@@ -189,7 +196,7 @@ export default abstract class Application implements IApplication {
                 return reject(new ControllerLoadException( `No controller directory was found. If you intend to register controllers manually, remove the call to ${this.UseControllersAsync.name}.`));
 
 
-            console.debug(`reading controllers in ${controllersPath}`);
+            this.GetLogger().Debug(`reading controllers in ${controllersPath}`);
 
             let files: string[] = this.GetAllControllersFilesRecursively(controllersPath);
 
@@ -303,7 +310,7 @@ export default abstract class Application implements IApplication {
             if(collision.length > 0)
                 throw new ControllerLoadException(`The URI: ${verb.toString().toUpperCase()} ${route}${action} exists in two controllers: ${collision[0].Controller} and ${ctor.name}.${method.toString()}`);
 
-            console.debug("appended : ", verb, `${route}${action}`);
+            this.GetLogger().Debug("appended:", verb, `${route}${action}`);
 
             let pathParams = '';
         
@@ -917,12 +924,12 @@ export default abstract class Application implements IApplication {
                 response.json(exception);
 
             } catch (err) {
-                console.log("Error while trying handle the error");
-                console.log(err);
+                this.GetLogger().Error("An error occurred while handling another error.");
+                this.GetLogger().Error(err);
 
             } finally {
-                console.log("Inner exception");
-                console.log(exception);
+                this.GetLogger().Error("Original exception:");
+                this.GetLogger().Error(exception);
             }
         }
 
@@ -931,8 +938,8 @@ export default abstract class Application implements IApplication {
                 this.ApplicationThreadExeptionHandler!(request, response, this.CastToExpection(exception));
 
             } catch (err) {
-                console.log("Error while trying handle the error with custom delegate");
-                console.log(err);
+                this.GetLogger().Error("An error occurred while executing the custom exception handler.");
+                this.GetLogger().Error(err);
                 defaultHandler(request, response, this.CastToExpection(err as Error));
             }
         } else {

@@ -172,6 +172,11 @@ export function PUT(action? : string)
     return ControllersDecorators.Verb(HTTPVerbs.PUT, action); 
 } ;
 
+export function PATCH(action? : string)       
+{
+    return ControllersDecorators.Verb(HTTPVerbs.PATCH, action); 
+} ;
+
 export function DELETE(action? : string)       
 {
     return ControllersDecorators.Verb(HTTPVerbs.DELETE, action); 

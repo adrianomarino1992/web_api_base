@@ -356,13 +356,20 @@ export default abstract class Application implements IApplication {
                     let isMultiPartFormData = content_type && content_type.indexOf('multipart/form-data') > -1;
                     let isJSONData = content_type && content_type.indexOf('application/json') > -1;
 
-                    if((verb == HTTPVerbs.POST || verb == HTTPVerbs.PUT) && !isJSONData && !isMultiPartFormData)
+                    const expectsRequestBody = fromBody.length > 0 || fromFiles.length > 0;
+
+                    if(
+                        expectsRequestBody &&
+                        (verb == HTTPVerbs.POST || verb == HTTPVerbs.PUT || verb == HTTPVerbs.PATCH) &&
+                        !isJSONData &&
+                        !isMultiPartFormData
+                    )
                     {
                         response.status(400);
                         response.json(
                             {
                                 Message: "Model binding fail",
-                                Detailts: "To send data using a PUT or POST method the correct content-type header is required"
+                                Detailts: `The ${verb} action expects request data. Use the "content-type" header with "application/json" for JSON payloads or "multipart/form-data" for file uploads.`
                             });
                     }
 

@@ -1,6 +1,4 @@
-import ActionResult from "../../controllers/ActionResult";
-import { ControllerBase } from "../../controllers/base/ControllerBase";
-import { Route, GET, FromPath, OmmitActionNameOnRoute, OmmitOnRoute } from "../../";
+import { ActionResult, ControllerBase, FromPath, GET, OmmitOnRoute } from "../TestAPI";
 
 
 

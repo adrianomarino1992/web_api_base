@@ -1,25 +1,50 @@
-import { ControllerBase, OptionalFromBodyArg, FileService, Route, Inject, InjectAbstract, UseBefore,  FromBody, DELETE, FromQuery, GET, POST, PUT, Description, ProducesResponse, ActionResult, FromFiles, ControllerHeader, ActionHeader,  UseAfter, InjectForTypeArgument, Validate, FromPath, RequiredFromBodyArg, RequiredFromQueryArg, OptionalFromQueryArg } from "../../index";
+import {
+    ActionHeader,
+    ActionResult,
+    ControllerBase,
+    ControllerHeader,
+    DELETE,
+    Description,
+    FromBody,
+    FromPath,
+    FromQuery,
+    GET,
+    Inject,
+    InjectAbstract,
+    InjectForTypeArgument,
+    OptionalFromBodyArg,
+    OptionalFromQueryArg,
+    PATCH,
+    POST,
+    ProducesResponse,
+    RequiredFromBodyArg,
+    RequiredFromQueryArg,
+    UseAfter,
+    UseBefore,
+    Validate
+} from "../TestAPI";
 import { ConcreteService, SampleService, SampleServiceAbstract, WithGenericType } from "../service/SampleService";
-import {File} from '../../index';
-import Path from 'path';
-import GenericService from '../../__tests__/classes/GenericService';
-
-import TestClass, { DerivedClass, ItemTest } from "./TestClass";
+import GenericService from "../service/GenericService";
+import TestClass, { DerivedClass, ItemTest } from "../models/TestClass";
+import ValidatedModel from "../models/ValidatedModel";
 
 
 
 @UseBefore(context => 
 {
-    console.debug("First midleware");
+    let pipeline = ((context.Request as any).__pipeline ??= []) as string[];
+    pipeline.push("controller-before-1");
     return context.Next();
 })
 @UseBefore(async context => 
 {
-    console.debug("Second midleware");       
+    let pipeline = ((context.Request as any).__pipeline ??= []) as string[];
+    pipeline.push("controller-before-2");
     return await context.Next();
 })
 @UseAfter(async actionResult => 
 {
+      actionResult.Response.setHeader("x-controller-after", actionResult.Exception ? "error" : "handled");
 
       if(actionResult.Exception) 
       {
@@ -27,8 +52,6 @@ import TestClass, { DerivedClass, ItemTest } from "./TestClass";
           actionResult.Response.json({Error : actionResult.Exception.Message});
           return;
       }
-
-      console.log(actionResult) 
       
 })
 @ControllerHeader("api-key")
@@ -79,12 +102,22 @@ export default class StatusController extends ControllerBase
     @ProducesResponse({ Status : 500, Description: "Error", JSON : JSON.stringify({Message : "Error while processing the request"}, null, 2)})
     public CheckStatus(@FromBody()some : SampleService) 
     {       
-        console.log(this.ConcreteService);
-        console.log(this.GenericWithType);
-        console.log(this.GenericWithTypeDerived);
-        console.log(this.GenericWithDefinedTypeDerived);
         some.DoSomething();
-        return this.OK({status : "OK"});
+        return this.OK({
+            status : "OK",
+            payloadType: some.constructor.name,
+            pipeline: ((this.Request as any).__pipeline ?? []) as string[],
+            services: {
+                abstract: this.SomeService.constructor.name,
+                inferred: this.TypeInferedInjection?.constructor.name,
+                concrete: this.ConcreteService?.constructor.name,
+                generic: this.GenericDependecy.GetTypeName(),
+                genericDerived: this.GenericDerivedDependecy.GetTypeName(),
+                withType: this.GenericWithType?.GetType().name,
+                withDerivedType: this.GenericWithTypeDerived?.GetType().name,
+                withDynamicType: this.GenericWithDefinedTypeDerived?.GetType().name
+            }
+        });
     }
 
 
@@ -254,6 +287,37 @@ export default class StatusController extends ControllerBase
     public GetWithOptionalQueryArg(@OptionalFromQueryArg() name : string) : string
     {
         return name ?? "not provided";
+    }
+
+    @POST()
+    public PostValidatedModel(@FromBody() model: ValidatedModel)
+    {
+        return this.OK(model);
+    }
+
+    @PATCH()
+    public PatchPartialRecord(@FromBody() changes: { Name?: string; Email?: string })
+    {
+        const currentRecord = {
+            Id: 1,
+            Name: "Original name",
+            Email: "original@example.com",
+            Active: true
+        };
+
+        return this.OK({
+            ...currentRecord,
+            ...changes
+        });
+    }
+
+    @PATCH()
+    public PatchUsingOnlyQuery(@FromQuery() name: string)
+    {
+        return this.OK({
+            updatedField: "name",
+            name
+        });
     }
 }
 

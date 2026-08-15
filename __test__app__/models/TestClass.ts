@@ -1,4 +1,4 @@
-import {ShowInDocumentation, ArrayElementType, CreateMetada, IgnoreInDocumentation, DefaultValue, Route, RunBefore, JSONProperty} from '../../index';
+import { ArrayElementType, CreateMetada, DefaultValue, IgnoreInDocumentation, JSONProperty, RunBefore, ShowInDocumentation } from "../TestAPI";
 
 
 

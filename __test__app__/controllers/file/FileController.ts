@@ -1,10 +1,6 @@
-import { POST, GET, FromFiles, FromQuery, MaxFilesSize } from "../../..";
-import { ControllerBase } from "../../../controllers/base/ControllerBase";
+import { ControllerBase, File, FromFiles, FromQuery, GET, MaxFileSize, OptionalFromFileArg, POST, RequiredFromFileArg, Validate } from "../../TestAPI";
 import FileService from "../../../files/FileService";
-import File from '../../../files/File'
 import Path from 'path';
-import { MaxFileSize, OptionalFromFileArg, RequiredFromFileArg } from "../../..";
-import { Validate } from "../../../validation/Index";
 
 
 

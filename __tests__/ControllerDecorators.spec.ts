@@ -52,6 +52,15 @@ describe("Controller decorators", () => {
 
     });
 
+    test("should retrieve PATCH HTTP verb from decorator", () => {
+
+        const controller = new ControllerTest(new SampleService());
+        const verb = ControllersDecorators.GetVerb(ControllerTest, "PatchAction");
+
+        expect(verb).toBe(HTTPVerbs.PATCH);
+
+    });
+
     test("should retrieve parameters decorated with FromQuery", () => {
 
         const controller = new ControllerTest(new SampleService());

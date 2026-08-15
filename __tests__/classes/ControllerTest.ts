@@ -1,7 +1,7 @@
 import { AnotherService } from "./AnotherService";
 import { SampleServiceAbstract } from "./SampleServiceAbstract";
 
-import {Inject, ControllerBase, Action, Route, GET, POST , FromBody, FromQuery, InjectAbstract, PUT, DELETE, Description, ActionHeader, ControllerHeader, ProducesResponse, RequestJson, File, FromFiles} from '../../index';
+import {Inject, ControllerBase, Action, Route, GET, POST , FromBody, FromQuery, InjectAbstract, PUT, PATCH, DELETE, Description, ActionHeader, ControllerHeader, ProducesResponse, RequestJson, File, FromFiles} from '../../index';
 
 @ControllerHeader("api-token")
 @Route("/test")
@@ -57,6 +57,12 @@ export class ControllerTest extends ControllerBase
 
     @PUT()
     public PutAction(@FromBody()user : { Name : string, Age : number}) : { Name : string, Age : number}
+    {
+        return user;
+    }
+
+    @PATCH()
+    public PatchAction(@FromBody()user : { Name?: string, Age?: number}) : { Name?: string, Age?: number}
     {
         return user;
     }

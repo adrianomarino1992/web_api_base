@@ -1,4 +1,4 @@
-import { ControllerBase, Route, GET, ProducesResponse, ActionResult } from "../../index";
+import { ActionResult, ControllerBase, GET, ProducesResponse, Route } from "../TestAPI";
 
 
 @Route()

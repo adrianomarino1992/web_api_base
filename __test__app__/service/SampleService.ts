@@ -1,4 +1,4 @@
-import TestClass, { DerivedClass } from "../controllers/TestClass";
+import TestClass, { DerivedClass } from "../models/TestClass";
 
 export abstract class SampleServiceAbstract
 {

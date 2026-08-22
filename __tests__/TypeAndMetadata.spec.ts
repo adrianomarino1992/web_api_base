@@ -4,6 +4,11 @@ import MetadataDecorators from '../decorators/metadata/MetadataDecorators';
 import Type from '../metadata/Type';
 import { describe, test, expect } from '@jest/globals';
 
+class DateContainer
+{
+    @MetadataDecorators.CreateMetada()
+    public CreatedAt!: Date;
+}
 
 describe("Validation decorators", () => {
 
@@ -67,6 +72,44 @@ describe("Validation decorators", () => {
          expect(keys).toContain('from_json');
          expect(keys).not.toContain('JSONProperty'); 
 
+    });
+
+    test("should parse local datetime strings without shifting the local clock", () => {
+        let date = Type.CastStringToDate("2026-08-15T10:20:30");
+
+        expect(date.getFullYear()).toBe(2026);
+        expect(date.getMonth()).toBe(7);
+        expect(date.getDate()).toBe(15);
+        expect(date.getHours()).toBe(10);
+        expect(date.getMinutes()).toBe(20);
+        expect(date.getSeconds()).toBe(30);
+    });
+
+    test("should preserve UTC instants when the source contains Z", () => {
+        let date = Type.CastStringToDate("2026-08-15T10:20:30Z");
+
+        expect(date.toISOString()).toBe("2026-08-15T10:20:30.000Z");
+    });
+
+    test("should preserve explicit timezone offsets when parsing dates", () => {
+        let date = Type.CastStringToDate("2026-08-15T10:20:30-03:00");
+
+        expect(date.toISOString()).toBe("2026-08-15T13:20:30.000Z");
+    });
+
+    test("should return undefined when casting an invalid date string", () => {
+        let date = Type.Cast("not-a-date", Date);
+
+        expect(date).toBeUndefined();
+    });
+
+    test("should use the same date parser when validating object properties", () => {
+        let payload: any = { CreatedAt: "2026-08-15T10:20:30-03:00" };
+
+        Type.ValidateType(payload, DateContainer);
+
+        expect(payload.CreatedAt instanceof Date).toBe(true);
+        expect(payload.CreatedAt.toISOString()).toBe("2026-08-15T13:20:30.000Z");
     });
 
 

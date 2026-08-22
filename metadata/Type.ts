@@ -305,8 +305,12 @@ export default class Type {
         else if (type.name == Date.name) 
         {
             try {
+                const date = Type.CastStringToDate(obj);
 
-                return Type.CastStringToDate(obj) as T;                
+                if(Number.isNaN(date.getTime()))
+                    return undefined;
+
+                return date as T;                
 
             } catch { return undefined}
 
@@ -389,7 +393,7 @@ export default class Type {
                 source[propertyOnJSON] =  obj == undefined ? "" : obj.toString();
             }
             else if (designType == Date && obj) {
-                let date = new Date(obj);
+                let date = Type.CastStringToDate(obj);
 
                 if(Number.isNaN(date.getTime()))
                     throw new InvalidEntityException(`Can not cast the property "${c}" in Date`);
@@ -442,56 +446,57 @@ export default class Type {
         return false;
     }
 
-    public static CastStringToDate(date : string) : Date
+    public static CastStringToDate(date : string | Date) : Date
     {
         if(!date)
-            return new Date(Date.UTC(0,0,0)); 
+            return new Date(Number.NaN); 
 
-        let parts = date.split('-');
+        if(date instanceof Date)
+            return date;
 
-        if(parts.length < 3)
-            return new Date(Date.UTC(0,0,0)); 
+        let normalizedDate = date.toString().trim();
 
-        let time = parts[2].split(' ');  
+        if(!normalizedDate)
+            return new Date(Number.NaN);
 
-        if(time.length == 1 && time[0].length > 4)
-            time = parts[2].split('T');  
-        
-        parts[2] = time.shift()!;
+        const hasExplicitTimezone = /(?:Z|[+\-]\d{2}:\d{2})$/i.test(normalizedDate);
 
-        if(time.length == 0 || time[0].indexOf(':') == -1)
-            time = ["0","0","0"];
-        else
-            time = time[0].split(':');    
-
-        let dateParts : number[] = [];
-
-        for(let p of parts)
+        if(hasExplicitTimezone)
         {
-            let r = Number.parseInt(p);
+            const parsedDate = new Date(normalizedDate);
 
-            if(Number.isNaN(r))
-                return new Date(Date.UTC(0,0,0)); 
-            
-            dateParts.push(r);
+            if(!Number.isNaN(parsedDate.getTime()))
+                return parsedDate;
+
+            return new Date(Number.NaN);
         }
 
-        let hours : number[] = [];
-        for(let p of time)
-        {
-            let r = Number.parseInt(p);
+        const dateTimeMatch = normalizedDate.match(/^(\d{4})-(\d{2})-(\d{2})(?:[T\s](\d{2})(?::(\d{2}))?(?::(\d{2}))?(?:\.(\d{1,3}))?)?$/);
 
-            if(Number.isNaN(r))           
-                hours.push(0);
-            else
-                hours.push(r);
+        if(!dateTimeMatch)
+            return new Date(Number.NaN);
 
-        }
+        const year = Number.parseInt(dateTimeMatch[1]);
+        const month = Number.parseInt(dateTimeMatch[2]);
+        const day = Number.parseInt(dateTimeMatch[3]);
+        const hours = Number.parseInt(dateTimeMatch[4] ?? "0");
+        const minutes = Number.parseInt(dateTimeMatch[5] ?? "0");
+        const seconds = Number.parseInt(dateTimeMatch[6] ?? "0");
+        const milliseconds = Number.parseInt((dateTimeMatch[7] ?? "0").padEnd(3, "0"));
 
-        while(hours.length < 3)
-            hours.push(0);
-    
-        return new Date(dateParts[0], dateParts[1] - 1, dateParts[2], hours[0], hours[1], hours[2]);       
+        const parsedDate = new Date(year, month - 1, day, hours, minutes, seconds, milliseconds);
+
+        if(
+            parsedDate.getFullYear() !== year ||
+            parsedDate.getMonth() !== month - 1 ||
+            parsedDate.getDate() !== day ||
+            parsedDate.getHours() !== hours ||
+            parsedDate.getMinutes() !== minutes ||
+            parsedDate.getSeconds() !== seconds
+        )
+            return new Date(Number.NaN);
+
+        return parsedDate;      
 
     }
 

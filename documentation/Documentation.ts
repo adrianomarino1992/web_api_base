@@ -32,7 +32,8 @@ export default class Documentation {
             
             let doc : IDocument = 
             {
-                Id : 'c_' + documentations.length, 
+                Id : 'c_' + documentations.length + '_c', 
+                Label : DocumentationDecorators.GetLabelOnDocumentation(ctor),
                 Route : route ?? "",
                 Controller : ctor.name,
                 Headers: [],
@@ -93,7 +94,13 @@ export default class Documentation {
 
         if(documentations.length > 0)
         {
-            for(let doc of documentations.sort((c, e) =>  c.Controller.toLowerCase().localeCompare(e.Controller.toLocaleLowerCase())))
+            for(let doc of documentations.sort((c, e) =>  {
+
+                let a = c.Label ?? c.Controller;
+                let b = e.Label ?? e.Controller;
+
+                return a.toLowerCase().localeCompare(b.toLowerCase());
+            }))
             {
                 JS.Append(`AddResource(${JSON.stringify(doc)});`);
             }
@@ -135,6 +142,7 @@ export default class Documentation {
 interface IDocument
 {
     Controller : string, 
+    Label : string | undefined,
     Id : string,
     Route : string,
     Headers : string[],

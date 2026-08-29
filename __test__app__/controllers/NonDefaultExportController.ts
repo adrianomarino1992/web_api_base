@@ -1,4 +1,4 @@
-import { ActionResult, ControllerBase, FromPath, GET } from "../TestAPI";
+import { ActionResult, ControllerBase, FromPath, GET, LabelOnDocumentation, Route } from "../TestAPI";
 
 
 
@@ -29,7 +29,8 @@ export class NonDefaultExportController extends ControllerBase {
 }
 
 
-
+@LabelOnDocumentation("[route] -- [controller]")
+@Route("[folder]/[controller]/nonDefaultExport")
 export class NonDefaultExport2Controller extends ControllerBase {
 
     constructor() {

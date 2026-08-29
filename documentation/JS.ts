@@ -14,24 +14,24 @@ export default class JS
         {    
             console.log(route);
     
-            document.getElementById('root').innerHTML += '<div id="'+ route.Controller.toLowerCase()+'" class="card"></div>';
+            document.getElementById('root').innerHTML += '<div id="'+ route.Id+'" class="card"></div>';
     
-            let root = document.getElementById(route.Controller.toLowerCase());           
+            let root = document.getElementById(route.Id);           
                
-            root.innerHTML += '<h1 >'+route.Controller+'</h1>';
+            root.innerHTML += '<h1 >'+ (route.Label ?? route.Controller)+'</h1>';
 
             
             if(route.Headers.length > 0)
             {
-                root.innerHTML += '<div id="'+route.Controller.toLowerCase()+'_headers" class="container" style="display: block;"></div>';
+                root.innerHTML += '<div id="'+route.Id+'_headers" class="container" style="display: block;"></div>';
 
-                let container = document.getElementById(route.Controller.toLowerCase()+'_headers');
+                let container = document.getElementById(route.Id+'_headers');
                 
                 container.innerHTML += "<h3>Controller headers:</h3>";
                 
                 for(let r of route.Headers)
                 {                    
-                    container.innerHTML += '<div class="token-container"><input type="text" id="header-'+r+route.Controller.toLowerCase()+route.Headers.indexOf(r)+'" placeholder="'+r+'" style="width: 100%;"></div>';                  
+                    container.innerHTML += '<div class="token-container"><input type="text" id="header-'+r+route.Id+route.Headers.indexOf(r)+'" placeholder="'+r+'" style="width: 100%;"></div>';                  
                 }
             }               
 
@@ -312,7 +312,7 @@ export default class JS
                             {
                                 for(let r of route.Headers)
                                 {   
-                                    let header = document.getElementById('header-'+r+route.Controller.toLowerCase()+route.Headers.indexOf(r));
+                                    let header = document.getElementById('header-'+r+route.Id+route.Headers.indexOf(r));
                                     req.setRequestHeader(r,header.value);           
                                                       
                                 }

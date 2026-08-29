@@ -1,3 +1,6 @@
+import Type from "../../metadata/Type";
+import ControllersDecorators from "../controllers/ControllerDecorators";
+
 export class DocumentationDecorators {
 
     constructor() { }
@@ -7,6 +10,7 @@ export class DocumentationDecorators {
     private static _responseKeyMetadata = "meta:responseJsonKey";
     private static _controllerUseHeaderKeyMetadata = "meta:controllerUseHeaderKeyMetadata";
     private static _controllerActionUseHeaderKeyMetadata = "meta:controllerActionUseHeaderKeyMetadata";
+    private static _controllerLabelKeyMetadata = "meta:controllerLabelKeyMetadata";
 
     public static Description(description: string) {
         return function (target: Object, methodName: string, propertyDescriptor: PropertyDescriptor) {
@@ -18,6 +22,32 @@ export class DocumentationDecorators {
     public static GetDescription(target: Function, method: string): string | undefined {
         return Reflect.getMetadata(DocumentationDecorators._descriptionKeyMetadata, typeof target == 'function' ? target.prototype : target, method);
     }
+
+    public static LabelOnDocumentation(label: string) {
+        return function (target: Function) {
+            Reflect.defineMetadata(DocumentationDecorators._controllerLabelKeyMetadata, label, target.prototype);
+        };
+    }
+
+
+    public static GetLabelOnDocumentation(target: Function): string | undefined {
+
+        const meta : string | undefined = Reflect.getMetadata(DocumentationDecorators._controllerLabelKeyMetadata, target.prototype);
+        const controllerName = target.name;
+
+        if(!meta)
+            return undefined;
+
+        let label = meta;
+
+        if(label.indexOf("[route]") > -1)
+            label = Type.ReplaceCaseInsensitive(label, "[route]", ControllersDecorators.GetRoute(target));
+        if(label.indexOf("[controller]"))
+            label = Type.ReplaceCaseInsensitive(label, "[controller]", controllerName);
+
+        return label;
+    }
+
 
     public static RequestJson(json: string) {
         return function (target: Object, methodName: string, propertyDescriptor: PropertyDescriptor) {

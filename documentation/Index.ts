@@ -9,6 +9,12 @@ export function ControllerHeader(header : string)
 } ;
 
 
+export function LabelOnDocumentation(label : string)       
+{
+    return DocumentationDecorators.LabelOnDocumentation(label); 
+} ;
+
+
 export function ActionHeader(header : string)       
 {
     return DocumentationDecorators.ActionHeader(header); 

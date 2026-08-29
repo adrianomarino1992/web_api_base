@@ -323,6 +323,12 @@ export function IgnoreInDocumentation()
     return MetadataDecorators.IgnoreInDocumentation();
 }
 
+
+export function LabelOnDocumentation(label : string)
+{
+    return DocumentationDecorators.LabelOnDocumentation(label);
+}
+
 export function ShowInDocumentation()
 {
     return MetadataDecorators.ShowInDocumentation();

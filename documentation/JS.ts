@@ -235,7 +235,7 @@ export default class JS
                     container.innerHTML += '<h3>Use @Description(...) to add a description to a action</h3>';               
                 
                
-                container.innerHTML += '<div class="btn-container" ><button id="bt-'+expandId.ID+'">Send</button></div>';
+                container.innerHTML += '<div class="btn-container" ><button id="bt-'+expandId.ID+'">Send</button><button id="cancel-'+expandId.ID+'" style="display:none;">Cancel</button></div>';
                 
                 if(r.Response.length > 0)
                 {
@@ -285,6 +285,15 @@ export default class JS
     
                 document.addEventListener('DOMContentLoaded', function() {                                 
     
+                    let activeRequest = null;
+                    let cancelTimeout = null;
+                    let cancelBtn = document.getElementById('cancel-'+expandId.ID);
+
+                    cancelBtn.addEventListener('click', () => {
+                        if(activeRequest)
+                            activeRequest.abort();
+                    });
+
                     document.getElementById('bt-'+expandId.ID).addEventListener('click', (evt) => 
                     {
                         let btn = evt.currentTarget; 
@@ -298,8 +307,12 @@ export default class JS
 
                         btn.disabled = true;
                         btn.innerHTML = '<span class="spinner"></span>'; 
-
                         let req = new XMLHttpRequest();
+                        activeRequest = req;
+                        cancelTimeout = setTimeout(() => {
+                            if(activeRequest === req)
+                                cancelBtn.style.display = "inline-block";
+                        }, 5000);
                         req.open(r.Verb, getURLFunction(), true);   
 
                         if (r.FromFiles.length == 0 && r.FromBody.length > 0)                        
@@ -333,9 +346,26 @@ export default class JS
                         document.getElementById( expandId.ID).innerHTML = getURLFunction();
 
                         const resetBtn = () => {
+                            if(cancelTimeout)
+                            {
+                                clearTimeout(cancelTimeout);
+                                cancelTimeout = null;
+                            }
+                            if(activeRequest === req)
+                                activeRequest = null;
                             btn.disabled = false;
                             btn.innerHTML = originalContent;
+                            cancelBtn.style.display = "none";
                         };
+
+                        req.onabort = ()=>
+                        {
+                            resetBtn();
+                            h3.innerText = "Current response:";
+                            bar.style.display = "flex";
+                            resp.value = 'Request canceled';
+                            bar.innerHTML = '<div><status class="Info">0</status> <tx>Request canceled</tx></div>';
+                        }
 
                         req.onerror = ()=>
                         {

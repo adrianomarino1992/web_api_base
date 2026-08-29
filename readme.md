@@ -621,10 +621,19 @@ When the application runs in debug mode and `--no-open` is not used, the browser
 ## Documentation decorators
 
 - `@ControllerHeader(header: string)`: adds a header to all requests in a controller
+- `@LabelOnDocumentation(label: string)`: overrides the controller label shown in the playground; supports `[route]` and `[controller]` placeholders
 - `@ActionHeader(header: string)`: adds a header to a specific action
 - `@Description(description: string)`: adds a description to an action
 - `@RequestJson(json: string)`: overrides the generated request body example
 - `@ProducesResponse(response: { Status: number, Description?: string, JSON?: string })`: documents a possible response
+
+```typescript
+@LabelOnDocumentation("[route] - [controller]")
+@Controller("/users")
+export class UsersController {
+    // The documentation label is: /users - UsersController
+}
+```
 
 ### Playground preview
 

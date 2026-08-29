@@ -12,7 +12,7 @@
             "skipFiles": [
                 "<node_internals>/**"
             ],
-            "args": ["--light"],
+            "args": ["--matrix"],
             "program": "${workspaceFolder}\\dist\\__test__app__\\index.js",
             "env": {
                "DEBUG": "true"   

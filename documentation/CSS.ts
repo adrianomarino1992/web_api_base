@@ -119,91 +119,103 @@ export default class CSS
     --transition: 0.2s ease;
 }
     `;
-
-
-
-       private static _matrix = `
+    private static _matrix = `
     :root {
-   
-   --page-bg: #000000;
---surface: #050505;
---surface-secondary: #101010;
+    --page-bg: #000000;
+    --surface: #050805;
+    --surface-secondary: #0a110a;
 
---primary: #00ff41;
---primary-dark: #00cc33;
---primary-light: rgba(0, 255, 65, 0.18);
+    --primary: #39ff14;
+    --primary-dark: #20c909;
+    --primary-light: rgba(224, 211, 55, 0.28);
 
---text-primary: #00ff41;
---text-secondary: #7dff9b;
---text-link: #39ff14;
+    --text-primary: #61ff49;
+    --text-secondary: #a3ff8f;
+    --text-link: #8dff70;
 
---border-color: #0b5f1b;
---shadow-color: rgba(0, 255, 65, 0.12);
+    --border-color: #258c22;
+    --shadow-color: rgba(57, 255, 20, 0.16);
 
---success: #00ff41;
---warning: #c8ff00;
---danger: #ff4040;
---info: #00ffaa;
+    --success: #61ff49;
+    --warning: #e0d337;
+    --danger: #ff5f5f;
+    --info: #7dffb2;
 
---method-get: #00ff41;
---method-post: #00d97a;
---method-put: #c8ff00;
---method-delete: #ff4040;
---method-other: #1faa55;
+    --method-get: #209c1e;
+    --method-post: #177d39;
+    --method-put: #8b8115;
+    --method-delete: #a52e2e;
+    --method-other: #467a46;
 
+    --border-radius-sm: 0;
+    --border-radius-md: 0;
+    --border-radius-lg: 0;
 
-    --border-radius-sm: 5px;
-    --border-radius-md: 8px;
-    --border-radius-lg: 12px;
-
-    --transition: 0.2s ease;
+    --transition: 0.15s ease;
 }
     `;
 
-
     private static _matrixExtra = `
-
-    
 body {
-    font-family: Consolas, "Courier New", monospace;
+    font-family: Fixedsys, Terminal, "Lucida Console", "Courier New", monospace;
+    text-shadow: 0 0 4px rgba(97, 255, 73, 0.45);
 }
 
-.card {
-    border: 1px solid var(--border-color);
-    box-shadow:
-        0 0 8px rgba(0,255,65,.10),
-        inset 0 0 3px rgba(0,255,65,.08);
+.card,
+.colapsed {
+    border-radius: 0;
+    box-shadow: 0 0 10px rgba(57, 255, 20, 0.12), inset 0 0 8px rgba(57, 255, 20, 0.04);
 }
 
-button {
-    border: 1px solid var(--primary);
-    background: #001b08;
-    color: var(--primary);
+.card:hover {
+    border-color: var(--primary);
+    box-shadow: 0 0 14px rgba(57, 255, 20, 0.2), inset 0 0 8px rgba(57, 255, 20, 0.04);
 }
 
-button:hover {
-    background: var(--primary);
-    color: #000;
-    box-shadow: 0 0 12px var(--primary);
+textarea,
+input,
+button,
+span.GET,
+span.POST,
+span.PUT,
+span.DELETE,
+span.OTHER,
+.spinner {
+    border-radius: 0;
 }
 
 textarea,
 input {
-    background: #030303;
-    color: var(--text-primary);
-    border: 1px solid var(--border-color);
+    background: #020402;
+    border-color: #258c22;
 }
 
 textarea:focus,
 input:focus {
-    border-color: var(--primary);
-    box-shadow: 0 0 10px rgba(0,255,65,.35);
+    border: 4px solid #e0d337;
+    box-shadow: 0 0 0 1px #544f10;
 }
 
-a:hover {
-    text-shadow: 0 0 6px var(--primary);
+button {
+    background: #071807;
+    border: 1px solid var(--primary);
+    color: var(--text-primary);
 }
-    
+
+button:hover:not(:disabled) {
+    background: var(--primary);
+    color: #000000;
+    box-shadow: 0 0 12px var(--primary);
+}
+
+button:focus-visible {
+    box-shadow: 0 0 0 4px #e0d337;
+}
+
+.spinner {
+    border-color: rgba(97, 255, 73, 0.35);
+    border-top-color: var(--text-primary);
+}
     `;
 
 

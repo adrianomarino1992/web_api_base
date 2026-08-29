@@ -1,4 +1,4 @@
-# WEB_API_BASE
+# Web API Base Framework
 
 `web_api_base` is an npm package for building web APIs with decorators, controller conventions, dependency injection, model binding, validation, and an optional API playground.
 
